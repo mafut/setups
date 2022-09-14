@@ -193,7 +193,7 @@ EOF
     cp -f ${CONFIG} ${CONFIG}.bak
     cat << EOF > ${CONFIG}
 option /etc/ppp/pptpd-options
-localip 192.169.1.1
+localip 192.168.1.1
 remoteip 192.168.1.100-200
 EOF
     

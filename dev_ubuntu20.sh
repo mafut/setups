@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Initialize variables
-USERNAME=$SUDO_USER
 APACHE_USER=www-data
 APACHE_LOG=/var/log/apache2
 APACHE_DOCPATH=$1
@@ -13,6 +12,7 @@ CODESERVER_PORT=$4
 CERT_PATH=$5
 MYSQL_REPO=mysql-apt-config_0.8.22-1_all.deb
 
+USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ];
 then
     echo "Can't get User Name"
@@ -44,6 +44,12 @@ fi
 APACHE_DOCPATH=${APACHE_DOCPATH%/}
 CERT_PATH=${CERT_PATH%/}
 
+# [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
+if ! grep -q ${USERNAME} /etc/sudoers;
+then
+    echo ${USERNAME} ALL=NOPASSWD: ALL >> /etc/sudoers
+fi
+
 # Stop Services at the first
 systemctl disable --now nginx
 systemctl disable --now apache2
@@ -72,12 +78,6 @@ a2dismod proxy
 a2dismod proxy_http
 a2dismod proxy_wstunnel
 a2dissite default-ssl
-
-# [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
-if ! grep -q ${USERNAME} /etc/sudoers;
-then
-    echo ${USERNAME} ALL=NOPASSWD: ALL >> /etc/sudoers
-fi
 
 # [Security] Setup Firewall
 ufw disable

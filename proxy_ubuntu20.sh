@@ -174,7 +174,7 @@ EOF
     CONFIG=/etc/ppp/chap-secrets
     cp -f ${CONFIG} ${CONFIG}.bak
     cat << EOF > ${CONFIG}
-vpn pptpd "${PASS}" *
+vpn pptpd ${PASS} *
 EOF
     
     CONFIG=/usr/lib/sysctl.d/50-default.conf

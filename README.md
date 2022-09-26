@@ -1,5 +1,4 @@
 # Proxy (squid) and VPN (pptp) setup
-### proxy_ubuntu18.sh
 ### proxy_ubuntu20.sh
 
 This is just shell script to setup proxy and vpn on cloud server (I'm using Azure). Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer). Even non restricted site would have better performance by avoiding unnecessary routing. 
@@ -10,7 +9,6 @@ This is just shell script to setup proxy and vpn on cloud server (I'm using Azur
 
 
 # PHP with Code-Server
-### dev_ubuntu18.sh
 ### dev_ubuntu20.sh
 
 This script setups Apache-PHP-MySQL site with Code-Server. This also supports multi-user and expects the following as the result.
@@ -24,7 +22,8 @@ https://[user].your_domain/vscode/ | Code-Server to develop your PHP-MySQL site.
 ## Quick Steps
 1. Create new user and login
     1. sudo adduser [user]
-    2. su [user]
+    2. sudo usermod -G sudo [user]
+    3. su [user]
 2. Configure SSH
     1. ssh-keygen
     2. Register id_rsa.pub to github

@@ -64,7 +64,7 @@ apt-get -y --force-yes upgrade
 
 # Install packages
 apt-get -y --force-yes install wget zip unzip
-apt-get -y --force-yes install certbot python3
+apt-get -y --force-yes install certbot python3 python3-pip python-is-python3
 apt-get -y --force-yes install apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y --force-yes install ufw nginx
 apt-get -y --force-yes autoremove
@@ -91,6 +91,9 @@ ufw allow 1723      # PPTP
 ufw allow 8080      # Squid
 ufw --force enable
 
+# [AWS EB CLI]
+python -m pip install --user virtualenv
+# python ./aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py
 
 # [Code-Server] Install
 if [ ! -e ./code-server_${CODESERVER_VER}_amd64.deb ]; then

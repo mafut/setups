@@ -221,6 +221,6 @@ fi
 
 cat << EOF
 [Usage]
-setup_ubuntu20.sh [password] [allowed host]
+proxy_ubuntu20.sh [password] [allowed host]
 EOF
 exit 0

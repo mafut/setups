@@ -41,7 +41,7 @@ EOF
     narou s convert.no-strip=true
     narou s convert.no-open=true
     narou s convert.no-mobi=true
-    narou s convert.copy_to="/home/kotai/epub"
+    narou s convert.copy_to="/home/${USERNAME}/epub"
 }
 
 if [ $# = 0 ];

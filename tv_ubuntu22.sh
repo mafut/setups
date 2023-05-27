@@ -13,9 +13,6 @@ then
 fi
 
 # Create folders to mount
-if [ ! -d /mnt/setup ]; then
-    mkdir /mnt/setup
-fi
 if [ ! -d /mnt/record ]; then
     mkdir /mnt/records
 fi
@@ -23,42 +20,44 @@ chmod -R 777 /mnt
 apt-get install -y nfs-common
 
 # Mount Host(synology) Shared folders
-mount -t nfs 192.168.86.10:/volume1/setup /mnt/setup/
+umount /mnt/records/
 mount -t nfs 192.168.86.10:/volume1/records /mnt/records/
 
-#Add the following in /etc/fstab
-if ! grep -q setup /etc/fstab;
-then
-    echo 192.168.86.10:/volume1/setup /mnt/setup nfs defaults 0 0 >> /etc/fstab
-fi
+# Add the following in /etc/fstab
 if ! grep -q records /etc/fstab;
 then
     echo 192.168.86.10:/volume1/records /mnt/records nfs defaults 0 0 >> /etc/fstab
 fi
 
-#install
+# Install required packages
 apt-get install -y curl
 curl -sL https://deb.nodesource.com/setup_16.x | sudo bash -
 apt-get install -y unzip git cmake g++ build-essential pcscd libpcsclite-dev libccid pcsc-tools automake autoconf autoconf-doc libtool libtool-doc nodejs npm sqlite3 ffmpeg
 npm install -y pm2 -g
 
-#unzip PX-S1UD_driver_Ver.1.0.1.zip
-cp PX-S1UD_driver_Ver.1.0.1/x64/amd64/isdbt_rio.inp /lib/firmware/
+# Tuner Driver
+unzip -o -d ${HOME}/tv $(dirname $0)/tv/PX-S1UD_driver_Ver.1.0.1.zip
+cp ${HOME}/tv/PX-S1UD_driver_Ver.1.0.1/x64/amd64/isdbt_rio.inp /lib/firmware/
 
-#tar xvzf recdvb-1.3.1.tgz
-cd recdvb-1.3.1
+# Rec App
+tar --overwrite -xvzf $(dirname $0)/tv/recdvb-1.3.1.tgz -C ${HOME}/tv
+cd ${HOME}/tv/recdvb-1.3.1
 ./autogen.sh
 ./configure --enable-b25
 make 
 make install
-cd ..
+cd $(dirname $0)
 
-#git clone https://github.com/stz2012/libarib25.git
-cd libarib25
+# libarib25
+if [ ! -d ${HOME}/libarib25 ]; then
+    git clone https://github.com/stz2012/libarib25.git ${HOME}/libarib25
+fi
+cd ${HOME}/libarib25
+git pull
 cmake .
 make
 make install
-cd ..
+cd $(dirname $0)
 
 # mirakurun
 npm install mirakurun -g --unsafe --production
@@ -73,8 +72,11 @@ EOF
 mirakurun restart
 #curl -X PUT "http://localhost:40772/api/config/channels/scan"
 
-#git clone https://github.com/l3tnun/EPGStation.git
-cd EPGStation
+# EPGStation
+if [ ! -d ${HOME}/EPGStation ]; then
+    git clone https://github.com/l3tnun/EPGStation.git ${HOME}/EPGStation
+fi
+cd ${HOME}/EPGStation
 npm run all-install
 npm run build
 
@@ -90,4 +92,4 @@ pm2 start dist/index.js --name "epgstation" -u ${USERNAME}
 pm2 save -u ${USERNAME}
 pm2 list -u ${USERNAME}
 pm2 restart epgstation -u ${USERNAME}
-cd ..
+cd $(dirname $0)

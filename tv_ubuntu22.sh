@@ -21,12 +21,12 @@ apt-get install -y nfs-common
 
 # Mount Host(synology) Shared folders
 umount /mnt/records/
-mount -t nfs 192.168.86.10:/volume1/records /mnt/records/
+mount -t nfs 192.168.86.100:/volume1/records /mnt/records/
 
 # Add the following in /etc/fstab
 if ! grep -q records /etc/fstab;
 then
-    echo 192.168.86.10:/volume1/records /mnt/records nfs defaults 0 0 >> /etc/fstab
+    echo 192.168.86.100:/volume1/records /mnt/records nfs defaults 0 0 >> /etc/fstab
 fi
 
 # Install required packages
@@ -36,12 +36,20 @@ apt-get install -y unzip git cmake g++ build-essential pcscd libpcsclite-dev lib
 npm install -y pm2 -g
 
 # Tuner Driver
-unzip -o -d ${HOME}/tv $(dirname $0)/tv/PX-S1UD_driver_Ver.1.0.1.zip
-cp ${HOME}/tv/PX-S1UD_driver_Ver.1.0.1/x64/amd64/isdbt_rio.inp /lib/firmware/
+# unzip -o -d ${HOME}/tv $(dirname $0)/tv/PX-S1UD_driver_Ver.1.0.1.zip
+# cp ${HOME}/tv/PX-S1UD_driver_Ver.1.0.1/x64/amd64/isdbt_rio.inp /lib/firmware/
+unzip -o -d ${HOME}/tv $(dirname $0)/tv/ubuntu20.04.2_PX-S1UD_Driver.zip
+cp ${HOME}/tv/ubuntu20.04.2_PX-S1UD_Driver/s270-firmware/isdbt_rio.inp /lib/firmware/
 
 # Rec App
-tar --overwrite -xvzf $(dirname $0)/tv/recdvb-1.3.1.tgz -C ${HOME}/tv
-cd ${HOME}/tv/recdvb-1.3.1
+# tar --overwrite -xvzf $(dirname $0)/tv/recdvb-1.3.1.tgz -C ${HOME}/tv
+if [ ! -d ${HOME}/recdvb-dogeel ]; then
+    git clone https://github.com/dogeel/recdvb.git ${HOME}/recdvb-dogeel
+fi
+if [ ! -d ${HOME}/recdvb-qpe ]; then
+    git clone https://github.com/qpe/recdvb.git ${HOME}/recdvb-qpe
+fi
+cd ${HOME}/recdvb-dogeel
 ./autogen.sh
 ./configure --enable-b25
 make 

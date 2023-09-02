@@ -15,7 +15,6 @@ function init(){
 
 
     # Stop Services at the first
-    systemctl stop pptpd
     systemctl stop squid
     
     # APT update/upgrade
@@ -24,7 +23,6 @@ function init(){
     
     # Install packages
     apt-get -y --force-yes install ufw
-    apt-get -y --force-yes install pptpd
     apt-get -y --force-yes install squid
     apt-get -y --force-yes install apache2-utils
     
@@ -36,7 +34,6 @@ function init(){
     ufw limit 22
     ufw allow 80
     ufw allow 443
-    ufw allow 1723
     ufw allow 8080
 
     CONFIG=/etc/default/ufw
@@ -139,63 +136,6 @@ EOF
     systemctl restart squid
 }
 
-function setup_vpn(){
-    # [vpn] Setup PPTP
-    CONFIG=/etc/pptpd.conf
-    cp -f ${CONFIG} ${CONFIG}.bak
-    cat << EOF > ${CONFIG}
-option /etc/ppp/pptpd-options
-localip 192.168.1.1
-remoteip 192.168.1.100-200
-EOF
-    
-    CONFIG=/etc/ppp/pptpd-options
-    cp -f ${CONFIG} ${CONFIG}.bak
-    cat << EOF > ${CONFIG}
-name pptpd
-refuse-pap
-refuse-chap
-refuse-mschap
-require-mschap-v2
-require-mppe-128
-proxyarp
-lock
-nobsdcomp
-novj
-novjccomp
-nologfd
-
-ms-dns 8.8.8.8
-ms-dns 8.8.4.4
-
-mtu 1400
-EOF
-    
-    CONFIG=/etc/ppp/chap-secrets
-    cp -f ${CONFIG} ${CONFIG}.bak
-    cat << EOF > ${CONFIG}
-vpn pptpd ${PASS} *
-EOF
-    
-    CONFIG=/usr/lib/sysctl.d/50-default.conf
-    cp -f ${CONFIG} ${CONFIG}.bak
-    if ! grep -q 'net.ipv4.ip_forward' ${CONFIG};
-    then
-        cat << EOF >> ${CONFIG}
-net.ipv4.ip_forward = 1
-net.ipv4.conf.all.send_redirects = 0
-net.ipv4.conf.all.accept_redirects = 0
-EOF
-    fi
-    sysctl -p
-    
-    # Add Auto startup and Start service
-    systemctl enable pptpd
-    systemctl start pptpd
-    systemctl restart pptpd
-}
-
-
 if [ $# = 2 ];
 then
     # Initialize variables
@@ -215,7 +155,6 @@ then
 
     init
     setup_proxy $1 $2
-    setup_vpn $1
     exit 0
 fi
 

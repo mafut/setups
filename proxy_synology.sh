@@ -9,7 +9,6 @@ function init(){
     apt-get -y upgrade
     
     # Install packages
-    apt-get -y --force-yes install vim
     apt-get -y --force-yes install squid
     apt-get -y --force-yes install apache2-utils
 }
@@ -116,6 +115,13 @@ then
 fi
 
 cat << EOF
+[Prep]
+1. Create ubuntu docker container
+2. sudo docker exec it [container] bash
+3. apt-get update
+4. apt-get upgrade
+5. apt-get install init systemd git vim
+
 [Usage]
 proxy_synology.sh [password] [allowed host]
 EOF

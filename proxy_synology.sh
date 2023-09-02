@@ -1,15 +1,11 @@
 #!/bin/bash
 
 function init(){
-    # Stop Services at the first
-    systemctl stop squid
-    
     # APT update/upgrade
     apt-get -y update
     apt-get -y upgrade
     
     # Install packages
-    apt-get -y --force-yes install squid
     apt-get -y --force-yes install apache2-utils
 }
 
@@ -86,10 +82,6 @@ acl password proxy_auth REQUIRED
 http_access allow password
 http_access deny all
 EOF
-    
-    # Add Auto startup and Start service
-    systemctl enable squid
-    systemctl restart squid
 }
 
 if [ $# = 2 ];
@@ -116,11 +108,11 @@ fi
 
 cat << EOF
 [Prep]
-1. Create ubuntu docker container
+1. Create "ubuntu/squid" docker container
 2. sudo docker exec it [container] bash
 3. apt-get update
 4. apt-get upgrade
-5. apt-get install init systemd git vim
+5. apt-get install git vim
 
 [Usage]
 proxy_synology.sh [password] [allowed host]

@@ -1,11 +1,11 @@
-# Proxy (squid) and VPN (pptp) setup
+# Proxy (squid) setup
+### proxy_synology.sh
+
+This is just shell script to setup proxy on synology. Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Viode and even Netflix). Even non restricted site would have better performance by avoiding unnecessary routing. 
+
 ### proxy_ubuntu20.sh
 
-This is just shell script to setup proxy and vpn on cloud server (I'm using Azure). Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer). Even non restricted site would have better performance by avoiding unnecessary routing. 
-
-### Notes
-* Watch ondemand TV (except Netflix and hulu. Amazon is not tested yet). TVer and Gyao work.
-* Z-kai online study with better streaming performance.
+This is just shell script to setup proxy on cloud server. Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Video). Even non restricted site would have better performance by avoiding unnecessary routing. 
 
 
 # PHP with Code-Server

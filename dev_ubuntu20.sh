@@ -6,11 +6,13 @@ APACHE_LOG=/var/log/apache2
 APACHE_DOCPATH=$1
 APACHE_PORT=$3
 PHP_VER=7.4
-CODESERVER_VER=4.4.0
+# https://github.com/coder/code-server/releases
+CODESERVER_VER=4.18.0
 CODESERVER_PASS=$2
 CODESERVER_PORT=$4
 CERT_PATH=$5
-MYSQL_REPO=mysql-apt-config_0.8.22-1_all.deb
+# https://dev.mysql.com/downloads/repo/apt/
+MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
 
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ];
@@ -68,6 +70,7 @@ apt-get -y --force-yes install certbot python3 python3-pip python-is-python3
 apt-get -y --force-yes install apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y --force-yes install ufw nginx
 apt-get -y --force-yes autoremove
+python -m pip install --user virtualenv
 a2enmod authz_groupfile
 a2enmod headers
 a2enmod rewrite
@@ -90,10 +93,6 @@ ufw allow 443
 ufw allow 1723      # PPTP
 ufw allow 8080      # Squid
 ufw --force enable
-
-# [AWS EB CLI]
-python -m pip install --user virtualenv
-# python ./aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py
 
 # [Code-Server] Install
 if [ ! -e ./code-server_${CODESERVER_VER}_amd64.deb ]; then

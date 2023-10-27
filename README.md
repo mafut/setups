@@ -1,14 +1,27 @@
-# Proxy (squid) setup
+# Proxy (squid)
+
+Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Viode and even Netflix). Even non-restricted site would have better performance by avoiding unnecessary routing. Both setup script supports one host name that doesn't require password to access. If the host is for your home ip address by DDNS, no password from home.
+
 ### proxy_synology.sh
 
-This is just shell script to setup proxy on synology. Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Viode and even Netflix). Even non restricted site would have better performance by avoiding unnecessary routing. 
+This is just shell script to setup proxy using Docker on synology . 
 
-### proxy_ubuntu20.sh
+### proxy_ubuntu22.sh
 
-This is just shell script to setup proxy on cloud server. Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Video). Even non restricted site would have better performance by avoiding unnecessary routing. 
+This is just shell script to setup proxy on cloud VM server like Azure, AWS or VPS.
 
 
-# PHP with Code-Server
+# TV Recorder with PX-S1UD
+### tv_ubuntu22_synology.sh
+
+This is for ubuntu 22.04 LTS on Synology VM.
+
+### tv_ubuntu22_raspberrypi4.sh
+
+This is for ubuntu 22.04 LTS on Raspberry Pi 4
+
+
+# PHP Development with Code-Server
 ### dev_ubuntu20.sh
 
 This script setups Apache-PHP-MySQL site with Code-Server. This also supports multi-user and expects the following as the result.

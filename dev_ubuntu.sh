@@ -156,7 +156,7 @@ EOF
 # /etc/mysql/conf.d/
 # /etc/mysql/mysql.conf.d/
 CONFIG=/etc/mysql/conf.d/my.cnf
-if [ ! -e ${CONFIG} ]; then
+if [[ -f ${CONFIG} ]]; then
     cp -f ${CONFIG} ${CONFIG}.bak
 fi
 cat << EOF > ${CONFIG}

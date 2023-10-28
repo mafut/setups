@@ -139,25 +139,8 @@ log: debug
 EOF
 
 
-# [MySQL] Install
-if [ ! -e ${MYSQL_REPO} ]; then
-    curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
-    dpkg -i ./${MYSQL_REPO}
-    apt-get -y --force-yes install mysql-server
-fi
-
-# [MySQL] Reset data
-usermod -d /var/lib/mysql/ mysql
-
-chown mysql:mysql /var/lib/mysql
-chown mysql:mysql /var/lib/mysql-files
-chown mysql:mysql /var/log/mysql
-
-chmod 750 /var/lib/mysql
-chmod 750 /var/lib/mysql-files
-chmod 750 /var/log/mysql
-
-# [MySQL] /etc/mysql/conf.d/my.cnf
+# [MySQL] Config /etc/mysql/conf.d/my.cnf
+# default my.cnf loads from the following
 # /etc/mysql/conf.d/
 # /etc/mysql/mysql.conf.d/
 CONFIG=/etc/mysql/conf.d/my.cnf
@@ -220,6 +203,25 @@ default-character-set = utf8mb4
 [mysqldump]
 default-character-set = utf8mb4
 EOF
+
+# [MySQL] Install
+if [ ! -e ${MYSQL_REPO} ]; then
+    curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
+    dpkg -i ./${MYSQL_REPO}
+    apt-get -y --force-yes install mysql-server
+fi
+
+# [MySQL] Data Permission
+chown mysql:mysql /var/lib/mysql
+chown mysql:mysql /var/lib/mysql-files
+chown mysql:mysql /var/log/mysql
+
+chmod 750 /var/lib/mysql
+chmod 750 /var/lib/mysql-files
+chmod 750 /var/log/mysql
+
+usermod -d /var/lib/mysql/ mysql
+mysqld --initialize-insecure --user=mysql
 
 # [MySQL] Resolve warning at start
 dpkg-divert --local --rename --add /sbin/initctl
@@ -383,9 +385,7 @@ cat << EOF
   flush privileges;
 4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
 5. sudo systemctl restart mysql
-6. sudo mysqld --initialize-insecure --user=mysql
 
 [Additional for Production]
-- sudo mysqld --initialize --user=mysql
 - sudo mysql_secure_installation
 EOF

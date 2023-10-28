@@ -262,6 +262,7 @@ find ${APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 
 # [Apache] User to Apache
+usermod -g ${APACHE_USER} ${USERNAME}
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/logs/
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/cache/
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/setting/

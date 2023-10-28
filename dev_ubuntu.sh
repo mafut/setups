@@ -5,14 +5,27 @@ APACHE_USER=www-data
 APACHE_LOG=/var/log/apache2
 APACHE_DOCPATH=$1
 APACHE_PORT=$3
-PHP_VER=7.4
+
 # https://github.com/coder/code-server/releases
 CODESERVER_VER=4.18.0
 CODESERVER_PASS=$2
 CODESERVER_PORT=$4
 CERT_PATH=$5
+
 # https://dev.mysql.com/downloads/repo/apt/
 MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
+
+if [[ -f /etc/os-release ]]; then
+    source /usr/lib/os-release
+    case $VERSION_ID in
+        20.04 ) PHP_VER=7.4 ;;
+        22.04 ) PHP_VER=8.1 ;;
+        * ) exit 1 ;;
+    esac
+else
+    echo "/etc/os-release is not exist."
+    exit 1
+fi
 
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ];
@@ -90,7 +103,6 @@ ufw allow 22
 ufw limit 22
 ufw allow 80
 ufw allow 443
-ufw allow 1723      # PPTP
 ufw allow 8080      # Squid
 ufw --force enable
 

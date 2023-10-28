@@ -369,11 +369,12 @@ EOF
 rm -f /etc/nginx/sites-enabled/${USERNAME}
 ln -s /etc/nginx/sites-available/${USERNAME} /etc/nginx/sites-enabled/${USERNAME}
 
+# Add auto-start user instance
+loginctl enable-linger ${USERNAME}
+
 # Add auto-start and start services
 systemctl enable --now nginx
 systemctl enable --now code-server@${USERNAME}
-loginctl enable-linger ${USERNAME}
-
 systemctl enable --now apache2
 systemctl enable --now mysql
 

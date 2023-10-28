@@ -146,25 +146,72 @@ if [ ! -e ${MYSQL_REPO} ]; then
     apt-get -y --force-yes install mysql-server
 fi
 
-# [MySQL] /etc/mysql/my.cnf
-CONFIG=/etc/mysql/mysql.conf.d/mysqld.cnf
-cp -f ${CONFIG} ${CONFIG}.bak
+# [MySQL] Reset data
+usermod -d /var/lib/mysql/ mysql
+
+chown mysql:mysql /var/lib/mysql
+chown mysql:mysql /var/lib/mysql-files
+chown mysql:mysql /var/log/mysql
+
+chmod 750 /var/lib/mysql
+chmod 750 /var/lib/mysql-files
+chmod 750 /var/log/mysql
+
+# [MySQL] /etc/mysql/conf.d/my.cnf
+# /etc/mysql/conf.d/
+# /etc/mysql/mysql.conf.d/
+CONFIG=/etc/mysql/conf.d/my.cnf
+if [ ! -e ${CONFIG} ]; then
+    cp -f ${CONFIG} ${CONFIG}.bak
+fi
 cat << EOF > ${CONFIG}
 [mysqld]
+# When reset root password
+# skip-grant-tables
+
+character-set-server = utf8mb4
+# collation-server = utf8mb4_general_ci
+collation_server = utf8mb4_ja_0900_as_cs
+
+# Timezone
+default-time-zone = SYSTEM
+log_timestamps = SYSTEM
+
+basedir   = /var/lib/mysql
+datadir   = /var/lib/mysql-files
 pid-file  = /var/run/mysqld/mysqld.pid
 socket    = /var/run/mysqld/mysqld.sock
-datadir   = /var/lib/mysql
 log-error = /var/log/mysql/error.log
+lc_messages_dir = /usr/share/mysql-8.0/english
+
+performance-schema = 0
+local-infile = 0
+mysqlx = 0
 bind-address = 127.0.0.1
 symbolic-links = 0
 explicit_defaults_for_timestamp = 0
-sql-mode = "TRADITIONAL,ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"
-character-set-server = utf8mb4
-collation-server = utf8mb4_general_ci
 default-storage-engine=innodb
 default_password_lifetime = 0
-innodb_file_per_table = 1
 log_bin_trust_function_creators = 1
+sql-mode = "TRADITIONAL,ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"
+
+innodb_dedicated_server = 1
+innodb_log_buffer_size = 64M
+innodb_read_io_threads = 12
+innodb_write_io_threads = 12
+innodb_stats_on_metadata = 0
+innodb_file_per_table = 1
+
+table_definition_cache = 65536
+table_open_cache = 65536
+
+tmp_table_size = 128M
+max_heap_table_size = 128M
+
+read_buffer_size = 256K
+join_buffer_size = 512K
+sort_buffer_size = 512K
+read_rnd_buffer_size = 512K
 
 [mysql]
 auto-rehash
@@ -180,7 +227,6 @@ if [ ! -e /sbin/initctl ];
 then
     ln -s /bin/true /sbin/initctl
 fi
-usermod -d /var/lib/mysql/ mysql
 
 
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
@@ -311,11 +357,11 @@ ln -s /etc/nginx/sites-available/${USERNAME} /etc/nginx/sites-enabled/${USERNAME
 
 # Add auto-start and start services
 systemctl enable --now nginx
-systemctl enable --now apache2
-systemctl enable --now mysql
 systemctl enable --now code-server@${USERNAME}
 loginctl enable-linger ${USERNAME}
 
+systemctl enable --now apache2
+systemctl enable --now mysql
 
 # [Cron] Schedule to pull
 CONFIG=${APACHE_DOCPATH}/setting/crontab.bak
@@ -324,3 +370,22 @@ cat << EOF > ${CONFIG}
 */5 * * * * /bin/sh -c 'cd ${APACHE_DOCPATH} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 EOF
 crontab -u ${USERNAME} ${APACHE_DOCPATH}/setting/crontab.bak
+
+# [MySQL] Manual setup
+cat << EOF
+[Manual setup for MySQL]
+1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
+2. sudo systemctl restart mysql
+3. Reset
+  use mysql;
+  update user set authentication_string="" where User='root';
+  update user set plugin="mysql_native_password" where User='root';
+  flush privileges;
+4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
+5. sudo systemctl restart mysql
+6. sudo mysqld --initialize-insecure --user=mysql
+
+[Additional for Production]
+- sudo mysqld --initialize --user=mysql
+- sudo mysql_secure_installation
+EOF

@@ -10,12 +10,14 @@ APACHE_PORT=$3
 CODESERVER_VER=4.18.0
 CODESERVER_PASS=$2
 CODESERVER_PORT=$4
+
 CERT_PATH=$5
+NGINX_DEFAULT=$6
 
 # https://dev.mysql.com/downloads/repo/apt/
 MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
 
-if [[ -f /etc/os-release ]]; then
+if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
     case $VERSION_ID in
         20.04 ) PHP_VER=7.4 ;;
@@ -49,9 +51,14 @@ then
     CERT_PATH=$(cd $(dirname $0)/cert;pwd)
 fi
 
+if [ -z "${NGINX_DEFAULT}" ];
+then
+    NGINX_DEFAULT=false
+fi
+
 if [ -z "${APACHE_DOCPATH}" ] && [ -z "${CODESERVER_PASS}" ];
 then
-    echo "Usage: this_script.sh [Apache Doc Path] [Code-Server Password] [Apache Port=8081] [Code-Server Port=8082] [Cert Path=setupscript/cert]"
+    echo "Usage: this_script.sh [Apache Doc Path] [Code-Server Password] [Apache Port=8081] [Code-Server Port=8082] [Cert Path=setupscript/cert] [nginx default=false]"
     exit 1
 fi
 
@@ -156,7 +163,7 @@ EOF
 # /etc/mysql/conf.d/
 # /etc/mysql/mysql.conf.d/
 CONFIG=/etc/mysql/conf.d/my.cnf
-if [[ -f ${CONFIG} ]]; then
+if [ -f ${CONFIG} ]; then
     cp -f ${CONFIG} ${CONFIG}.bak
 fi
 cat << EOF > ${CONFIG}
@@ -343,10 +350,17 @@ sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG}.bak 
 # [Nginx] Configure https
 rm -f /etc/nginx/sites-enabled/default
 
+# [] is not needed in if. Format is 'if "${boolean}"''
+if "${NGINX_DEFAULT}"; then
+    NGINX_LISTEN='listen 443 ssl default_server;'
+else
+    NGINX_LISTEN='listen 443 ssl;'
+fi
+
 CONFIG=/etc/nginx/sites-available/${USERNAME}
 cat << EOF > ${CONFIG}
 server {
-    listen 443 ssl;
+    ${NGINX_LISTEN}
     server_name ${USERNAME}.*;
 
     ssl_certificate ${CERT_PATH}/fullchain.pem;

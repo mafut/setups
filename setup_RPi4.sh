@@ -9,22 +9,23 @@ if [ -z "${WIFIPOINT}" ] || [ -z "${WIFIPASS}" ]; then
 fi
 
 # Add ubuntu to sudoers
-# If doesn't work,
-# Run "sudo visudo" and Add "ubuntu ALL=NOPASSWD:ALL"
-# Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X
-if ! grep -q ${USERNAME} /etc/sudoers; then
-    echo ${USERNAME} ALL=NOPASSWD: ALL >>/etc/sudoers
-fi
+echo Add to sudoers
+echo 1. Run "sudo visudo"
+echo 2. Add "ubuntu ALL=NOPASSWD:ALL"
+echo 3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X
 
 # apt-get update/upgrade
+echo apt-get update/upgrade
 apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
 
-# Remove swap
+# Remove Swap
+echo Remove Swap
 apt-get autoremove -y dphys-swapfile
 swapoff --all
 
 # RAM Disk
+echo Configure RAM Disk
 if ! grep -q tmpfs /etc/fstab; then
     CONFIG=/etc/fstab
     cat <<EOF >>${CONFIG}
@@ -35,9 +36,11 @@ EOF
 fi
 
 # https://www.waveshare.com/wiki/4.3inch_DSI_LCD
+echo Install xset
 apt-get install -y --force-yes x11-xserver-utils
 
 # screen saver before login
+echo Configure cmatrix
 apt-get install -y --force-yes cmatrix
 
 CONFIG=/usr/local/bin/loginMatrix.sh
@@ -58,12 +61,14 @@ StandardOutput=tty
 EOF
 
 # Fix ssh server
+echo Fix ssh host
 if [ ! -f /etc/ssh/ssh_host_key ] && [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
     echo Add /etc/ssh/ssh_host_key and /etc/ssh/ssh_host_dsa_key
     ssh-keygen -A
 fi
 
-# Connect Wifi
+# Add Wifi Access Point
+echo Configure WiFi Access Point
 CONFIG=/etc/netplan/50-cloud-init.yaml
 cat <<EOF >${CONFIG}
 network:

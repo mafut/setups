@@ -56,7 +56,7 @@ then
     NGINX_DEFAULT=false
 fi
 
-if [ -z "${APACHE_DOCPATH}" ] && [ -z "${CODESERVER_PASS}" ];
+if [ -z "${APACHE_DOCPATH}" ] || [ -z "${CODESERVER_PASS}" ];
 then
     echo "Usage: this_script.sh [Apache Doc Path] [Code-Server Password] [Apache Port=8081] [Code-Server Port=8082] [Cert Path=setupscript/cert] [nginx default=false]"
     exit 1

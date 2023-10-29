@@ -108,9 +108,11 @@ fi
 
 cat << EOF
 [Usage]
-1. Create "ubuntu/squid" docker container
+1. Create "ubuntu/squid" docker container (host network instead of bridge)
+2. SSH to synology
 2. sudo docker exec it [container] bash
 3. sudo apt-get install git
-4. sodo proxy_synology.sh [password] [allowed host]
+4. git clone https://github.com/mafut/setupscripts.git
+5. sodo proxy/setup_synology.sh [password] [allowed host]
 EOF
 exit 0

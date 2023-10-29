@@ -28,28 +28,32 @@ This script setup Apache-PHP-MySQL site with Code-Server. This also supports mul
 
 Url | What you can
 -|-
-http://[user].your_domain/ | Apache default on HTTP. This is used for certbot as well.
-https://[user].your_domain/ | Your PHP-MySQL site on HTTPS.
-https://[user].your_domain/vscode/ | Code-Server to develop your PHP-MySQL site.
+http://[user].[your_domain]/ | Apache default on HTTP. This is used for certbot as well.
+https://[user].[your_domain]/ | Your PHP-MySQL site on HTTPS.
+https://[user].[your_domain]/vscode/ | Code-Server to develop your PHP-MySQL site.
+
+Request host doesn't match with configured server_name of /etc/nginx/sites-enabled/, first configuration will be used.
+If you don't like, please run  "ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default" to reject.
+If you'd like to use specific config, add "default_server" in listen directive like "listen 443 ssl default_server".
 
 ## Quick Steps
 1. Create new user and login
     1. sudo adduser [user]
     2. sudo usermod -G sudo [user]
     3. su [user]
-2. Configure SSH
+2. (Option) Configure SSH
     1. ssh-keygen
     2. Register id_rsa.pub to github
     3. (Option) Add yubikey's public cert to authorized_keys
 3. Get the latest source
-    * git clone git@github.com:mafut/setupscripts.git
+    * git clone https://github.com/mafut/setupscripts.git
 4. Setup a site with self-signed cert
-    * sudo ./dev_ubuntu.sh [your_site_folder] password 8081 8082
+    * sudo ./dev_ubuntu.sh [your_site_folder] [password] [internal_apache_port] [internal_code-server_port]
+    * e.g. sudo ./dev_ubuntu.sh /home/user/www/ password 8081 8082
 5. Issue a certificate
-    * sudo certbot certonly --agree-tos --webroot -w /var/www/html/ -d [user].your_domain
+    * sudo certbot certonly --agree-tos --webroot -w /var/www/html/ -d [user].[your_domain]
 6. Setup with real cert
-    * sudo ./dev_ubuntu.sh [your_site_folder] password 8081 8082 /etc/letsencrypt/live/[user].[your_domain]
-
+    * sudo ./dev_ubuntu.sh [your_site_folder] [password] [internal_apache_port] [internal_code-server_port] /etc/letsencrypt/live/[user].[your_domain]
 
 # Raspberry Pi 4
 

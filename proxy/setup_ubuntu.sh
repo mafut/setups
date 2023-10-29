@@ -160,6 +160,6 @@ fi
 
 cat << EOF
 [Usage]
-sudo proxy_ubuntu.sh [password] [allowed host]
+sudo proxy/setup_ubuntu.sh [password] [allowed host]
 EOF
 exit 0

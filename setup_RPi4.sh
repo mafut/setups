@@ -10,9 +10,9 @@ fi
 
 # Add ubuntu to sudoers
 echo Add to sudoers
-echo 1. Run "sudo visudo"
-echo 2. Add "ubuntu ALL=NOPASSWD:ALL"
-echo 3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X
+echo "1. Run \"sudo visudo\""
+echo "2. Add \"ubuntu ALL=NOPASSWD:ALL\""
+echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
 
 # apt-get update/upgrade
 echo apt-get update/upgrade

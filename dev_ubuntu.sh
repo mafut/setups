@@ -20,9 +20,9 @@ MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
 if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
     case $VERSION_ID in
-        20.04 ) PHP_VER=7.4 ;;
-        22.04 ) PHP_VER=8.1 ;;
-        * ) exit 1 ;;
+    20.04) PHP_VER=7.4 ;;
+    22.04) PHP_VER=8.1 ;;
+    *) exit 1 ;;
     esac
 else
     echo "/etc/os-release is not exist."
@@ -30,34 +30,31 @@ else
 fi
 
 USERNAME=$SUDO_USER
-if [ -z "${USERNAME}" ];
-then
+if [ -z "${USERNAME}" ]; then
     echo "Can't get User Name"
     exit 1
 fi
 
-if [ -z "${APACHE_PORT}" ];
-then
+if [ -z "${APACHE_PORT}" ]; then
     APACHE_PORT=8081
 fi
 
-if [ -z "${CODESERVER_PORT}" ];
-then
+if [ -z "${CODESERVER_PORT}" ]; then
     CODESERVER_PORT=8082
 fi
 
-if [ -z "${CERT_PATH}" ];
-then
-    CERT_PATH=$(cd $(dirname $0)/cert;pwd)
+if [ -z "${CERT_PATH}" ]; then
+    CERT_PATH=$(
+        cd $(dirname $0)/cert
+        pwd
+    )
 fi
 
-if [ -z "${NGINX_DEFAULT}" ];
-then
+if [ -z "${NGINX_DEFAULT}" ]; then
     NGINX_DEFAULT=false
 fi
 
-if [ -z "${APACHE_DOCPATH}" ] || [ -z "${CODESERVER_PASS}" ];
-then
+if [ -z "${APACHE_DOCPATH}" ] || [ -z "${CODESERVER_PASS}" ]; then
     echo "Usage: this_script.sh [Apache Doc Path] [Code-Server Password] [Apache Port=8081] [Code-Server Port=8082] [Cert Path=setupscript/cert] [nginx default=false]"
     exit 1
 fi
@@ -67,9 +64,8 @@ APACHE_DOCPATH=${APACHE_DOCPATH%/}
 CERT_PATH=${CERT_PATH%/}
 
 # [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
-if ! grep -q ${USERNAME} /etc/sudoers;
-then
-    echo ${USERNAME} ALL=NOPASSWD: ALL >> /etc/sudoers
+if ! grep -q ${USERNAME} /etc/sudoers; then
+    echo ${USERNAME} ALL=NOPASSWD: ALL >>/etc/sudoers
 fi
 
 # Stop Services at the first
@@ -110,7 +106,7 @@ ufw allow 22
 ufw limit 22
 ufw allow 80
 ufw allow 443
-ufw allow 8080      # Squid
+ufw allow 8080 # Squid
 ufw --force enable
 
 # [Code-Server] Install
@@ -128,7 +124,7 @@ find /home/${USERNAME}/.local/share/code-server -type f -exec chmod 644 {} \;
 
 # [Code-Server] Config
 CONFIG=/etc/systemd/system/code-server.service
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 [Unit]
 Description=code-server
 After=apache2.service
@@ -148,7 +144,7 @@ WantedBy=multi-user.target
 EOF
 
 CONFIG=/home/${USERNAME}/.config/code-server/config.yaml
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 bind-addr: 127.0.0.1:${CODESERVER_PORT}
 auth: password
 password: ${CODESERVER_PASS}
@@ -156,7 +152,6 @@ cert: false
 user-data-dir: /home/${USERNAME}/.local/share/code-server
 log: debug
 EOF
-
 
 # [MySQL] Config /etc/mysql/conf.d/my.cnf
 # default my.cnf loads from the following
@@ -166,7 +161,7 @@ CONFIG=/etc/mysql/conf.d/my.cnf
 if [ -f ${CONFIG} ]; then
     cp -f ${CONFIG} ${CONFIG}.bak
 fi
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 [mysqld]
 # When reset root password
 # skip-grant-tables
@@ -244,11 +239,9 @@ mysqld --initialize-insecure --user=mysql
 
 # [MySQL] Resolve warning at start
 dpkg-divert --local --rename --add /sbin/initctl
-if [ ! -e /sbin/initctl ];
-then
+if [ ! -e /sbin/initctl ]; then
     ln -s /bin/true /sbin/initctl
 fi
-
 
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
 chown -R ${USERNAME} ${APACHE_DOCPATH}/
@@ -285,7 +278,7 @@ find ${APACHE_DOCPATH}/setup/ -name \*.sh -exec chmod 755 {} \;
 
 # [Apache] Configure http
 CONFIG=/etc/apache2/sites-available/000-default.conf
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 AcceptFilter http none
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -307,7 +300,7 @@ rm -f /etc/apache2/sites-enabled/000-default.conf
 ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
 CONFIG=/etc/apache2/sites-available/${USERNAME}.conf
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 AcceptFilter http none
 Listen ${APACHE_PORT}
 <VirtualHost *:${APACHE_PORT}>
@@ -336,7 +329,6 @@ EOF
 rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
 ln -s /etc/apache2/sites-available/${USERNAME}.conf /etc/apache2/sites-enabled/${USERNAME}.conf
 
-
 # [Php] Set display_errors, display_startup_errors as ON
 CONFIG=/etc/php/${PHP_VER}/apache2/php.ini
 cp -f ${CONFIG} ${CONFIG}.bak
@@ -345,7 +337,6 @@ cp -f ${CONFIG} ${CONFIG}.bak
 sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG}.bak > ${CONFIG}"
 cp -f ${CONFIG} ${CONFIG}.bak
 sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG}.bak > ${CONFIG}"
-
 
 # [Nginx] Configure https
 rm -f /etc/nginx/sites-enabled/default
@@ -358,7 +349,7 @@ else
 fi
 
 CONFIG=/etc/nginx/sites-available/${USERNAME}
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 server {
     ${NGINX_LISTEN}
     server_name ${USERNAME}.*;
@@ -395,14 +386,14 @@ systemctl enable --now mysql
 
 # [Cron] Schedule to pull
 CONFIG=${APACHE_DOCPATH}/setting/crontab.bak
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 # */5 * * * * /bin/sh -c 'cd ${APACHE_DOCPATH} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 */5 * * * * /bin/sh -c 'cd ${APACHE_DOCPATH} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 EOF
 crontab -u ${USERNAME} ${APACHE_DOCPATH}/setting/crontab.bak
 
 # [MySQL] Manual setup
-cat << EOF
+cat <<EOF
 [Manual setup for MySQL]
 1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
 2. sudo systemctl restart mysql

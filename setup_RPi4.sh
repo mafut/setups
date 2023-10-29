@@ -3,19 +3,17 @@
 WIFIPOINT=$1
 WIFIPASS=$2
 
-if [ -z "${WIFIPOINT}" ] || [ -z "${WIFIPASS}" ];
-then
+if [ -z "${WIFIPOINT}" ] || [ -z "${WIFIPASS}" ]; then
     echo "Usage: this_script.sh [wifi point] [wifi pass]"
     exit 1
 fi
 
 # Add ubuntu to sudoers
-# If doesn't work, 
+# If doesn't work,
 # Run "sudo visudo" and Add "ubuntu ALL=NOPASSWD:ALL"
 # Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X
-if ! grep -q ${USERNAME} /etc/sudoers;
-then
-    echo ${USERNAME} ALL=NOPASSWD: ALL >> /etc/sudoers
+if ! grep -q ${USERNAME} /etc/sudoers; then
+    echo ${USERNAME} ALL=NOPASSWD: ALL >>/etc/sudoers
 fi
 
 # apt-get update/upgrade
@@ -24,12 +22,12 @@ apt-get -y --force-yes upgrade
 
 # Remove swap
 apt-get autoremove -y dphys-swapfile
+swapoff --all
 
 # RAM Disk
-if ! grep -q tmpfs /etc/fstab;
-then
+if ! grep -q tmpfs /etc/fstab; then
     CONFIG=/etc/fstab
-    cat << EOF >> ${CONFIG}
+    cat <<EOF >>${CONFIG}
 tmpfs   /tmp        tmpfs   defaults,size=256m,noatime,mode=1777    0   0
 tmpfs   /var/tmp    tmpfs   defaults,size=16m,noatime,mode=1777     0   0
 tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0755     0   0
@@ -44,7 +42,7 @@ fi
 
 # Connect Wifi
 CONFIG=/etc/netplan/50-cloud-init.yaml
-cat << EOF > ${CONFIG}
+cat <<EOF >${CONFIG}
 network:
     ethernets:
         eth0:
@@ -60,3 +58,5 @@ network:
                     password: "${WIFIPASS}"
 EOF
 netplan apply
+
+reboot now

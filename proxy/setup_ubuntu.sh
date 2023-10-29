@@ -13,7 +13,6 @@ function init(){
         echo ${USERNAME} ALL=NOPASSWD: ALL >> /etc/sudoers
     fi
 
-
     # Stop Services at the first
     systemctl stop squid
     
@@ -58,7 +57,7 @@ EOF
     ufw --force enable
 }
 
-function setup_proxy(){     
+function setup(){     
     # Create .htpasswd
     htpasswd -b -c /etc/squid/.htpasswd proxy ${PASS}
     
@@ -155,12 +154,12 @@ then
     fi
 
     init
-    setup_proxy $1 $2
+    setup $1 $2
     exit 0
 fi
 
 cat << EOF
 [Usage]
-proxy_ubuntu20.sh [password] [allowed host]
+sudo proxy_ubuntu.sh [password] [allowed host]
 EOF
 exit 0

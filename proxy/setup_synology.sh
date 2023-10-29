@@ -6,10 +6,10 @@ function init(){
     apt-get -y upgrade
     
     # Install packages
-    apt-get -y --force-yes install apache2-utils
+    apt-get -y --force-yes install vim apache2-utils
 }
 
-function setup_proxy(){     
+function setup(){     
     # Create .htpasswd
     htpasswd -b -c /etc/squid/.htpasswd proxy ${PASS}
     
@@ -102,19 +102,15 @@ then
     fi
 
     init
-    setup_proxy $1 $2
+    setup $1 $2
     exit 0
 fi
 
 cat << EOF
-[Prep]
+[Usage]
 1. Create "ubuntu/squid" docker container
 2. sudo docker exec it [container] bash
-3. apt-get update
-4. apt-get upgrade
-5. apt-get install git vim
-
-[Usage]
-proxy_synology.sh [password] [allowed host]
+3. sudo apt-get install git
+4. sodo proxy_synology.sh [password] [allowed host]
 EOF
 exit 0

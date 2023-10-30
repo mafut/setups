@@ -70,7 +70,9 @@ fi
 # Add Wifi Access Point
 echo Configure WiFi Access Point
 CONFIG=/etc/netplan/50-cloud-init.yaml
-cat <<EOF >${CONFIG}
+
+if ! grep -q ${WIFIPOINT} ${CONFIG}; then
+    cat <<EOF >${CONFIG}
 network:
     ethernets:
         eth0:
@@ -85,6 +87,5 @@ network:
                 ${WIFIPOINT}:
                     password: "${WIFIPASS}"
 EOF
-netplan apply
-
-reboot now
+    netplan apply
+fi

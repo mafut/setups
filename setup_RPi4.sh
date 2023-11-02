@@ -1,10 +1,22 @@
 #!/bin/bash
 
+SCRIPT_PATH=$(
+    cd $(dirname $0)
+    pwd
+)
+
 WIFIPOINT=$1
 WIFIPASS=$2
 
 if [ -z "${WIFIPOINT}" ] || [ -z "${WIFIPASS}" ]; then
     echo "Usage: this_script.sh [wifi point] [wifi pass]"
+    exit 1
+fi
+
+# Check sudo or not
+USERNAME=$SUDO_USER
+if [ -z "${USERNAME}" ]; then
+    echo "Can't get User Name"
     exit 1
 fi
 
@@ -51,16 +63,11 @@ NODE_MAJOR=16
 apt-get update
 apt-get install npm nodejs -y
 
-# Resource monitor blessed-contrib https://github.com/yaronn/blessed-contrib
-# git clone https://github.com/yaronn/blessed-contrib.git
-# npm install
-# node ./examples/dashboard.js
-
 # Resource monitor gtop https://github.com/aksakalli/gtop
-git clone https://github.com/aksakalli/gtop.git
-cd gtop
+git clone https://github.com/aksakalli/gtop.git /home/${USERNAME}/gtop
+cd /home/${USERNAME}/gtop
 npm install gtop -g
-cd ..
+cd ${SCRIPT_PATH}
 
 # Screensaver
 echo Configure cmatrix

@@ -43,12 +43,26 @@ fi
 echo Install xset
 apt-get install -y --force-yes x11-xserver-utils
 
-# Resource monitor gtop https://github.com/aksakalli/gtop
-echo configure gtop
-apt-get install -y --force-yes npm
-git clone https://github.com/aksakalli/gtop.git
+# npm/nodejs
+apt-get install -y ca-certificates curl gnupg
+mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+NODE_MAJOR=16
+apt-get update
+apt-get install npm nodejs -y
 
-# screen saver before login
+# Resource monitor blessed-contrib https://github.com/yaronn/blessed-contrib
+# git clone https://github.com/yaronn/blessed-contrib.git
+# npm install
+# node ./examples/dashboard.js
+
+# Resource monitor gtop https://github.com/aksakalli/gtop
+git clone https://github.com/aksakalli/gtop.git
+cd gtop
+npm install gtop -g
+cd ..
+
+# Screensaver
 echo Configure cmatrix
 apt-get install -y --force-yes cmatrix
 
@@ -56,6 +70,7 @@ echo Configure termsaver
 apt-get install python3-pip build-essential
 pip install termsaver
 
+# Configure to run screensaver before login as info hub
 CONFIG=/usr/local/bin/loginScreensaver.sh
 cat <<EOF >${CONFIG}
 #!/bin/bash

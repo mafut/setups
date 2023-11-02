@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 WIFIPOINT=$1
 WIFIPASS=$2
 
@@ -19,6 +18,7 @@ echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
 echo apt-get update/upgrade
 apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
+apt-get -y --focrce-yes purge needrestart
 
 # set time zone
 timedatectl set-timezone America/Los_Angeles

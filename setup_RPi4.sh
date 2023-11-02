@@ -20,14 +20,15 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-# Add ubuntu to sudoers
-echo Add to sudoers
-echo "1. Run \"sudo visudo\""
-echo "2. Add \"ubuntu ALL=NOPASSWD:ALL\""
-echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
+# [Manual] Add ubuntu to sudoers
+if ! grep -q ${USERNAME} /etc/sudoers; then
+    echo Add to sudoers manually
+    echo "1. Run \"sudo visudo\""
+    echo "2. Add \"ubuntu ALL=NOPASSWD:ALL\""
+    echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
+fi
 
 # apt-get update/upgrade
-echo apt-get update/upgrade
 apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
 apt-get -y --focrce-yes purge needrestart
@@ -36,12 +37,10 @@ apt-get -y --focrce-yes purge needrestart
 timedatectl set-timezone America/Los_Angeles
 
 # Remove Swap
-echo Remove Swap
 apt-get autoremove -y dphys-swapfile
 swapoff --all
 
 # RAM Disk
-echo Configure RAM Disk
 if ! grep -q tmpfs /etc/fstab; then
     CONFIG=/etc/fstab
     cat <<EOF >>${CONFIG}
@@ -51,8 +50,7 @@ tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0755     0   0
 EOF
 fi
 
-# https://www.waveshare.com/wiki/4.3inch_DSI_LCD
-echo Install xset
+# xset https://www.waveshare.com/wiki/4.3inch_DSI_LCD
 apt-get install -y --force-yes x11-xserver-utils
 
 # npm/nodejs
@@ -76,11 +74,10 @@ cd /home/${USERNAME}/gtop
 npm install gtop -g
 cd ${SCRIPT_PATH}
 
-# Screensaver
-echo Configure cmatrix
+# Screensaver: cmatrix
 apt-get install -y --force-yes cmatrix
 
-echo Configure termsaver
+# Screensaver: termsaver
 apt-get install python3-pip build-essential
 pip install termsaver
 
@@ -104,17 +101,15 @@ StandardOutput=tty
 EOF
 
 # Fix ssh server
-echo Fix ssh host
 if [ ! -f /etc/ssh/ssh_host_key ] && [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
     echo Add /etc/ssh/ssh_host_key and /etc/ssh/ssh_host_dsa_key
     ssh-keygen -A
 fi
 
 # Add Wifi Access Point
-echo Configure WiFi Access Point
 CONFIG=/etc/netplan/50-cloud-init.yaml
-
 if ! grep -q ${WIFIPOINT} ${CONFIG}; then
+    echo Configure WiFi Access Point
     cat <<EOF >${CONFIG}
 network:
     ethernets:

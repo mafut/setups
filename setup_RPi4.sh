@@ -56,12 +56,19 @@ echo Install xset
 apt-get install -y --force-yes x11-xserver-utils
 
 # npm/nodejs
-apt-get install -y ca-certificates curl gnupg
-mkdir -p /etc/apt/keyrings
-curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 NODE_MAJOR=16
+apt-get install -y ca-certificates curl gnupg
+if [ ! -f /etc/apt/keyrings/nodesource.gpg ]; then
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+fi
 apt-get update
 apt-get install npm nodejs -y
+
+# Resource monitor blessed-contrib https://github.com/yaronn/blessed-contrib
+# git clone https://github.com/yaronn/blessed-contrib.git
+# npm install
+# node ./examples/dashboard.js
 
 # Resource monitor gtop https://github.com/aksakalli/gtop
 git clone https://github.com/aksakalli/gtop.git /home/${USERNAME}/gtop

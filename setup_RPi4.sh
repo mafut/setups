@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 WIFIPOINT=$1
 WIFIPASS=$2
 
@@ -18,6 +19,9 @@ echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
 echo apt-get update/upgrade
 apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
+
+# set time zone
+timedatectl set-timezone America/Los_Angeles
 
 # Remove Swap
 echo Remove Swap
@@ -43,19 +47,24 @@ apt-get install -y --force-yes x11-xserver-utils
 echo Configure cmatrix
 apt-get install -y --force-yes cmatrix
 
-CONFIG=/usr/local/bin/loginMatrix.sh
+echo Configure termsaver
+apt-get install python3-pip build-essential
+pip install termsaver
+
+CONFIG=/usr/local/bin/loginScreensaver.sh
 cat <<EOF >${CONFIG}
 #!/bin/bash
-/usr/bin/cmatrix -abs
+# /usr/bin/cmatrix -abs
+termsaver clock
 exec /bin/login
 EOF
-chmod 744 /usr/local/bin/loginMatrix.sh
+chmod 744 /usr/local/bin/loginScreensaver.sh
 
 CONFIG=/etc/systemd/system/getty@tty1.service.d/override.conf
 cat <<EOF >${CONFIG}
 [Service]
 ExecStart=
-ExecStart=-/usr/local/bin/loginMatrix.sh
+ExecStart=-/usr/local/bin/loginScreensaver.sh
 StandardInput=tty
 StandardOutput=tty
 EOF

@@ -20,11 +20,11 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-# [Manual] Add ubuntu to sudoers
+# [Manual] Add user to sudoers
 if ! grep -q ${USERNAME} /etc/sudoers; then
     echo Add to sudoers manually
     echo "1. Run \"sudo visudo\""
-    echo "2. Add \"ubuntu ALL=NOPASSWD:ALL\""
+    echo "2. Add \"${USERNAME} ALL=(ALL) NOPASSWD:ALL\""
     echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
 fi
 

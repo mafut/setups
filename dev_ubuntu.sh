@@ -121,9 +121,9 @@ ufw allow 8080 # Squid
 ufw --force enable
 
 # [Code-Server] Install
-if [ ! -e ./code-server_${CODESERVER_VER}_amd64.deb ]; then
+if [ ! -e ./code-server_${CODESERVER_VER}_${OSARCH}.deb ]; then
     curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_${OSARCH}.deb
-    dpkg -i ./code-server_${CODESERVER_VER}_amd64.deb
+    dpkg -i ./code-server_${CODESERVER_VER}_${OSARCH}.deb
 fi
 
 # [Code-Server] Reset Permission

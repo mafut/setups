@@ -82,14 +82,14 @@ systemctl disable --now code-server@${USERNAME}
 
 # apt-get update/upgrade
 # add-apt-repository ppa:ondrej/apache2 -y
-apt-get -y --force-yes update
-apt-get -y --force-yes upgrade
+apt-get -y --allow update
+apt-get -y --allow upgrade
 
 # Install packages
-apt-get -y --force-yes install ufw wget zip unzip
-apt-get -y --force-yes install certbot python3 python3-pip python-is-python3
-apt-get -y --force-yes install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
-apt-get -y --force-yes autoremove
+apt-get -y --allow install ufw wget zip unzip
+apt-get -y --allow install certbot python3 python3-pip python-is-python3
+apt-get -y --allow install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
+apt-get -y --allow autoremove
 python -m pip install --user virtualenv
 a2enmod authz_groupfile
 a2enmod headers
@@ -315,7 +315,7 @@ EOF
 if [ ! -e ${MYSQL_REPO} ]; then
     curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
     dpkg -i ./${MYSQL_REPO}
-    apt-get -y --force-yes install mysql-server
+    apt-get -y --allow install mysql-server
 fi
 
 # [MySQL] Data Permission

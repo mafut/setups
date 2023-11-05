@@ -13,10 +13,10 @@ if [ -z "${USERNAME}" ]; then
 fi
 
 # xset https://www.waveshare.com/wiki/4.3inch_DSI_LCD
-apt-get install -y --force-yes x11-xserver-utils
+apt-get install -y --allow x11-xserver-utils
 
 # Screensaver: cmatrix
-apt-get install -y --force-yes cmatrix
+apt-get install -y --allow cmatrix
 
 # Screensaver: termsaver
 apt-get install python3-pip build-essential

@@ -29,10 +29,10 @@ if ! grep -q ${USERNAME} /etc/sudoers; then
 fi
 
 # apt-get update/upgrade
-apt-get -y --force-yes update
-apt-get -y --force-yes upgrade
-apt-get -y --force-yes purge needrestart
-apt-get -y --force-yes raspi-config
+apt-get -y --allow update
+apt-get -y --allow upgrade
+apt-get -y --allow purge needrestart
+apt-get -y --allow raspi-config
 
 # set time zone
 timedatectl set-timezone America/Los_Angeles

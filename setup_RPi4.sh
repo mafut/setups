@@ -52,9 +52,20 @@ EOF
 fi
 
 # Make /etc/init.d/prep-varlog
-CONFIG=/etc/init.d/prep-varlog.sh
+CONFIG=/etc/init.d/prep-varlog
 cat <<EOF >${CONFIG}
 #!/bin/bash
+#
+### BEGIN INIT INFO
+# Provides:          prep-varlog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Required-Start:
+# Required-Stop:
+# Short-Description: Create /var/log/... files on tmpfs at startup
+# Description:       Create /var/log/... files needed by system daemon
+### END INIT INFO
+
 case "\${1:-''}" in
   'start')
     # Prepare folders
@@ -109,7 +120,7 @@ case "\${1:-''}" in
 esac
 EOF
 chmod 755 ${CONFIG}
-update-rc.d ${CONFIG} defaults 01 10
+update-rc.d prep-varlog defaults 01 10
 
 # npm/nodejs
 NODE_MAJOR=16

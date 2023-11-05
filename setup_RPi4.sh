@@ -55,7 +55,7 @@ fi
 CONFIG=/etc/init.d/prep-varlog.sh
 cat <<EOF >${CONFIG}
 #!/bin/bash
-case "${1:-''}" in
+case "\${1:-''}" in
   'start')
     # Prepare folders
     mkdir -p /var/log/ConsoleKit

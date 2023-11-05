@@ -126,6 +126,12 @@ chgrp -R ${USERNAME} /home/${USERNAME}/.local/
 find /home/${USERNAME}/.local/share/code-server -type d -exec chmod 755 {} \;
 find /home/${USERNAME}/.local/share/code-server -type f -exec chmod 644 {} \;
 
+mkdir -p /home/${USERNAME}/.config/code-server
+chown -R ${USERNAME} /home/${USERNAME}/.config/
+chgrp -R ${USERNAME} /home/${USERNAME}/.config/
+find /home/${USERNAME}/.config/code-server -type d -exec chmod 755 {} \;
+find /home/${USERNAME}/.config/code-server -type f -exec chmod 644 {} \;
+
 # [Code-Server] Config
 CONFIG=/etc/systemd/system/code-server@${USERNAME}.service
 cat <<EOF >${CONFIG}

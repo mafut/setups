@@ -121,6 +121,7 @@ esac
 EOF
 chmod 755 ${CONFIG}
 update-rc.d prep-varlog defaults 01 10
+# update-rc.d no longer does anything but call insserv nowadays to do all
 # update-rc.d apache2 defaults 02 10
 # update-rc.d mysql defaults 02 10
 # update-rc.d nginx defaults 02 10

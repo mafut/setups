@@ -1,11 +1,19 @@
 #!/bin/bash
 
 # Initialize variables
+# Apache
 APACHE_USER=www-data
 APACHE_LOG=/var/log/apache2
 APACHE_DOCPATH=$1
 APACHE_PORT=$3
 
+# MySQL
+# https://dev.mysql.com/downloads/repo/apt/
+MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
+MYSQL_USER=mysql
+MYSQL_LOG=/var/log/mysql
+
+# Code-Server
 # https://github.com/coder/code-server/releases
 CODESERVER_VER=4.18.0
 CODESERVER_PASS=$2
@@ -13,9 +21,6 @@ CODESERVER_PORT=$4
 
 CERT_PATH=$5
 NGINX_DEFAULT=$6
-
-# https://dev.mysql.com/downloads/repo/apt/
-MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
 
 if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
@@ -81,10 +86,9 @@ apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
 
 # Install packages
-apt-get -y --force-yes install wget zip unzip
+apt-get -y --force-yes install ufw wget zip unzip
 apt-get -y --force-yes install certbot python3 python3-pip python-is-python3
-apt-get -y --force-yes install apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
-apt-get -y --force-yes install ufw nginx
+apt-get -y --force-yes install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y --force-yes autoremove
 python -m pip install --user virtualenv
 a2enmod authz_groupfile
@@ -153,6 +157,95 @@ user-data-dir: /home/${USERNAME}/.local/share/code-server
 log: debug
 EOF
 
+# [logrotate] Main Config
+CONFIG=/etc/logrotate.conf
+cat <<EOF >${CONFIG}
+weekly
+rotate 10
+create
+missingok
+include /etc/logrotate.d
+EOF
+
+# [logrotate] apache2
+CONFIG=/etc/logrotate.d/apache2
+cat <<EOF >${CONFIG}
+/var/log/apache2/*.log {
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data root
+    sharedscripts
+    postrotate
+            if invoke-rc.d apache2 status > /dev/null 2>&1; then \
+                invoke-rc.d apache2 reload > /dev/null 2>&1; \
+            fi;
+    endscript
+    prerotate
+            if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                    run-parts /etc/logrotate.d/httpd-prerotate; \
+            fi; \
+    endscript
+}
+EOF
+
+# [logrotate] mysql-server
+CONFIG=/etc/logrotate.d/mysql-server
+cat <<EOF >${CONFIG}
+/var/log/mysql.log /var/log/mysql/*log {
+    create 640 mysql mysql
+    compress
+    sharedscripts
+    postrotate
+            test -x /usr/bin/mysqladmin || exit 0
+            MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
+            if [ -z "`$MYADMIN ping 2>/dev/null`" ]; then
+                if killall -q -s0 -umysql mysqld; then
+                    exit 1
+                fi
+            else
+                $MYADMIN flush-logs
+            fi
+    endscript
+}
+EOF
+
+# [logrotate] nginx
+CONFIG=/etc/logrotate.d/nginx
+cat <<EOF >${CONFIG}
+/var/log/nginx/*.log {
+    compress
+    delaycompress
+    create 0640 www-data root
+    sharedscripts
+    prerotate
+            if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+                run-parts /etc/logrotate.d/httpd-prerotate; \
+            fi \
+    endscript
+    postrotate
+            invoke-rc.d nginx rotate >/dev/null 2>&1
+    endscript
+}
+EOF
+
+# [logwatch] Config
+mkdir -p /var/cache/logwatch
+CONFIG=/etc/logwatch/conf/logwatch.conf
+cat <<EOF >${CONFIG}
+TmpDir = /var/cache/logwatch
+# Output = mail
+Output = stdout
+Format = text
+Encode = none
+Range = yesterday
+Detail = High
+Service = All
+# MailTo = root
+# MailFrom = Logwatch
+# mailer = "/usr/sbin/sendmail -t"
+EOF
+
 # [MySQL] Config /etc/mysql/conf.d/my.cnf
 # default my.cnf loads from the following
 # /etc/mysql/conf.d/
@@ -178,7 +271,7 @@ basedir   = /var/lib/mysql
 datadir   = /var/lib/mysql-files
 pid-file  = /var/run/mysqld/mysqld.pid
 socket    = /var/run/mysqld/mysqld.sock
-log-error = /var/log/mysql/error.log
+log-error = ${MYSQL_LOG}/error.log
 lc_messages_dir = /usr/share/mysql-8.0/english
 
 performance-schema = 0
@@ -226,16 +319,16 @@ if [ ! -e ${MYSQL_REPO} ]; then
 fi
 
 # [MySQL] Data Permission
-chown mysql:mysql /var/lib/mysql
-chown mysql:mysql /var/lib/mysql-files
-chown mysql:mysql /var/log/mysql
+chown mysql:${MYSQL_USER} /var/lib/mysql
+chown mysql:${MYSQL_USER} /var/lib/mysql-files
+chown mysql:${MYSQL_USER} ${MYSQL_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
-chmod 750 /var/log/mysql
+chmod 750 ${MYSQL_LOG}
 
-usermod -d /var/lib/mysql/ mysql
-mysqld --initialize-insecure --user=mysql
+usermod -d /var/lib/mysql/ ${MYSQL_USER}
+mysqld --initialize-insecure --user=${MYSQL_USER}
 
 # [MySQL] Resolve warning at start
 dpkg-divert --local --rename --add /sbin/initctl

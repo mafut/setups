@@ -498,9 +498,9 @@ cat <<EOF >${CONFIG}
 EOF
 crontab -u ${USERNAME} ${APACHE_DOCPATH}/setting/crontab.bak
 
-# [MySQL] Manual setup
+# Manual setup
 cat <<EOF
-[Manual setup for MySQL]
+[MySQL] Remove root password
 1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
 2. sudo systemctl restart mysql
 3. Reset
@@ -511,6 +511,18 @@ cat <<EOF
 4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
 5. sudo systemctl restart mysql
 
-[Additional for Production]
-- sudo mysql_secure_installation
+[MySQL] Add root password for Production
+sudo mysql_secure_installation
+
+[SSH] Cert auth instead of password
+1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
+2. Confirm if /etc/ssh/sshd_config allows rsa auth
+PubkeyAuthentication        yes
+RSAAuthentication           yes
+AuthorizedKeysFile          .ssh/authorized_keys
+3. sudo systemctl restart sshd
+4. Confirm if "ssh -i id_rsa ${USERNAME}@[hostname]" works
+5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
+PasswordAuthentication      no
+6. sudo systemctl restart sshd
 EOF

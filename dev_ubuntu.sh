@@ -146,7 +146,7 @@ WorkingDirectory=/home/${USERNAME}
 Restart=always
 RestartSec=10
 
-ExecStart=/user/bin/code-server --host 127.0.0.1 --user-data-dir /home/${USERNAME}/.local/share/code-server
+ExecStart=/usr/bin/code-server --host 127.0.0.1 --user-data-dir /home/${USERNAME}/.local/share/code-server
 ExecStop=/bin/kill -s QUIT $MAINPID
 
 [Install]

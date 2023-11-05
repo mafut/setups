@@ -236,6 +236,7 @@ cat <<EOF >${CONFIG}
 EOF
 
 # [logwatch] Config
+mkdir -p /etc/logwatch/conf
 mkdir -p /var/cache/logwatch
 CONFIG=/etc/logwatch/conf/logwatch.conf
 cat <<EOF >${CONFIG}

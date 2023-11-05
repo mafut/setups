@@ -127,7 +127,7 @@ find /home/${USERNAME}/.local/share/code-server -type d -exec chmod 755 {} \;
 find /home/${USERNAME}/.local/share/code-server -type f -exec chmod 644 {} \;
 
 # [Code-Server] Config
-CONFIG=/etc/systemd/system/code-server.service
+CONFIG=/etc/systemd/system/code-server@${USERNAME}.service
 cat <<EOF >${CONFIG}
 [Unit]
 Description=code-server

@@ -35,11 +35,10 @@ else
 fi
 
 ARCH=$(arch)
-if [ "$(echo $ARCH | grep -q aarch64)" ]; then
-    OSARCH=arm64
-else
-    OSARCH=amd64
-fi
+case $ARCH in
+aarch64) OSARCH=arm64 ;;
+*) OSARCH=amd64 ;;
+esac
 
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
@@ -212,7 +211,7 @@ cat <<EOF >${CONFIG}
     postrotate
             test -x /usr/bin/mysqladmin || exit 0
             MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
-            if [ -z "`$MYADMIN ping 2>/dev/null`" ]; then
+            if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
                 if killall -q -s0 -umysql mysqld; then
                     exit 1
                 fi

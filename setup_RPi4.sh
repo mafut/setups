@@ -47,9 +47,69 @@ if ! grep -q tmpfs /etc/fstab; then
     cat <<EOF >>${CONFIG}
 tmpfs   /tmp        tmpfs   defaults,size=256m,noatime,mode=1777    0   0
 tmpfs   /var/tmp    tmpfs   defaults,size=256m,noatime,mode=1777    0   0
-tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0777     0   0
+tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0750     0   0
 EOF
 fi
+
+# Make /etc/init.d/prep-varlog
+CONFIG=/etc/init.d/prep-varlog.sh
+cat <<EOF >${CONFIG}
+#!/bin/bash
+case "${1:-''}" in
+  'start')
+    # Prepare folders
+    mkdir -p /var/log/ConsoleKit
+    mkdir -p /var/log/apache2
+    mkdir -p /var/log/apt
+    mkdir -p /var/log/fsck
+    mkdir -p /var/log/mysql
+    mkdir -p /var/log/nginx
+
+    chown www-data /var/log/nginx
+    chmod 750 /var/log/nginx
+
+    chown www-data /var/log/apache2
+    chmod 750 /var/log/apache2
+
+    chown mysql /var/log/mysql
+    chmod 750 /var/log/mysql
+
+    # Prepare /var/log file for ramdisk init on every boot
+    touch /var/log/lastlog
+    touch /var/log/wtmp
+    touch /var/log/btmp
+    touch /var/log/apache2/access.log
+    touch /var/log/apache2/error.log
+    touch /var/log/apache2/ssl_access.log
+ 
+    chown www-data /var/log/apache2/access.log
+    chown www-data /var/log/apache2/error.log
+    chown www-data /var/log/apache2/ssl_access.log
+
+    chmod 640 /var/log/apache2/access.log
+    chmod 640 /var/log/apache2/error.log
+    chmod 640 /var/log/apache2/ssl_access.log
+
+    chown root /var/log/lastlog
+    chown root /var/log/wtmp
+    chown root /var/log/btmp
+   ;;
+  'stop')
+   ;;
+  'restart')
+   ;;
+  'reload'|'force-reload')
+   ;;
+  'status')
+   ;;
+  *)
+   echo "Usage: $SELF start"
+   exit 1
+   ;;
+esac
+EOF
+chmod 755 ${CONFIG}
+update-rc.d ${CONFIG} defaults 01 10
 
 # npm/nodejs
 NODE_MAJOR=16

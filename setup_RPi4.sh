@@ -50,9 +50,6 @@ tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0755     0   0
 EOF
 fi
 
-# xset https://www.waveshare.com/wiki/4.3inch_DSI_LCD
-apt-get install -y --force-yes x11-xserver-utils
-
 # npm/nodejs
 NODE_MAJOR=16
 apt-get install -y ca-certificates curl gnupg
@@ -73,32 +70,6 @@ git clone https://github.com/aksakalli/gtop.git /home/${USERNAME}/gtop
 cd /home/${USERNAME}/gtop
 npm install gtop -g
 cd ${SCRIPT_PATH}
-
-# Screensaver: cmatrix
-apt-get install -y --force-yes cmatrix
-
-# Screensaver: termsaver
-apt-get install python3-pip build-essential
-pip install termsaver
-
-# Configure to run screensaver before login as info hub
-CONFIG=/usr/local/bin/loginScreensaver.sh
-cat <<EOF >${CONFIG}
-#!/bin/bash
-# /usr/bin/cmatrix -abs
-termsaver clock
-exec /bin/login
-EOF
-chmod 744 /usr/local/bin/loginScreensaver.sh
-
-CONFIG=/etc/systemd/system/getty@tty1.service.d/override.conf
-cat <<EOF >${CONFIG}
-[Service]
-ExecStart=
-ExecStart=-/usr/local/bin/loginScreensaver.sh
-StandardInput=tty
-StandardOutput=tty
-EOF
 
 # Fix ssh server
 if [ ! -f /etc/ssh/ssh_host_key ] && [ ! -f /etc/ssh/ssh_host_dsa_key ]; then

@@ -47,7 +47,7 @@ if ! grep -q tmpfs /etc/fstab; then
     cat <<EOF >>${CONFIG}
 tmpfs   /tmp        tmpfs   defaults,size=256m,noatime,mode=1777    0   0
 tmpfs   /var/tmp    tmpfs   defaults,size=256m,noatime,mode=1777    0   0
-tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0755     0   0
+tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0777     0   0
 EOF
 fi
 

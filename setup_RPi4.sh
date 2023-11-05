@@ -32,7 +32,7 @@ fi
 apt-get -y --force-yes update
 apt-get -y --force-yes upgrade
 apt-get -y --force-yes purge needrestart
-apt-get -u --force-yes raspi-config
+apt-get -y --force-yes raspi-config
 
 # set time zone
 timedatectl set-timezone America/Los_Angeles

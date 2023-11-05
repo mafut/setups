@@ -34,6 +34,13 @@ else
     exit 1
 fi
 
+ARCH=$(arch)
+if [ "$(echo $ARCH | grep -q aarch64)" ]; then
+    OSARCH=arm64
+else
+    OSARCH=amd64
+fi
+
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
     echo "Can't get User Name"
@@ -115,7 +122,7 @@ ufw --force enable
 
 # [Code-Server] Install
 if [ ! -e ./code-server_${CODESERVER_VER}_amd64.deb ]; then
-    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_amd64.deb
+    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_${OSARCH}.deb
     dpkg -i ./code-server_${CODESERVER_VER}_amd64.deb
 fi
 

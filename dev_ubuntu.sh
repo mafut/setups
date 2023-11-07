@@ -371,6 +371,7 @@ find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 usermod -g ${APACHE_USER} ${USERNAME}
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/logs/
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/cache/
+chown -R ${APACHE_USER} ${APACHE_DOCPATH}/images/
 chown -R ${APACHE_USER} ${APACHE_DOCPATH}/setting/
 chown -R ${APACHE_USER} /var/www/html/setting/
 chown -R ${APACHE_USER} ${APACHE_LOG}

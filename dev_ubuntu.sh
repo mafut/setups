@@ -1,32 +1,38 @@
 #!/bin/bash
 
-# Initialize variables
-# Apache
-APACHE_USER=www-data
-APACHE_LOG=/var/log/apache2
-APACHE_DOCPATH=$1
-APACHE_PORT=$3
+# Load variables from dev_ubuntu.sh.conf
+CONF=$1
+if [ -z "${CONF}" ]; then
+    CONF=$0.conf
+fi
+if [ ! -e ${CONF} ]; then
+    echo "Usage: this_script.sh [conf=this_script.sh.conf]"
+    exit 1
+fi
 
-# MySQL
-# https://dev.mysql.com/downloads/repo/apt/
-MYSQL_REPO=mysql-apt-config_0.8.28-1_all.deb
-MYSQL_USER=mysql
-MYSQL_LOG=/var/log/mysql
+source ${CONF}
+source $0.default.conf
 
-# Code-Server
-# https://github.com/coder/code-server/releases
-CODESERVER_VER=4.18.0
-CODESERVER_PASS=$2
-CODESERVER_PORT=$4
+# Trim a trailing slash
+DOCPATH_ROOT=${DOCPATH_ROOT%/}
+DOCPATH_HTTP=${DOCPATH_HTTP%/}
+DOCPATH_CONTENT=${DOCPATH_CONTENT%/}
 
-CERT_PATH=$5
-NGINX_DEFAULT=$6
+# NGINX_CERT_PATH
+if [ -z "${NGINX_CERT_PATH}" ]; then
+    NGINX_CERT_PATH=$(
+        cd $(dirname $0)/cert
+        pwd
+    )
+fi
+NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
 
+# Valuables from OS/environment
 if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
     case $VERSION_ID in
-    20.04) PHP_VER=7.4 ;;
-    22.04) PHP_VER=8.1 ;;
+    20.04) OS_PHP_VER=7.4 ;;
+    22.04) OS_PHP_VER=8.1 ;;
     *) exit 1 ;;
     esac
 else
@@ -36,8 +42,8 @@ fi
 
 ARCH=$(arch)
 case $ARCH in
-aarch64) OSARCH=arm64 ;;
-*) OSARCH=amd64 ;;
+aarch64) OS_ARCH=arm64 ;;
+*) OS_ARCH=amd64 ;;
 esac
 
 USERNAME=$SUDO_USER
@@ -46,33 +52,40 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-if [ -z "${APACHE_PORT}" ]; then
-    APACHE_PORT=8081
-fi
-
-if [ -z "${CODESERVER_PORT}" ]; then
-    CODESERVER_PORT=8082
-fi
-
-if [ -z "${CERT_PATH}" ]; then
-    CERT_PATH=$(
-        cd $(dirname $0)/cert
-        pwd
-    )
-fi
-
-if [ -z "${NGINX_DEFAULT}" ]; then
-    NGINX_DEFAULT=false
-fi
-
-if [ -z "${APACHE_DOCPATH}" ] || [ -z "${CODESERVER_PASS}" ]; then
-    echo "Usage: this_script.sh [Apache Doc Path] [Code-Server Password] [Apache Port=8081] [Code-Server Port=8082] [Cert Path=setupscript/cert] [nginx default=false]"
-    exit 1
-fi
-
-# Trim a trailing slash
-APACHE_DOCPATH=${APACHE_DOCPATH%/}
-CERT_PATH=${CERT_PATH%/}
+# Configuration
+cat <<EOF
+Nginx
++-- Conf: /etc/nginx/sites-available/${USERNAME}.conf
++-- Default for *.domain: ${NGINX_DEFAULT}
+|
++-- http://${USERNAME}.domain:80
+|   +-- Enabled:${ENABLE_HTTP}
+|   +-- Path:${DOCPATH_HTTP}
+|
++-- https://${USERNAME}.domain:443
+    +-- SSL:${NGINX_CERT_PATH}
+    |
+    +-- /
+    |   +-- Path: ${DOCPATH_ROOT}
+    |   +-- Port: ${APACHE_PORT}
+    |   +-- PHP: ${OS_PHP_VER}
+    |   +-- Apache By: ${APACHE_USER}
+    |   +-- Apache Log: ${APACHE_LOG}
+    |   +-- MySQL By: ${MYSQL_USER}
+    |   +-- MySQL Log: ${MYSQL_LOG}
+    |
+    +-- /content
+    |   +-- Enabled: ${ENABLE_CONTENT}
+    |   +-- Path: ${DOCPATH_CONTENT}
+    |
+    +-- /vscode
+        +-- Enabled: ${ENABLE_VSCODE}
+        +-- Port: ${CODESERVER_PORT}
+        +-- Architecture: ${OS_ARCH}
+        +-- Version: ${CODESERVER_VER}
+        +-- Password: ${CODESERVER_PASS}
+EOF
+read -p "Hit enter if ok: "
 
 # [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
 if ! grep -q ${USERNAME} /etc/sudoers; then
@@ -120,9 +133,9 @@ ufw allow 8080 # Squid
 ufw --force enable
 
 # [Code-Server] Install
-if [ ! -e ./code-server_${CODESERVER_VER}_${OSARCH}.deb ]; then
-    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_${OSARCH}.deb
-    dpkg -i ./code-server_${CODESERVER_VER}_${OSARCH}.deb
+if [ ! -e ./code-server_${CODESERVER_VER}_${OS_ARCH}.deb ]; then
+    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_${OS_ARCH}.deb
+    dpkg -i ./code-server_${CODESERVER_VER}_${OS_ARCH}.deb
 fi
 
 # [Code-Server] Reset Permission
@@ -350,16 +363,16 @@ if [ ! -e /sbin/initctl ]; then
 fi
 
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
-chown -R ${USERNAME} ${APACHE_DOCPATH}/
-chgrp -R ${USERNAME} ${APACHE_DOCPATH}/
-find ${APACHE_DOCPATH}/ -type d -exec chmod 755 {} \;
-find ${APACHE_DOCPATH}/ -type f -exec chmod 644 {} \;
+chown -R ${USERNAME} ${DOCPATH_ROOT}/
+chgrp -R ${USERNAME} ${DOCPATH_ROOT}/
+find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
 
-mkdir -p /var/www/html/setting/
-chown -R ${USERNAME} /var/www/html/setting/
-chgrp -R ${USERNAME} /var/www/html/setting/
-find /var/www/html/setting/ -type d -exec chmod 755 {} \;
-find /var/www/html/setting/ -type f -exec chmod 644 {} \;
+mkdir -p ${DOCPATH_HTTP}/setting/
+chown -R ${USERNAME} ${DOCPATH_HTTP}/setting/
+chgrp -R ${USERNAME} ${DOCPATH_HTTP}/setting/
+find ${DOCPATH_HTTP}/setting/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_HTTP}/setting/ -type f -exec chmod 644 {} \;
 
 mkdir -p ${APACHE_LOG}
 chown -R ${USERNAME} ${APACHE_LOG}
@@ -369,19 +382,19 @@ find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 
 # [Apache] User to Apache
 usermod -g ${APACHE_USER} ${USERNAME}
-chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/logs/
-chown -R ${APACHE_USER} ${APACHE_DOCPATH}/application/cache/
-chown -R ${APACHE_USER} ${APACHE_DOCPATH}/images/
-chown -R ${APACHE_USER} ${APACHE_DOCPATH}/setting/
-chown -R ${APACHE_USER} /var/www/html/setting/
+chown -R ${APACHE_USER} ${DOCPATH_ROOT}/application/logs/
+chown -R ${APACHE_USER} ${DOCPATH_ROOT}/application/cache/
+chown -R ${APACHE_USER} ${DOCPATH_ROOT}/images/
+chown -R ${APACHE_USER} ${DOCPATH_ROOT}/setting/
+chown -R ${APACHE_USER} ${DOCPATH_HTTP}/setting/
 chown -R ${APACHE_USER} ${APACHE_LOG}
 
 # [Apache] Configure Permission
-find /var/www/html/setting/ -type f -exec chmod 600 {} \;
-find ${APACHE_DOCPATH}/setting/ -type f -exec chmod 600 {} \;
-find ${APACHE_DOCPATH}/ -name .htaccess -exec chmod 644 {} \;
-find ${APACHE_DOCPATH}/ -name index.html -exec chmod 644 {} \;
-find ${APACHE_DOCPATH}/setup/ -name \*.sh -exec chmod 755 {} \;
+find ${DOCPATH_HTTP}/setting/ -type f -exec chmod 600 {} \;
+find ${DOCPATH_ROOT}/setting/ -type f -exec chmod 600 {} \;
+find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_ROOT}/setup/ -name \*.sh -exec chmod 755 {} \;
 
 # [Apache] Configure http
 CONFIG=/etc/apache2/sites-available/000-default.conf
@@ -395,8 +408,8 @@ AcceptFilter http none
     ErrorLog ${APACHE_LOG}/error.log
     CustomLog ${APACHE_LOG}/access.log combined
 
-    DocumentRoot /var/www/html
-    <Directory /var/www/html>
+    DocumentRoot ${DOCPATH_HTTP}
+    <Directory ${DOCPATH_HTTP}>
         Options All
         AllowOverride All
         Require all granted
@@ -418,15 +431,15 @@ Listen ${APACHE_PORT}
     ErrorLog ${APACHE_LOG}/error.log
     CustomLog ${APACHE_LOG}/access.log combined
 
-    DocumentRoot ${APACHE_DOCPATH}
-    <Directory ${APACHE_DOCPATH}>
+    DocumentRoot ${DOCPATH_ROOT}
+    <Directory ${DOCPATH_ROOT}>
         Options All
         AllowOverride All
         Require all granted
     </Directory>
 
-    Alias /application/views ${APACHE_DOCPATH}/application/views
-    <Directory ${APACHE_DOCPATH}/application/views>
+    Alias /application/views ${DOCPATH_ROOT}/application/views
+    <Directory ${DOCPATH_ROOT}/application/views>
         Options All
         AllowOverride All
         Require all granted
@@ -437,7 +450,7 @@ rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
 ln -s /etc/apache2/sites-available/${USERNAME}.conf /etc/apache2/sites-enabled/${USERNAME}.conf
 
 # [Php] Set display_errors, display_startup_errors as ON
-CONFIG=/etc/php/${PHP_VER}/apache2/php.ini
+CONFIG=/etc/php/${OS_PHP_VER}/apache2/php.ini
 cp -f ${CONFIG} ${CONFIG}.bak
 sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG}.bak > ${CONFIG}"
 cp -f ${CONFIG} ${CONFIG}.bak
@@ -461,13 +474,18 @@ server {
     ${NGINX_LISTEN}
     server_name ${USERNAME}.*;
 
-    ssl_certificate ${CERT_PATH}/fullchain.pem;
-    ssl_certificate_key ${CERT_PATH}/privkey.pem;
+    ssl_certificate ${NGINX_CERT_PATH}/fullchain.pem;
+    ssl_certificate_key ${NGINX_CERT_PATH}/privkey.pem;
 
     location / {
         proxy_pass http://127.0.0.1:${APACHE_PORT}/;
         proxy_set_header Host \$host;
         proxy_set_header Accept-Encoding gzip;
+    }
+
+    location /content {
+        autoindex on;
+        root ${DOCPATH_CONTENT}
     }
 
     location /vscode/ {
@@ -492,12 +510,12 @@ systemctl enable --now apache2
 systemctl enable --now mysql
 
 # [Cron] Schedule to pull
-CONFIG=${APACHE_DOCPATH}/setting/crontab.bak
+CONFIG=${DOCPATH_ROOT}/setting/crontab.bak
 cat <<EOF >${CONFIG}
-# */5 * * * * /bin/sh -c 'cd ${APACHE_DOCPATH} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
-*/5 * * * * /bin/sh -c 'cd ${APACHE_DOCPATH} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
+# */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
+*/5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 EOF
-crontab -u ${USERNAME} ${APACHE_DOCPATH}/setting/crontab.bak
+crontab -u ${USERNAME} ${DOCPATH_ROOT}/setting/crontab.bak
 
 # Manual setup
 cat <<EOF
@@ -518,12 +536,12 @@ sudo mysql_secure_installation
 [SSH] Cert auth instead of password
 1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
 2. Confirm if /etc/ssh/sshd_config allows rsa auth
-PubkeyAuthentication        yes
-RSAAuthentication           yes
-AuthorizedKeysFile          .ssh/authorized_keys
+  PubkeyAuthentication        yes
+  RSAAuthentication           yes
+  AuthorizedKeysFile          .ssh/authorized_keys
 3. sudo systemctl restart sshd
 4. Confirm if "ssh -i id_rsa ${USERNAME}@[hostname]" works
 5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
-PasswordAuthentication      no
+  PasswordAuthentication      no
 6. sudo systemctl restart sshd
 EOF

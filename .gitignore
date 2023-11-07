@@ -1,11 +1,15 @@
 .gitconfig
 .DS_Store
-Thumbs.db
+.vscode
+
 *.bak
 *.deb
 *.pyc
 *.rpm
 *~
+
 data.test.*
 data.live.*
-.vscode
+
+Thumbs.db
+dev_ubuntu.sh.conf

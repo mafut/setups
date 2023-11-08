@@ -362,17 +362,20 @@ if [ ! -e /sbin/initctl ]; then
     ln -s /bin/true /sbin/initctl
 fi
 
+# [Apache] Reset user primary/secondary group
+usermod -g ${USERNAME} ${USERNAME}
+usermod -G ${APACHE_USER} ${USERNAME}
+
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
 chown -R ${USERNAME} ${DOCPATH_ROOT}/
 chgrp -R ${USERNAME} ${DOCPATH_ROOT}/
 find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
 
-mkdir -p ${DOCPATH_HTTP}/setting/
-chown -R ${USERNAME} ${DOCPATH_HTTP}/setting/
-chgrp -R ${USERNAME} ${DOCPATH_HTTP}/setting/
-find ${DOCPATH_HTTP}/setting/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_HTTP}/setting/ -type f -exec chmod 644 {} \;
+chown -R ${USERNAME} ${DOCPATH_CONTENT}/
+chgrp -R ${USERNAME} ${DOCPATH_CONTENT}/
+find ${DOCPATH_CONTENT}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_CONTENT}/ -type f -exec chmod 644 {} \;
 
 mkdir -p ${APACHE_LOG}
 chown -R ${USERNAME} ${APACHE_LOG}
@@ -381,20 +384,7 @@ find ${APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 
 # [Apache] User to Apache
-usermod -g ${APACHE_USER} ${USERNAME}
-chown -R ${APACHE_USER} ${DOCPATH_ROOT}/application/logs/
-chown -R ${APACHE_USER} ${DOCPATH_ROOT}/application/cache/
-chown -R ${APACHE_USER} ${DOCPATH_ROOT}/images/
-chown -R ${APACHE_USER} ${DOCPATH_ROOT}/setting/
-chown -R ${APACHE_USER} ${DOCPATH_HTTP}/setting/
 chown -R ${APACHE_USER} ${APACHE_LOG}
-
-# [Apache] Configure Permission
-find ${DOCPATH_HTTP}/setting/ -type f -exec chmod 600 {} \;
-find ${DOCPATH_ROOT}/setting/ -type f -exec chmod 600 {} \;
-find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
-find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
-find ${DOCPATH_ROOT}/setup/ -name \*.sh -exec chmod 755 {} \;
 
 # [Apache] Configure http
 CONFIG=/etc/apache2/sites-available/000-default.conf
@@ -477,15 +467,10 @@ server {
     ssl_certificate ${NGINX_CERT_PATH}/fullchain.pem;
     ssl_certificate_key ${NGINX_CERT_PATH}/privkey.pem;
 
-    location / {
-        proxy_pass http://127.0.0.1:${APACHE_PORT}/;
-        proxy_set_header Host \$host;
-        proxy_set_header Accept-Encoding gzip;
-    }
-
-    location /content {
+    location /content/ {
+        alias ${DOCPATH_CONTENT}/;
         autoindex on;
-        root ${DOCPATH_CONTENT}
+        index index.html;
     }
 
     location /vscode/ {
@@ -493,6 +478,12 @@ server {
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection upgrade;
+        proxy_set_header Accept-Encoding gzip;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:${APACHE_PORT}/;
+        proxy_set_header Host \$host;
         proxy_set_header Accept-Encoding gzip;
     }
 }
@@ -512,8 +503,10 @@ systemctl enable --now mysql
 # [Cron] Schedule to pull
 CONFIG=${DOCPATH_ROOT}/setting/crontab.bak
 cat <<EOF >${CONFIG}
-# */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
+# Pull the latest for apache/php
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
+# Pull the latest for static
+*/5 * * * * /bin/sh -c 'cd ${DOCPATH_CONTENT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 EOF
 crontab -u ${USERNAME} ${DOCPATH_ROOT}/setting/crontab.bak
 

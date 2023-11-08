@@ -102,7 +102,7 @@ cat <<EOF
 [Structure]
 +-- http://${USERNAME}.domain:80
 |   +-- /
-|       +-- Enabled: ${ENABLE_HTTP}
+|       +-- Visiable: ${ENABLE_HTTP}
 |       +-- App: Apache
 |       +-- Config: ${CONFIG_APACHE_DEFAULT}
 |       +-- Path: ${DOCPATH_HTTP}
@@ -123,12 +123,12 @@ cat <<EOF
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
 |   |
 |   +-- /content
-|   |   +-- Enabled: ${ENABLE_CONTENT}
+|   |   +-- Visiable: ${ENABLE_CONTENT}
 |   |   +-- App: Nginx
 |   |   +-- Path: ${DOCPATH_CONTENT}
 |   |
 |   +-- /vscode
-|       +-- Enabled: ${ENABLE_VSCODE}
+|       +-- Visiable: ${ENABLE_VSCODE}
 |       +-- App: Code-Server
 |       +-- Config: ${CONFIG_CODESERVER}
 |       +-- Port: ${CODESERVER_PORT}
@@ -140,7 +140,8 @@ cat <<EOF
 
 [User]
 Unix: ${USERNAME}
-Nginx/Apache: ${APACHE_USER}
+Nginx: ${APACHE_USER}
+Apache: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
 
 [Log]
@@ -148,6 +149,9 @@ Nginx: ${NGINX_LOG}
 Apache: ${APACHE_LOG}
 MySQL: ${MYSQL_LOG}
 LogWatch: ${DIR_DATA_LOGWATCH}
+
+[VS Code Extensions]
+${CODESERVER_EXTS[*]}
 
 EOF
 read -p "Hit enter if ok: "
@@ -255,73 +259,9 @@ log: debug
 EOF
 
 # [Code-Server] Extensions
-# Bash IDE
-code-server --install-extension mads-hartmann.bash-ide-vscode
-
-# Better Comments
-code-server --install-extension aaron-bond.better-comments
-
-# Better Shell Syntax
-code-server --install-extension jeff-hykin.better-shellscript-syntax
-
-# Code Spell Checker
-code-server --install-extension streetsidesoftware.code-spell-checker
-
-# Dendron Markdown Shortcuts
-code-server --install-extension dendron.dendron-markdown-shortcuts
-
-# Explicit Folding
-#"editor.foldingStrategy": "auto",
-#"editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
-#"explicitFolding.rules": {
-#    "*": {
-#        "begin": "#region",
-#        "end": "#endregion"
-#    }
-#}
-code-server --install-extension zokugun.explicit-folding
-
-# Git Graph
-code-server --install-extension mhutchie.git-graph
-
-# Git History
-code-server --install-extension donjayamanne.githistory
-
-# Inline SQL
-code-server --install-extension qufiwefefwoyn.inline-sql-syntax
-
-# markdownlint
-code-server --install-extension davidanson.vscode-markdownlint
-
-# php cs fixer
-# "[php]": {
-#     "editor.defaultFormatter": "junstyle.php-cs-fixer"
-# },
-# "php-cs-fixer.executablePath": "${extensionPath}/php-cs-fixer.phar",
-# "vscode-php-cs-fixer.rules": "@PSR1,@PSR2,@Symfony",
-# "workbench.settings.applyToAllProfiles": [
-#     "vscode-php-cs-fixer.rules"
-# ],
-# "php-cs-fixer.formatHtml": true,
-# "php-cs-fixer.autoFixBySemicolon": true,
-# "php-cs-fixer.rules": "",
-# "php-cs-fixer.lastDownload": 1699324233318,
-code-server --install-extension junstyle.php-cs-fixer
-
-# php debug
-code-server --install-extension xdebug.php-debug
-
-# php inteliphense
-code-server --install-extension bmewburn.vscode-intelephense-client
-
-# php intelisense
-code-server --install-extension felixfbecker.php-intellisense
-
-# Render line endings
-code-server --install-extension medo64.render-crlf
-
-# shell-format
-code-server --install-extension foxundermoon.shell-format
+for extension in ${CODESERVER_EXTS[@]}; do
+    code-server --install-extension $extension
+done
 
 #endregion
 

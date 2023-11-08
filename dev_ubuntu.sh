@@ -262,6 +262,7 @@ code-server --install-extension streetsidesoftware.code-spell-checker
 
 # Dendron Markdown Shortcuts
 code-server --install-extension dendron.dendron-markdown-shortcuts
+
 # Explicit Folding
 #"editor.foldingStrategy": "auto",
 #"editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#region Input Variables
+
 # Load variables from dev_ubuntu.sh.conf
 CONF=$1
 if [ -z "${CONF}" ]; then
@@ -27,6 +29,9 @@ if [ -z "${NGINX_CERT_PATH}" ]; then
 fi
 NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
 
+#endregion
+
+#region Config Variables
 # Valuables from OS/environment
 if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
@@ -140,28 +145,31 @@ LogWatch: ${DIR_DATA_LOGWATCH}
 EOF
 read -p "Hit enter if ok: "
 
-# [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
+#endregion
+
+#region Base Setup
+
+# [Base Setup] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
 if ! grep -q ${USERNAME} /etc/sudoers; then
     echo ${USERNAME} ALL=\(ALL\) NOPASSWD:ALL >>/etc/sudoers
 fi
 
-# Stop Services at the first
+# [Base Setup] Stop Services at the first
 systemctl disable --now nginx
 systemctl disable --now apache2
 systemctl disable --now mysql
 systemctl disable --now code-server
 systemctl disable --now code-server@${USERNAME}
 
-# apt-get update/upgrade
+# [Base Setup] Install packages
 apt-get -y update
 apt-get -y upgrade
-
-# Install packages
 apt-get -y install ufw wget zip unzip
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y autoremove
 python -m pip install --user virtualenv
+
 a2enmod authz_groupfile
 a2enmod headers
 a2enmod rewrite
@@ -170,9 +178,10 @@ a2dismod ssl
 a2dismod proxy
 a2dismod proxy_http
 a2dismod proxy_wstunnel
+
 a2dissite default-ssl
 
-# [Security] Setup Firewall
+# [Base Setup] Firewall
 ufw disable
 ufw --force reset
 ufw default deny
@@ -187,6 +196,9 @@ for port in ${ALLOWED_PORTS[@]}; do
 done
 ufw --force enable
 
+#endregion
+
+#region Code-Server
 
 # [Code-Server] Install
 if [ ! -e ./${CONFIG_CODESERVER_INSTALLER} ]; then
@@ -235,6 +247,77 @@ user-data-dir: ${DIR_DATA_CODESERVER}
 log: debug
 EOF
 
+# [Code-Server] Extensions
+# Bash IDE
+code-server --install-extension mads-hartmann.bash-ide-vscode
+
+# Better Comments
+code-server --install-extension aaron-bond.better-comments
+
+# Better Shell Syntax
+code-server --install-extension jeff-hykin.better-shellscript-syntax
+
+# Code Spell Checker
+code-server --install-extension streetsidesoftware.code-spell-checker
+
+# Dendron Markdown Shortcuts
+code-server --install-extension dendron.dendron-markdown-shortcuts
+# Explicit Folding
+#"editor.foldingStrategy": "auto",
+#"editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
+#"explicitFolding.rules": {
+#    "*": {
+#        "begin": "#region",
+#        "end": "#endregion"
+#    }
+#}
+code-server --install-extension zokugun.explicit-folding
+
+# Git Graph
+code-server --install-extension mhutchie.git-graph
+
+# Git History
+code-server --install-extension donjayamanne.githistory
+
+# Inline SQL
+code-server --install-extension qufiwefefwoyn.inline-sql-syntax
+
+# markdownlint
+code-server --install-extension davidanson.vscode-markdownlint
+
+# php cs fixer
+# "[php]": {
+#     "editor.defaultFormatter": "junstyle.php-cs-fixer"
+# },
+# "php-cs-fixer.executablePath": "${extensionPath}/php-cs-fixer.phar",
+# "vscode-php-cs-fixer.rules": "@PSR1,@PSR2,@Symfony",
+# "workbench.settings.applyToAllProfiles": [
+#     "vscode-php-cs-fixer.rules"
+# ],
+# "php-cs-fixer.formatHtml": true,
+# "php-cs-fixer.autoFixBySemicolon": true,
+# "php-cs-fixer.rules": "",
+# "php-cs-fixer.lastDownload": 1699324233318,
+code-server --install-extension junstyle.php-cs-fixer
+
+# php debug
+code-server --install-extension xdebug.php-debug
+
+# php inteliphense
+code-server --install-extension bmewburn.vscode-intelephense-client
+
+# php intelisense
+code-server --install-extension felixfbecker.php-intellisense
+
+# Render line endings
+code-server --install-extension medo64.render-crlf
+
+# shell-format
+code-server --install-extension foxundermoon.shell-format
+
+#endregion
+
+#region MySQL
 
 # [MySQL] Config
 if [ -f ${CONFIG_OS_MYSQL} ] && [ ! -f ${CONFIG_OS_MYSQL}.bak ]; then
@@ -323,6 +406,9 @@ if [ ! -e /sbin/initctl ]; then
     ln -s /bin/true /sbin/initctl
 fi
 
+#endregion
+
+#region PHP
 
 # [Php] Set display_errors, display_startup_errors as ON
 if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
@@ -336,6 +422,9 @@ sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CO
 cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
 sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
 
+#endregion
+
+#region Apache
 
 # [Apache] Reset user primary/secondary group
 usermod -g ${USERNAME} ${USERNAME}
@@ -467,6 +556,9 @@ EOF
 rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
 a2ensite ${USERNAME}
 
+#endregion
+
+#region Nginx
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -585,6 +677,9 @@ EOF
 rm -f /etc/nginx/sites-enabled/${USERNAME}
 ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
+#endregion
+
+#region logrotate
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}
@@ -669,6 +764,10 @@ Service = All
 # mailer = "/usr/sbin/sendmail -t"
 EOF
 
+#endregion
+
+#region Startup
+
 # Add auto-start user instance
 loginctl enable-linger ${USERNAME}
 
@@ -691,7 +790,10 @@ cat <<EOF >crontab.conf
 EOF
 crontab -u ${USERNAME} crontab.conf
 
-# Manual setup
+#endregion
+
+#region Manual setup
+
 cat <<EOF
 
 TIPS
@@ -722,3 +824,5 @@ TIPS
     PasswordAuthentication      no
   6. sudo systemctl restart sshd
 EOF
+
+#endregion

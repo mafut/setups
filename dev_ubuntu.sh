@@ -407,7 +407,9 @@ AcceptFilter http none
 </VirtualHost>
 EOF
 rm -f /etc/apache2/sites-enabled/000-default.conf
-ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+if "${ENABLE_HTTP}"; then
+    ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+fi
 
 CONFIG=/etc/apache2/sites-available/${USERNAME}.conf
 cat <<EOF >${CONFIG}
@@ -458,6 +460,34 @@ else
     NGINX_LISTEN='listen 443 ssl;'
 fi
 
+NGINX_CONTENT=
+if "${ENABLE_CONTENT}"; then
+    NGINX_CONTENT=$(
+        cat <<EOF
+    location /content/ {
+        alias ${DOCPATH_CONTENT}/;
+        autoindex on;
+        index index.html;
+    }
+EOF
+    )
+fi
+
+NGINX_VSCODE=
+if "${ENABLE_VSCODE}"; then
+    NGINX_VSCODE=$(
+        cat <<EOF
+    location /vscode/ {
+        proxy_pass http://127.0.0.1:${CODESERVER_PORT}/;
+        proxy_set_header Host \$host;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection upgrade;
+        proxy_set_header Accept-Encoding gzip;
+    }
+EOF
+    )
+fi
+
 CONFIG=/etc/nginx/sites-available/${USERNAME}
 cat <<EOF >${CONFIG}
 server {
@@ -467,19 +497,9 @@ server {
     ssl_certificate ${NGINX_CERT_PATH}/fullchain.pem;
     ssl_certificate_key ${NGINX_CERT_PATH}/privkey.pem;
 
-    location /content/ {
-        alias ${DOCPATH_CONTENT}/;
-        autoindex on;
-        index index.html;
-    }
+    ${NGINX_CONTENT}
 
-    location /vscode/ {
-        proxy_pass http://127.0.0.1:${CODESERVER_PORT}/;
-        proxy_set_header Host \$host;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection upgrade;
-        proxy_set_header Accept-Encoding gzip;
-    }
+    ${NGINX_VSCODE}
 
     location / {
         proxy_pass http://127.0.0.1:${APACHE_PORT}/;

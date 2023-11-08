@@ -123,7 +123,7 @@ cat <<EOF
 |       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
 |       +-- Password: ${CODESERVER_PASS}
 |
-+-- https://${USERNAME}.domain:XXX
++-- https://${USERNAME}.domain:XXXX
     +-- Allowed Ports: ${ALLOWED_PORTS[*]}
 
 [User]
@@ -142,7 +142,7 @@ read -p "Hit enter if ok: "
 
 # [Security] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
 if ! grep -q ${USERNAME} /etc/sudoers; then
-    echo ${USERNAME} ALL=NOPASSWD: ALL >>/etc/sudoers
+    echo ${USERNAME} ALL=\(ALL\) NOPASSWD:ALL >>/etc/sudoers
 fi
 
 # Stop Services at the first
@@ -153,14 +153,14 @@ systemctl disable --now code-server
 systemctl disable --now code-server@${USERNAME}
 
 # apt-get update/upgrade
-apt-get -y --allow update
-apt-get -y --allow upgrade
+apt-get -y update
+apt-get -y upgrade
 
 # Install packages
-apt-get -y --allow install ufw wget zip unzip
-apt-get -y --allow install certbot python3 python3-pip python-is-python3
-apt-get -y --allow install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
-apt-get -y --allow autoremove
+apt-get -y install ufw wget zip unzip
+apt-get -y install certbot python3 python3-pip python-is-python3
+apt-get -y install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
+apt-get -y autoremove
 python -m pip install --user virtualenv
 a2enmod authz_groupfile
 a2enmod headers
@@ -186,6 +186,7 @@ for port in ${ALLOWED_PORTS[@]}; do
     ufw allow $port
 done
 ufw --force enable
+
 
 # [Code-Server] Install
 if [ ! -e ./${CONFIG_CODESERVER_INSTALLER} ]; then
@@ -234,88 +235,6 @@ user-data-dir: ${DIR_DATA_CODESERVER}
 log: debug
 EOF
 
-# [logrotate] Config
-cat <<EOF >${CONFIG_OS_LOGROTATION}
-weekly
-rotate 10
-create
-missingok
-include ${PATH_LOGROTATION_CONFIG}
-EOF
-
-# [logrotate] apache2
-cat <<EOF >${CONFIG_LOGROTATION_APACHE}
-${APACHE_LOG}/*.log {
-    compress
-    delaycompress
-    notifempty
-    create 0640 ${APACHE_USER} root
-    sharedscripts
-    postrotate
-            if invoke-rc.d apache2 status > /dev/null 2>&1; then \
-                invoke-rc.d apache2 reload > /dev/null 2>&1; \
-            fi;
-    endscript
-    prerotate
-            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
-                    run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
-            fi; \
-    endscript
-}
-EOF
-
-# [logrotate] mysql-server
-cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
-/var/log/mysql.log ${MYSQL_LOG}/*log {
-    create 640 ${MYSQL_USER} ${MYSQL_USER}
-    compress
-    sharedscripts
-    postrotate
-            test -x /usr/bin/mysqladmin || exit 0
-            MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
-            if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
-                if killall -q -s0 -umysql mysqld; then
-                    exit 1
-                fi
-            else
-                $MYADMIN flush-logs
-            fi
-    endscript
-}
-EOF
-
-# [logrotate] nginx
-cat <<EOF >${CONFIG_LOGROTATION_NGINX}
-${NGINX_LOG}/*.log {
-    compress
-    delaycompress
-    create 0640 ${APACHE_USER} root
-    sharedscripts
-    prerotate
-            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
-                run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
-            fi \
-    endscript
-    postrotate
-            invoke-rc.d nginx rotate >/dev/null 2>&1
-    endscript
-}
-EOF
-
-# [logwatch] Config
-cat <<EOF >${CONFIG_LOGWATCH}
-TmpDir = ${DIR_DATA_LOGWATCH}
-# Output = mail
-Output = stdout
-Format = text
-Encode = none
-Range = yesterday
-Detail = High
-Service = All
-# MailTo = root
-# MailFrom = Logwatch
-# mailer = "/usr/sbin/sendmail -t"
-EOF
 
 # [MySQL] Config
 if [ -f ${CONFIG_OS_MYSQL} ] && [ ! -f ${CONFIG_OS_MYSQL}.bak ]; then
@@ -383,7 +302,7 @@ EOF
 if [ ! -e ${MYSQL_REPO} ]; then
     curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
     dpkg -i ./${MYSQL_REPO}
-    apt-get -y --allow install mysql-server
+    apt-get -y install mysql-server
 fi
 
 # [MySQL] Data Permission
@@ -404,6 +323,20 @@ if [ ! -e /sbin/initctl ]; then
     ln -s /bin/true /sbin/initctl
 fi
 
+
+# [Php] Set display_errors, display_startup_errors as ON
+if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
+fi
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+
+
 # [Apache] Reset user primary/secondary group
 usermod -g ${USERNAME} ${USERNAME}
 usermod -G ${APACHE_USER} ${USERNAME}
@@ -413,11 +346,17 @@ chown -R ${USERNAME} ${DOCPATH_ROOT}/
 chgrp -R ${USERNAME} ${DOCPATH_ROOT}/
 find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
+find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_ROOT}/ -name \*.sh -exec chmod 755 {} \;
 
 chown -R ${USERNAME} ${DOCPATH_CONTENT}/
 chgrp -R ${USERNAME} ${DOCPATH_CONTENT}/
 find ${DOCPATH_CONTENT}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_CONTENT}/ -type f -exec chmod 644 {} \;
+find ${DOCPATH_CONTENT}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_CONTENT}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_CONTENT}/ -name \*.sh -exec chmod 755 {} \;
 
 chown -R ${USERNAME} ${APACHE_LOG}
 chgrp -R ${USERNAME} ${APACHE_LOG}
@@ -528,17 +467,6 @@ EOF
 rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
 a2ensite ${USERNAME}
 
-# [Php] Set display_errors, display_startup_errors as ON
-if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
-    # Backup original
-    cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
-fi
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -656,6 +584,90 @@ server {
 EOF
 rm -f /etc/nginx/sites-enabled/${USERNAME}
 ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
+
+
+# [logrotate] Config
+cat <<EOF >${CONFIG_OS_LOGROTATION}
+weekly
+rotate 10
+create
+missingok
+include ${PATH_LOGROTATION_CONFIG}
+EOF
+
+# [logrotate] apache2
+cat <<EOF >${CONFIG_LOGROTATION_APACHE}
+${APACHE_LOG}/*.log {
+    compress
+    delaycompress
+    notifempty
+    create 0640 ${APACHE_USER} root
+    sharedscripts
+    postrotate
+            if invoke-rc.d apache2 status > /dev/null 2>&1; then \
+                invoke-rc.d apache2 reload > /dev/null 2>&1; \
+            fi;
+    endscript
+    prerotate
+            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
+                    run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
+            fi; \
+    endscript
+}
+EOF
+
+# [logrotate] mysql-server
+cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
+/var/log/mysql.log ${MYSQL_LOG}/*log {
+    create 640 ${MYSQL_USER} ${MYSQL_USER}
+    compress
+    sharedscripts
+    postrotate
+            test -x /usr/bin/mysqladmin || exit 0
+            MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
+            if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
+                if killall -q -s0 -umysql mysqld; then
+                    exit 1
+                fi
+            else
+                $MYADMIN flush-logs
+            fi
+    endscript
+}
+EOF
+
+# [logrotate] nginx
+cat <<EOF >${CONFIG_LOGROTATION_NGINX}
+${NGINX_LOG}/*.log {
+    compress
+    delaycompress
+    create 0640 ${APACHE_USER} root
+    sharedscripts
+    prerotate
+            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
+                run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
+            fi \
+    endscript
+    postrotate
+            invoke-rc.d nginx rotate >/dev/null 2>&1
+    endscript
+}
+EOF
+
+# [logwatch] Config
+cat <<EOF >${CONFIG_LOGWATCH}
+TmpDir = ${DIR_DATA_LOGWATCH}
+# Output = mail
+Output = stdout
+Format = text
+Encode = none
+Range = yesterday
+Detail = High
+Service = All
+# MailTo = root
+# MailFrom = Logwatch
+# mailer = "/usr/sbin/sendmail -t"
+EOF
 
 # Add auto-start user instance
 loginctl enable-linger ${USERNAME}

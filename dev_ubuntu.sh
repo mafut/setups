@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#region Input Variables
+#region Variables from Input
 
-# Load variables from dev_ubuntu.sh.conf
+# Load from dev_ubuntu.sh.conf
 CONF=$1
 if [ -z "${CONF}" ]; then
     CONF=$0.conf
@@ -15,7 +15,7 @@ fi
 source ${CONF}
 source $0.default.conf
 
-# Trim a trailing slash
+# Trim a trailing slash from path
 DOCPATH_ROOT=${DOCPATH_ROOT%/}
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
 DOCPATH_CONTENT=${DOCPATH_CONTENT%/}
@@ -31,8 +31,9 @@ NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
 
 #endregion
 
-#region Config Variables
-# Valuables from OS/environment
+#region Valuables from OS/environment
+
+# OS_PHP_VER
 if [ -f /etc/os-release ]; then
     source /usr/lib/os-release
     case $VERSION_ID in
@@ -45,17 +46,23 @@ else
     exit 1
 fi
 
+# OS_ARCH
 ARCH=$(arch)
 case $ARCH in
 aarch64) OS_ARCH=arm64 ;;
 *) OS_ARCH=amd64 ;;
 esac
 
+# USERNAME
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
     echo "Can't get User Name"
     exit 1
 fi
+
+#endregion
+
+#region Config Variables
 
 # Configuration/Data location
 # MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/

@@ -55,7 +55,7 @@ fi
 # Configuration
 cat <<EOF
 Nginx
-+-- Conf: /etc/nginx/sites-available/${USERNAME}.conf
++-- Conf: /etc/nginx/sites-available/${USERNAME}
 +-- Default for *.domain: ${NGINX_DEFAULT}
 |
 +-- http://${USERNAME}.domain:80

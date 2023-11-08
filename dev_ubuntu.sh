@@ -52,38 +52,91 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-# Configuration
+# Configuration/Data location
+# MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
+CONFIG_OS_NGINX=/etc/nginx/nginx.conf
+CONFIG_OS_APACHE=/etc/apache2/apache2.conf
+CONFIG_OS_PHP=/etc/php/${OS_PHP_VER}/apache2/php.ini
+CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
+CONFIG_OS_LOGROTATION=/etc/logrotate.conf
+
+DIR_CONFIG_LOGROTATION=/etc/logrotate.d
+DIR_CONFIG_LOGWATCH=/etc/logwatch/conf
+DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
+DIR_DATA_LOGWATCH=/var/cache/logwatch
+DIR_DATA_CODESERVER=/home/${USERNAME}/.local/share/code-server
+
+mkdir -p ${DIR_CONFIG_LOGROTATION}
+mkdir -p ${DIR_CONFIG_LOGWATCH}
+mkdir -p ${DIR_CONFIG_CODESERVER}
+mkdir -p ${DIR_DATA_LOGWATCH}
+mkdir -p ${DIR_DATA_CODESERVER}
+mkdir -p ${NGINX_LOG}
+mkdir -p ${APACHE_LOG}
+mkdir -p ${MYSQL_LOG}
+
+CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
+CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
+CONFIG_LOGROTATION_NGINX=${DIR_CONFIG_LOGROTATION}/nginx
+CONFIG_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
+CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
+CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
+CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
+CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
+CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
+CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
+
 cat <<EOF
-Nginx
-+-- Conf: /etc/nginx/sites-available/${USERNAME}
-+-- Default for *.domain: ${NGINX_DEFAULT}
-|
+[Structure]
 +-- http://${USERNAME}.domain:80
-|   +-- Enabled:${ENABLE_HTTP}
-|   +-- Path:${DOCPATH_HTTP}
+|   +-- /
+|       +-- Enabled: ${ENABLE_HTTP}
+|       +-- App: Apache
+|       +-- Config: ${CONFIG_APACHE_DEFAULT}
+|       +-- Path: ${DOCPATH_HTTP}
+|       +-- Port: 80 (Fixed and shared across users)
 |
 +-- https://${USERNAME}.domain:443
-    +-- SSL:${NGINX_CERT_PATH}
-    |
-    +-- /
-    |   +-- Path: ${DOCPATH_ROOT}
-    |   +-- Port: ${APACHE_PORT}
-    |   +-- PHP: ${OS_PHP_VER}
-    |   +-- Apache By: ${APACHE_USER}
-    |   +-- Apache Log: ${APACHE_LOG}
-    |   +-- MySQL By: ${MYSQL_USER}
-    |   +-- MySQL Log: ${MYSQL_LOG}
-    |
-    +-- /content
-    |   +-- Enabled: ${ENABLE_CONTENT}
-    |   +-- Path: ${DOCPATH_CONTENT}
-    |
-    +-- /vscode
-        +-- Enabled: ${ENABLE_VSCODE}
-        +-- Port: ${CODESERVER_PORT}
-        +-- Architecture: ${OS_ARCH}
-        +-- Version: ${CODESERVER_VER}
-        +-- Password: ${CODESERVER_PASS}
+|   +-- Config: ${CONFIG_OS_NGINX}
+|   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
+|   +-- SSL:${NGINX_CERT_PATH}
+|   |
+|   +-- /
+|   |   +-- App: Apache
+|   |   +-- Config: ${CONFIG_APACHE_USER}
+|   |   +-- Path: ${DOCPATH_ROOT}
+|   |   +-- Port: ${APACHE_PORT}
+|   |   +-- PHP: ${OS_PHP_VER}
+|   |   +-- PHP Config: ${CONFIG_OS_PHP}
+|   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
+|   |
+|   +-- /content
+|   |   +-- Enabled: ${ENABLE_CONTENT}
+|   |   +-- App: Nginx
+|   |   +-- Path: ${DOCPATH_CONTENT}
+|   |
+|   +-- /vscode
+|       +-- Enabled: ${ENABLE_VSCODE}
+|       +-- App: Code-Server
+|       +-- Config: ${CONFIG_CODESERVER}
+|       +-- Port: ${CODESERVER_PORT}
+|       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
+|       +-- Password: ${CODESERVER_PASS}
+|
++-- https://${USERNAME}.domain:XXX
+    +-- Allowed Ports: ${ALLOWED_PORTS[*]}
+
+[User]
+Unix: ${USERNAME}
+Nginx/Apache: ${APACHE_USER}
+MySQL: ${MYSQL_USER}
+
+[Log]
+Nginx: ${NGINX_LOG}
+Apache: ${APACHE_LOG}
+MySQL: ${MYSQL_LOG}
+LogWatch: ${DIR_DATA_LOGWATCH}
+
 EOF
 read -p "Hit enter if ok: "
 
@@ -100,7 +153,6 @@ systemctl disable --now code-server
 systemctl disable --now code-server@${USERNAME}
 
 # apt-get update/upgrade
-# add-apt-repository ppa:ondrej/apache2 -y
 apt-get -y --allow update
 apt-get -y --allow upgrade
 
@@ -113,7 +165,6 @@ python -m pip install --user virtualenv
 a2enmod authz_groupfile
 a2enmod headers
 a2enmod rewrite
-a2ensite ${USERNAME}
 
 a2dismod ssl
 a2dismod proxy
@@ -127,33 +178,34 @@ ufw --force reset
 ufw default deny
 ufw allow 22
 ufw limit 22
-ufw allow 80
 ufw allow 443
-ufw allow 8080 # Squid
+if "${ENABLE_HTTP}"; then
+    ufw allow 80
+fi
+for port in ${ALLOWED_PORTS[@]}; do
+    ufw allow $port
+done
 ufw --force enable
 
 # [Code-Server] Install
-if [ ! -e ./code-server_${CODESERVER_VER}_${OS_ARCH}.deb ]; then
-    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/code-server_${CODESERVER_VER}_${OS_ARCH}.deb
-    dpkg -i ./code-server_${CODESERVER_VER}_${OS_ARCH}.deb
+if [ ! -e ./${CONFIG_CODESERVER_INSTALLER} ]; then
+    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER}
+    dpkg -i ./${CONFIG_CODESERVER_INSTALLER}
 fi
 
 # [Code-Server] Reset Permission
-mkdir -p /home/${USERNAME}/.local/share/code-server
 chown -R ${USERNAME} /home/${USERNAME}/.local/
 chgrp -R ${USERNAME} /home/${USERNAME}/.local/
-find /home/${USERNAME}/.local/share/code-server -type d -exec chmod 755 {} \;
-find /home/${USERNAME}/.local/share/code-server -type f -exec chmod 644 {} \;
+find ${DIR_DATA_CODESERVER} -type d -exec chmod 755 {} \;
+find ${DIR_DATA_CODESERVER} -type f -exec chmod 644 {} \;
 
-mkdir -p /home/${USERNAME}/.config/code-server
 chown -R ${USERNAME} /home/${USERNAME}/.config/
 chgrp -R ${USERNAME} /home/${USERNAME}/.config/
-find /home/${USERNAME}/.config/code-server -type d -exec chmod 755 {} \;
-find /home/${USERNAME}/.config/code-server -type f -exec chmod 644 {} \;
+find ${DIR_CONFIG_CODESERVER} -type d -exec chmod 755 {} \;
+find ${DIR_CONFIG_CODESERVER} -type f -exec chmod 644 {} \;
 
-# [Code-Server] Config
-CONFIG=/etc/systemd/system/code-server@${USERNAME}.service
-cat <<EOF >${CONFIG}
+# [Code-Server] Startup
+cat <<EOF >/etc/systemd/system/code-server@${USERNAME}.service
 [Unit]
 Description=code-server
 After=apache2.service
@@ -165,41 +217,39 @@ WorkingDirectory=/home/${USERNAME}
 Restart=always
 RestartSec=10
 
-ExecStart=/usr/bin/code-server --host 127.0.0.1 --user-data-dir /home/${USERNAME}/.local/share/code-server
+ExecStart=/usr/bin/code-server --host 127.0.0.1 --user-data-dir ${DIR_DATA_CODESERVER}
 ExecStop=/bin/kill -s QUIT $MAINPID
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-CONFIG=/home/${USERNAME}/.config/code-server/config.yaml
-cat <<EOF >${CONFIG}
+# [Code-Server] User Config
+cat <<EOF >${CONFIG_CODESERVER}
 bind-addr: 127.0.0.1:${CODESERVER_PORT}
 auth: password
 password: ${CODESERVER_PASS}
 cert: false
-user-data-dir: /home/${USERNAME}/.local/share/code-server
+user-data-dir: ${DIR_DATA_CODESERVER}
 log: debug
 EOF
 
-# [logrotate] Main Config
-CONFIG=/etc/logrotate.conf
-cat <<EOF >${CONFIG}
+# [logrotate] Config
+cat <<EOF >${CONFIG_OS_LOGROTATION}
 weekly
 rotate 10
 create
 missingok
-include /etc/logrotate.d
+include ${PATH_LOGROTATION_CONFIG}
 EOF
 
 # [logrotate] apache2
-CONFIG=/etc/logrotate.d/apache2
-cat <<EOF >${CONFIG}
-/var/log/apache2/*.log {
+cat <<EOF >${CONFIG_LOGROTATION_APACHE}
+${APACHE_LOG}/*.log {
     compress
     delaycompress
     notifempty
-    create 0640 www-data root
+    create 0640 ${APACHE_USER} root
     sharedscripts
     postrotate
             if invoke-rc.d apache2 status > /dev/null 2>&1; then \
@@ -207,18 +257,17 @@ cat <<EOF >${CONFIG}
             fi;
     endscript
     prerotate
-            if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
-                    run-parts /etc/logrotate.d/httpd-prerotate; \
+            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
+                    run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
             fi; \
     endscript
 }
 EOF
 
 # [logrotate] mysql-server
-CONFIG=/etc/logrotate.d/mysql-server
-cat <<EOF >${CONFIG}
-/var/log/mysql.log /var/log/mysql/*log {
-    create 640 mysql mysql
+cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
+/var/log/mysql.log ${MYSQL_LOG}/*log {
+    create 640 ${MYSQL_USER} ${MYSQL_USER}
     compress
     sharedscripts
     postrotate
@@ -236,16 +285,15 @@ cat <<EOF >${CONFIG}
 EOF
 
 # [logrotate] nginx
-CONFIG=/etc/logrotate.d/nginx
-cat <<EOF >${CONFIG}
-/var/log/nginx/*.log {
+cat <<EOF >${CONFIG_LOGROTATION_NGINX}
+${NGINX_LOG}/*.log {
     compress
     delaycompress
-    create 0640 www-data root
+    create 0640 ${APACHE_USER} root
     sharedscripts
     prerotate
-            if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
-                run-parts /etc/logrotate.d/httpd-prerotate; \
+            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
+                run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
             fi \
     endscript
     postrotate
@@ -255,11 +303,8 @@ cat <<EOF >${CONFIG}
 EOF
 
 # [logwatch] Config
-mkdir -p /etc/logwatch/conf
-mkdir -p /var/cache/logwatch
-CONFIG=/etc/logwatch/conf/logwatch.conf
-cat <<EOF >${CONFIG}
-TmpDir = /var/cache/logwatch
+cat <<EOF >${CONFIG_LOGWATCH}
+TmpDir = ${DIR_DATA_LOGWATCH}
 # Output = mail
 Output = stdout
 Format = text
@@ -272,15 +317,12 @@ Service = All
 # mailer = "/usr/sbin/sendmail -t"
 EOF
 
-# [MySQL] Config /etc/mysql/conf.d/my.cnf
-# default my.cnf loads from the following
-# /etc/mysql/conf.d/
-# /etc/mysql/mysql.conf.d/
-CONFIG=/etc/mysql/conf.d/my.cnf
-if [ -f ${CONFIG} ]; then
-    cp -f ${CONFIG} ${CONFIG}.bak
+# [MySQL] Config
+if [ -f ${CONFIG_OS_MYSQL} ] && [ ! -f ${CONFIG_OS_MYSQL}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_MYSQL} ${CONFIG_OS_MYSQL}.bak
 fi
-cat <<EOF >${CONFIG}
+cat <<EOF >${CONFIG_OS_MYSQL}
 [mysqld]
 # When reset root password
 # skip-grant-tables
@@ -345,9 +387,9 @@ if [ ! -e ${MYSQL_REPO} ]; then
 fi
 
 # [MySQL] Data Permission
-chown mysql:${MYSQL_USER} /var/lib/mysql
-chown mysql:${MYSQL_USER} /var/lib/mysql-files
-chown mysql:${MYSQL_USER} ${MYSQL_LOG}
+chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
+chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
+chown ${MYSQL_USER}:${MYSQL_USER} ${MYSQL_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
@@ -377,7 +419,6 @@ chgrp -R ${USERNAME} ${DOCPATH_CONTENT}/
 find ${DOCPATH_CONTENT}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_CONTENT}/ -type f -exec chmod 644 {} \;
 
-mkdir -p ${APACHE_LOG}
 chown -R ${USERNAME} ${APACHE_LOG}
 chgrp -R ${USERNAME} ${APACHE_LOG}
 find ${APACHE_LOG} -type d -exec chmod 755 {} \;
@@ -386,9 +427,57 @@ find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 # [Apache] User to Apache
 chown -R ${APACHE_USER} ${APACHE_LOG}
 
+# [Apache] Configure core
+if [ -f ${CONFIG_OS_APACHE} ] && [ ! -f ${CONFIG_OS_APACHE}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_APACHE} ${CONFIG_OS_APACHE}.bak
+fi
+cat <<EOF >${CONFIG_OS_APACHE}
+DefaultRuntimeDir \${APACHE_RUN_DIR}
+PidFile \${APACHE_PID_FILE}
+Timeout 300
+KeepAlive On
+MaxKeepAliveRequests 100
+KeepAliveTimeout 5
+
+# These need to be set in /etc/apache2/envvars
+User \${APACHE_RUN_USER}
+Group \${APACHE_RUN_GROUP}
+
+HostnameLookups Off
+
+IncludeOptional mods-enabled/*.load
+IncludeOptional mods-enabled/*.conf
+
+Include ports.conf
+
+<Directory />
+        Options FollowSymLinks
+        AllowOverride None
+        Require all denied
+</Directory>
+
+AccessFileName .htaccess
+<FilesMatch "^\.ht">
+        Require all denied
+</FilesMatch>
+
+ErrorLog ${APACHE_LOG_DIR}/error.log
+LogLevel warn
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+
+IncludeOptional conf-enabled/*.conf
+IncludeOptional sites-enabled/*.conf
+EOF
+
 # [Apache] Configure http
-CONFIG=/etc/apache2/sites-available/000-default.conf
-cat <<EOF >${CONFIG}
+# Note: certbot passes this path
+cat <<EOF >${CONFIG_APACHE_DEFAULT}
 AcceptFilter http none
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -406,15 +495,11 @@ AcceptFilter http none
     </Directory>
 </VirtualHost>
 EOF
-if "${ENABLE_HTTP}"; then
-    a2ensite 000-default
-else
-    a2dissite 000-default
-    rm -f /etc/apache2/sites-enabled/000-default.conf
-fi
+rm -f /etc/apache2/sites-enabled/000-default.conf
+a2ensite 000-default
 
-CONFIG=/etc/apache2/sites-available/${USERNAME}.conf
-cat <<EOF >${CONFIG}
+# [Apache] Configure user
+cat <<EOF >${CONFIG_APACHE_USER}
 AcceptFilter http none
 Listen ${APACHE_PORT}
 <VirtualHost *:${APACHE_PORT}>
@@ -441,21 +526,65 @@ Listen ${APACHE_PORT}
 </VirtualHost>
 EOF
 rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
-ln -s /etc/apache2/sites-available/${USERNAME}.conf /etc/apache2/sites-enabled/${USERNAME}.conf
 a2ensite ${USERNAME}
 
 # [Php] Set display_errors, display_startup_errors as ON
-CONFIG=/etc/php/${OS_PHP_VER}/apache2/php.ini
-cp -f ${CONFIG} ${CONFIG}.bak
-sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG}.bak > ${CONFIG}"
-cp -f ${CONFIG} ${CONFIG}.bak
-sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG}.bak > ${CONFIG}"
-cp -f ${CONFIG} ${CONFIG}.bak
-sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG}.bak > ${CONFIG}"
+if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
+fi
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
+sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+
+# [Nginx] Configure core config
+if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_NGINX} ${CONFIG_OS_NGINX}.bak
+fi
+cat <<EOF >${CONFIG_OS_NGINX}
+user ${APACHE_USER};
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        # server_tokens off;
+
+        # server_names_hash_bucket_size 64;
+        # server_name_in_redirect off;
+
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+        ssl_prefer_server_ciphers on;
+
+        access_log ${NGINX_LOG}/access.log;
+        error_log ${NGINX_LOG}/error.log;
+
+        gzip on;
+
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;
+}
+EOF
 
 # [Nginx] Configure http 80 as backup
-CONFIG=/etc/nginx/sites-available/default
-cat <<EOF >${CONFIG}
+cat <<EOF >${CONFIG_NGINX_DEFAULT}
 server {
     listen 80 default_server;
     server_name _;
@@ -464,7 +593,7 @@ server {
     index index.html;
 
     location / {
-        try_files $uri $uri/ =404;
+        try_files \$uri \$uri/ =404;
     }
 }
 EOF
@@ -506,8 +635,7 @@ EOF
     )
 fi
 
-CONFIG=/etc/nginx/sites-available/${USERNAME}
-cat <<EOF >${CONFIG}
+cat <<EOF >${CONFIG_NGINX_USER}
 server {
     ${NGINX_LISTEN}
     server_name ${USERNAME}.*;
@@ -527,52 +655,58 @@ server {
 }
 EOF
 rm -f /etc/nginx/sites-enabled/${USERNAME}
-ln -s /etc/nginx/sites-available/${USERNAME} /etc/nginx/sites-enabled/${USERNAME}
+ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 # Add auto-start user instance
 loginctl enable-linger ${USERNAME}
 
 # Add auto-start and start services
-systemctl enable --now nginx
+systemctl reload mysql
+systemctl reload apache2
+systemctl reload nginx
+
 systemctl enable --now code-server@${USERNAME}
-systemctl enable --now apache2
 systemctl enable --now mysql
+systemctl enable --now apache2
+systemctl enable --now nginx
 
 # [Cron] Schedule to pull
-CONFIG=${DOCPATH_ROOT}/setting/crontab.bak
-cat <<EOF >${CONFIG}
+cat <<EOF >crontab.conf
 # Pull the latest for apache/php
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 # Pull the latest for static
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_CONTENT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 EOF
-crontab -u ${USERNAME} ${DOCPATH_ROOT}/setting/crontab.bak
+crontab -u ${USERNAME} crontab.conf
 
 # Manual setup
 cat <<EOF
+
+TIPS
+
 [MySQL] Remove root password
-1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
-2. sudo systemctl restart mysql
-3. Reset
-  use mysql;
-  update user set authentication_string="" where User='root';
-  update user set plugin="mysql_native_password" where User='root';
-  flush privileges;
-4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
-5. sudo systemctl restart mysql
+  1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
+  2. sudo systemctl restart mysql
+  3. Reset
+    use mysql;
+    update user set authentication_string="" where User='root';
+    update user set plugin="mysql_native_password" where User='root';
+    flush privileges;
+  4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
+  5. sudo systemctl restart mysql
 
 [MySQL] Add root password for Production
-sudo mysql_secure_installation
+  sudo mysql_secure_installation
 
 [SSH] Cert auth instead of password
-1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
-2. Confirm if /etc/ssh/sshd_config allows rsa auth
-  PubkeyAuthentication        yes
-  RSAAuthentication           yes
-  AuthorizedKeysFile          .ssh/authorized_keys
-3. sudo systemctl restart sshd
-4. Confirm if "ssh -i id_rsa ${USERNAME}@[hostname]" works
-5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
-  PasswordAuthentication      no
-6. sudo systemctl restart sshd
+  1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
+  2. Confirm if /etc/ssh/sshd_config allows rsa auth
+    PubkeyAuthentication        yes
+    RSAAuthentication           yes
+    AuthorizedKeysFile          .ssh/authorized_keys
+  3. sudo systemctl restart sshd
+  4. Confirm if "ssh -i id_rsa ${USERNAME}@[hostname]" works
+  5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
+    PasswordAuthentication      no
+  6. sudo systemctl restart sshd
 EOF

@@ -12,4 +12,5 @@ data.test.*
 data.live.*
 
 Thumbs.db
+crontab.conf
 dev_ubuntu.sh.conf

@@ -406,9 +406,11 @@ AcceptFilter http none
     </Directory>
 </VirtualHost>
 EOF
-rm -f /etc/apache2/sites-enabled/000-default.conf
 if "${ENABLE_HTTP}"; then
-    ln -s /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-enabled/000-default.conf
+    a2ensite 000-default
+else
+    a2dissite 000-default
+    rm -f /etc/apache2/sites-enabled/000-default.conf
 fi
 
 CONFIG=/etc/apache2/sites-available/${USERNAME}.conf
@@ -440,6 +442,7 @@ Listen ${APACHE_PORT}
 EOF
 rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
 ln -s /etc/apache2/sites-available/${USERNAME}.conf /etc/apache2/sites-enabled/${USERNAME}.conf
+a2ensite ${USERNAME}
 
 # [Php] Set display_errors, display_startup_errors as ON
 CONFIG=/etc/php/${OS_PHP_VER}/apache2/php.ini
@@ -450,10 +453,25 @@ sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CO
 cp -f ${CONFIG} ${CONFIG}.bak
 sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG}.bak > ${CONFIG}"
 
-# [Nginx] Configure https
+# [Nginx] Configure http 80 as backup
+CONFIG=/etc/nginx/sites-available/default
+cat <<EOF >${CONFIG}
+server {
+    listen 80 default_server;
+    server_name _;
+
+    root ${DOCPATH_HTTP};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+EOF
 rm -f /etc/nginx/sites-enabled/default
 
-# [] is not needed in if. Format is 'if "${boolean}"''
+# [Nginx] Configure https 443
+# Note: [] is not needed in if. Format is 'if "${boolean}"''
 if "${NGINX_DEFAULT}"; then
     NGINX_LISTEN='listen 443 ssl default_server;'
 else

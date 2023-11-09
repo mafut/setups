@@ -263,18 +263,34 @@ log: debug
 EOF
 
 # [Code-Server] Extensions
+readonly INSTALLED=($(code-server --list-extensions))
+echo "Installed extensions:${INSTALLED[@]}"
+installed() {
+    for installed in ${INSTALLED[@]}; do
+        if [[ $installed = ${1} ]]; then
+            # true
+            return 0
+        fi
+    done
+    # false
+    return 1
+}
 for extension in ${CODESERVER_EXTS[@]}; do
-    code-server --install-extension $extension
+    if installed $extension; then
+        echo "skip $extension"
+    else
+        code-server --install-extension $extension
+    fi
 done
 
 # [Code-Server] Extension config
-if [ ! -e ./php-cs-fixer.phar ]; then
-    curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o php-cs-fixer.phar
+if [ ! -e /home/${USERNAME}/php-cs-fixer.phar ]; then
+    curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
 fi
 
 # Explicit Folding "zokugun.explicit-folding"
-jq '.["editor.foldingStrategy"]|=auto' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["editor.defaultFoldingRangeProvider"]|=zokugun.explicit-folding' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}

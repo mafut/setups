@@ -6,6 +6,27 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
+if [ $# = 3 ]; then
+    # Initialize variables
+    PASS=$2
+    if [ -z "${PASS}" ]; then
+        echo "Can't get password"
+        exit 1
+    fi
+
+    HOMENETWORK=$3
+    if [ -z "${HOMENETWORK}" ]; then
+        echo "Can't get allowed host"
+        exit 1
+    fi
+
+    HOMEIP=$(getent hosts ${HOMENETWORK} | awk '{print $1}')
+    if [ -z "${HOMENETWORK}" ]; then
+        echo "Can't get IP of ${HOMENETWORK}"
+        exit 1
+    fi
+fi
+
 #region synology_init
 function synology_init() {
     # APT update/upgrade
@@ -23,7 +44,6 @@ function synology_setup() {
     htpasswd -b -c /etc/squid/.htpasswd proxy ${PASS}
 
     # [Proxy] Setup squid
-    HOMEIP=$(getent hosts ${HOMENETWORK} | awk '{print $1}')
     CONFIG=/etc/squid/squid.conf
     cat <<EOF >${CONFIG}
 acl localnet src 10.0.0.0/8
@@ -135,7 +155,6 @@ function ubuntu_setup() {
     htpasswd -b -c /etc/squid/.htpasswd proxy ${PASS}
 
     # [Proxy] Setup squid
-    HOMEIP=$(getent hosts ${HOMENETWORK} | awk '{print $1}')
     CONFIG=/etc/squid/squid.conf
     cat <<EOF >${CONFIG}
 acl localnet src 10.0.0.0/8
@@ -210,18 +229,12 @@ EOF
 #endregion
 
 if [ $# = 3 ]; then
-    # Initialize variables
-    PASS=$1
-    if [ -z "${PASS}" ]; then
-        echo "Can't get password"
-        exit 1
-    fi
-
-    HOMENETWORK=$2
-    if [ -z "${HOMENETWORK}" ]; then
-        echo "Can't get allowed host"
-        exit 1
-    fi
+    cat <<EOF
+    [Configuration]
+    Allowed: ${HOMENETWORK}
+    Resolved: ${HOMEIP}
+    Password: ${PASS}
+EOF
 
     case $1 in
     ubuntu)

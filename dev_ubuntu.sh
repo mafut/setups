@@ -287,12 +287,23 @@ for extension in ${CODESERVER_EXTS[@]}; do
     fi
 done
 
+# Manually install extensions that didn't work in code-server
+# small.php-ci
+if installed small.php-ci; then
+    echo "skip small.php-ci"
+else
+    sudo -u ${USERNAME} curl -fL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/small/vsextensions/php-ci/0.4.2/vspackage -o /home/${USERNAME}/small.php-ci.vsix
+    if [ -e /home/${USERNAME}/small.php-ci.vsix ]; then
+        sudo -u ${USERNAME} code-server --install-extension /home/${USERNAME}/small.php-ci.vsix
+    fi
+fi
+
 # [Code-Server] Extension config
 if [ ! -e /home/${USERNAME}/php-cs-fixer.phar ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
 fi
 
-if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING}  ]; then
+if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
     sudo -u ${USERNAME} touch ${CONFIG_CODESERVER_VSCODESETTING}
 fi
 

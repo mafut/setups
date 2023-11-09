@@ -283,11 +283,11 @@ jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRege
 
 # php cs fixer "junstyle.php-cs-fixer"
 jq '.["php-cs-fixer.executablePath"]|="/home/${USERNAME}/php-cs-fixer.phar"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.formatHtml"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}

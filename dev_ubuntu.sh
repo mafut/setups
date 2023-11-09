@@ -169,6 +169,10 @@ if ! grep -q ${USERNAME} /etc/sudoers; then
     echo ${USERNAME} ALL=\(ALL\) NOPASSWD:ALL >>/etc/sudoers
 fi
 
+# [Base Setup] Reset user primary/secondary group
+usermod -g ${USERNAME} ${USERNAME}
+usermod -G ${APACHE_USER} ${USERNAME}
+
 # [Base Setup] Stop Services at the first
 systemctl disable --now nginx
 systemctl disable --now apache2
@@ -420,11 +424,15 @@ sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | spon
 
 #region Apache
 
-# [Apache] Reset user primary/secondary group
-usermod -g ${USERNAME} ${USERNAME}
-usermod -G ${APACHE_USER} ${USERNAME}
-
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
+chown -R ${USERNAME} ${DOCPATH_HTTP}/
+chgrp -R ${USERNAME} ${DOCPATH_HTTP}/
+find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_HTTP}/ -type f -exec chmod 644 {} \;
+find ${DOCPATH_HTTP}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_HTTP}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_HTTP}/ -name \*.sh -exec chmod 755 {} \;
+
 chown -R ${USERNAME} ${DOCPATH_ROOT}/
 chgrp -R ${USERNAME} ${DOCPATH_ROOT}/
 find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
@@ -446,7 +454,7 @@ chgrp -R ${USERNAME} ${APACHE_LOG}
 find ${APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${APACHE_LOG} -type f -exec chmod 644 {} \;
 
-# [Apache] User to Apache
+# [Apache] User to APACHE_USER
 chown -R ${APACHE_USER} ${APACHE_LOG}
 
 # [Apache] Configure core
@@ -553,6 +561,9 @@ a2ensite ${USERNAME}
 #endregion
 
 #region Nginx
+
+# [Nginx] User to APACHE_USER
+chown -R ${APACHE_USER} ${NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -808,12 +819,11 @@ TIPS
 
 [SSH] Cert auth instead of password
   1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
-  2. Confirm if /etc/ssh/sshd_config allows rsa auth
+  2. Confirm if /etc/ssh/sshd_config allows cert auth
     PubkeyAuthentication        yes
-    RSAAuthentication           yes
     AuthorizedKeysFile          .ssh/authorized_keys
   3. sudo systemctl restart sshd
-  4. Confirm if "ssh -i id_rsa ${USERNAME}@[hostname]" works
+  4. Confirm if ssh works with cert
   5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
     PasswordAuthentication      no
   6. sudo systemctl restart sshd

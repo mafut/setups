@@ -4,13 +4,8 @@ This is personal notes to keep setup script for cloud instance and Raspberry Pi 
 
 Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Viode and even Netflix). Even non-restricted site would have better performance by avoiding unnecessary routing. Both setup scripts support one host name that doesn't require password to access. If the host is for your home ip address by DDNS, no password from home.
 
-### proxy/setup_synology.sh
-
-This is just shell script to setup proxy using Docker on synology . 
-
-### proxy/setup_ubuntu.sh
-
-This is just shell script to setup proxy on cloud VM server like Azure, AWS or VPS. From my experience, I don't recommend to use Azure or AWS because they count traffic volume and it will exceed even free tier.
+### proxy/setup.sh
+This is shell script to setup proxy on Synology or cloud VM server like Azure, AWS or VPS. From my experience, I don't recommend to use Azure or AWS because they count traffic volume and it will exceed even free tier.
 
 
 # TV Recorder with PX-S1UD
@@ -22,9 +17,9 @@ This is for ubuntu 22.04 LTS.
 
 # PHP Development with Code-Server
 
-### dev_ubuntu.sh
+### setup_lamp.sh
 
-This script setup Apache-PHP-MySQL site with Code-Server. This also supports multi-user and expects the following as the result.
+This script set up Linux-Apache-MySQL-PHP (LAMP) site with Code-Server on Ubuntu. This also supports multi-user and expects the following as the result.
 
 Url | What you can
 -|-
@@ -49,17 +44,17 @@ If you'd like to use specific config, add "default_server" in listen directive l
     ```
 3. Setup a site with self-signed cert
     ```
-    touch ./dev_ubuntu.sh.conf
-    sudo ./dev_ubuntu.sh
+    touch ./setup_lamp.sh.conf
+    sudo ./setup_lamp.sh
     ```
 5. Issue a certificate
     ```
     sudo certbot certonly --agree-tos --webroot -w /var/www/html/ -d [user].[your_domain]
     ```
-6. Edit dev_ubuntu.sh.conf
+6. Edit setup_lamp.sh.conf
 7. Setup with real cert
     ```
-    sudo ./dev_ubuntu.sh
+    sudo ./setup_lamp.sh
     ```
 
 ### dev_ubuntu.sh.conf with real cert

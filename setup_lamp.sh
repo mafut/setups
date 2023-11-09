@@ -1,5 +1,10 @@
 #!/bin/bash
 
+DIR_SELF=$(
+    cd $(dirname $0)
+    pwd
+)
+
 #region Variables from Input
 
 # Load from dev_ubuntu.sh.conf
@@ -22,10 +27,7 @@ DOCPATH_CONTENT=${DOCPATH_CONTENT%/}
 
 # NGINX_CERT_PATH
 if [ -z "${NGINX_CERT_PATH}" ]; then
-    NGINX_CERT_PATH=$(
-        cd $(dirname $0)/cert
-        pwd
-    )
+    NGINX_CERT_PATH=${DIR_SELF}/cert
 fi
 NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
 
@@ -220,9 +222,9 @@ ufw --force enable
 #region Code-Server
 
 # [Code-Server] Install
-if [ ! -e ./${CONFIG_CODESERVER_INSTALLER} ]; then
-    sudo -u ${USERNAME} curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER}
-    dpkg -i ./${CONFIG_CODESERVER_INSTALLER}
+if [ ! -e ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER} ]; then
+    sudo -u ${USERNAME} curl -fL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER} -o ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER}
+    dpkg -i ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER}
 fi
 
 # [Code-Server] Reset Permission
@@ -292,17 +294,16 @@ done
 if installed small.php-ci; then
     echo "skip small.php-ci"
 else
-    sudo -u ${USERNAME} curl -fL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/small/vsextensions/php-ci/0.4.2/vspackage -o /home/${USERNAME}/small.php-ci.vsix
-    if [ -e /home/${USERNAME}/small.php-ci.vsix ]; then
-        sudo -u ${USERNAME} code-server --install-extension /home/${USERNAME}/small.php-ci.vsix
+    VSCODE_EXTENSION=${DIR_SELF}/download/small.php-ci.vsix
+    if [ ! -e ${VSCODE_EXTENSION} ]; then
+        sudo -u ${USERNAME} curl -fL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/small/vsextensions/php-ci/0.4.2/vspackage -o ${VSCODE_EXTENSION}
+        if [ -e ${VSCODE_EXTENSION} ]; then
+            sudo -u ${USERNAME} code-server --install-extension ${VSCODE_EXTENSION}
+        fi
     fi
 fi
 
 # [Code-Server] Extension config
-if [ ! -e /home/${USERNAME}/php-cs-fixer.phar ]; then
-    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
-fi
-
 if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
     sudo -u ${USERNAME} touch ${CONFIG_CODESERVER_VSCODESETTING}
 fi
@@ -317,7 +318,11 @@ jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETT
 jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 # php cs fixer "junstyle.php-cs-fixer"
-jq '.["php-cs-fixer.executablePath"]|="/home/${USERNAME}/php-cs-fixer.phar"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+PHP_EXTENSION=${DIR_SELF}/download/php-cs-fixer.phar
+if [ ! -e ${PHP_EXTENSION} ]; then
+    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_EXTENSION}
+fi
+jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
@@ -807,7 +812,7 @@ cat <<EOF >crontab.conf
 # Pull the latest for static
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_CONTENT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 EOF
-crontab -u ${USERNAME} crontab.conf
+crontab -u ${USERNAME} setup_lamp.crontab.conf
 
 #endregion
 

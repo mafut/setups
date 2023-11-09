@@ -1,16 +1,13 @@
 .gitconfig
-.DS_Store
 .vscode
+.DS_Store
+Thumbs.db
 
 *.bak
-*.deb
 *.pyc
-*.rpm
 *~
 
-data.test.*
-data.live.*
-
-Thumbs.db
-crontab.conf
-dev_ubuntu.sh.conf
+/download/**
+!/download/.*
+setup_lamp.*.conf
+!setup_lamp.sh.default.conf

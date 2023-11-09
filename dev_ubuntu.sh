@@ -93,6 +93,7 @@ CONFIG_LOGROTATION_NGINX=${DIR_CONFIG_LOGROTATION}/nginx
 CONFIG_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
 CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
 CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
+CONFIG_CODESERVER_VSCODESETTING=${DIR_DATA_CODESERVER}/User/setting.json
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
@@ -153,6 +154,9 @@ LogWatch: ${DIR_DATA_LOGWATCH}
 [VS Code Extensions]
 ${CODESERVER_EXTS[*]}
 
+[VS Code Setting]
+${CONFIG_CODESERVER_VSCODESETTING}
+
 EOF
 read -p "Hit enter if ok: "
 
@@ -175,7 +179,7 @@ systemctl disable --now code-server@${USERNAME}
 # [Base Setup] Install packages
 apt-get -y update
 apt-get -y upgrade
-apt-get -y install ufw wget zip unzip
+apt-get -y install ufw wget zip unzip jq moreutils
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y autoremove
@@ -262,6 +266,31 @@ EOF
 for extension in ${CODESERVER_EXTS[@]}; do
     code-server --install-extension $extension
 done
+
+# [Code-Server] Extension config
+if [ ! -e ./php-cs-fixer.phar ]; then
+    curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o php-cs-fixer.phar
+fi
+
+# Explicit Folding "zokugun.explicit-folding"
+jq '.["editor.foldingStrategy"]|=auto' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.defaultFoldingRangeProvider"]|=zokugun.explicit-folding' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+
+# php cs fixer "junstyle.php-cs-fixer"
+jq '.["php-cs-fixer.executablePath"]|="/home/${USERNAME}/php-cs-fixer.phar"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.formatHtml"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+
+jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 #endregion
 
@@ -363,12 +392,9 @@ if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
 fi
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|display_errors = Off|display_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|display_startup_errors = Off|display_startup_errors = On|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
-cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.tmp
-sh -c "sed \"s|;extension=php_soap.dll|extension=php_soap.dll|g\" ${CONFIG_OS_PHP}.tmp > ${CONFIG_OS_PHP}"
+sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 
 #endregion
 

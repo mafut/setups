@@ -288,6 +288,10 @@ if [ ! -e /home/${USERNAME}/php-cs-fixer.phar ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
 fi
 
+if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING}  ]; then
+    sudo -u ${USERNAME} touch ${CONFIG_CODESERVER_VSCODESETTING}
+fi
+
 # Explicit Folding "zokugun.explicit-folding"
 jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
@@ -762,9 +766,9 @@ EOF
 loginctl enable-linger ${USERNAME}
 
 # Add auto-start and start services
-systemctl reload mysql
-systemctl reload apache2
-systemctl reload nginx
+# systemctl reload mysql
+# systemctl reload apache2
+# systemctl reload nginx
 
 systemctl enable --now code-server@${USERNAME}
 systemctl enable --now mysql

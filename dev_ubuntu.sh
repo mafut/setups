@@ -217,7 +217,7 @@ ufw --force enable
 
 # [Code-Server] Install
 if [ ! -e ./${CONFIG_CODESERVER_INSTALLER} ]; then
-    curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER}
+    sudo -u ${USERNAME} curl -fOL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER}
     dpkg -i ./${CONFIG_CODESERVER_INSTALLER}
 fi
 
@@ -263,7 +263,7 @@ log: debug
 EOF
 
 # [Code-Server] Extensions
-readonly INSTALLED=($(code-server --list-extensions))
+readonly INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 echo "Installed extensions:${INSTALLED[@]}"
 installed() {
     for installed in ${INSTALLED[@]}; do
@@ -279,13 +279,13 @@ for extension in ${CODESERVER_EXTS[@]}; do
     if installed $extension; then
         echo "skip $extension"
     else
-        code-server --install-extension $extension
+        sudo -u ${USERNAME} code-server --install-extension $extension
     fi
 done
 
 # [Code-Server] Extension config
 if [ ! -e /home/${USERNAME}/php-cs-fixer.phar ]; then
-    curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
+    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o /home/${USERNAME}/php-cs-fixer.phar
 fi
 
 # Explicit Folding "zokugun.explicit-folding"
@@ -376,7 +376,7 @@ EOF
 
 # [MySQL] Install
 if [ ! -e ${MYSQL_REPO} ]; then
-    curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
+    sudo -u ${USERNAME} curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
     dpkg -i ./${MYSQL_REPO}
     apt-get -y install mysql-server
 fi

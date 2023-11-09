@@ -425,6 +425,9 @@ sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | spon
 #region Apache
 
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
+# Ubuntu 22.04 the user dir has 750 permissions by default rather than 755.
+chmod 755 /home/${USERNAME}/
+
 chown -R ${USERNAME} ${DOCPATH_HTTP}/
 chgrp -R ${USERNAME} ${DOCPATH_HTTP}/
 find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;

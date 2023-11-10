@@ -331,7 +331,10 @@ jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | spon
 jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
-jq '.["workbench.colorTheme"]|="Visual Studio Dark"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+# Preference
+jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["git.autofetch"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["git.enableSmartCommit"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 chown ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}

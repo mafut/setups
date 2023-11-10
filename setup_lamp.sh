@@ -335,6 +335,7 @@ jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESE
 jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["git.autofetch"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 jq '.["git.enableSmartCommit"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["explorer.confirmDragAndDrop"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 chown ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}

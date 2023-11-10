@@ -9,5 +9,6 @@ Thumbs.db
 
 /download/**
 !/download/.*
+!/download/*.vsix
 setup_lamp.*.conf
 !setup_lamp.sh.default.conf

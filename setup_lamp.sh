@@ -160,9 +160,10 @@ ${CODESERVER_EXTS[*]}
 ${CONFIG_CODESERVER_VSCODESETTING}
 
 EOF
-read -p "Hit enter if ok: "
 
 #endregion
+
+read -p "Hit enter if ok: "
 
 #region Base Setup
 
@@ -271,6 +272,7 @@ EOF
 # [Code-Server] Extensions
 readonly INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 echo "Installed extensions:${INSTALLED[@]}"
+
 installed() {
     for installed in ${INSTALLED[@]}; do
         if [[ $installed = ${1} ]]; then
@@ -281,27 +283,26 @@ installed() {
     # false
     return 1
 }
+
 for extension in ${CODESERVER_EXTS[@]}; do
     if installed $extension; then
-        echo "skip $extension"
+        echo "Already installed $extension"
     else
         sudo -u ${USERNAME} code-server --install-extension $extension
     fi
 done
 
-# Manually install extensions that didn't work in code-server
-# small.php-ci
-if installed small.php-ci; then
-    echo "skip small.php-ci"
-else
-    VSCODE_EXTENSION=${DIR_SELF}/download/small.php-ci.vsix
-    if [ ! -e ${VSCODE_EXTENSION} ]; then
-        sudo -u ${USERNAME} curl -fL https://marketplace.visualstudio.com/_apis/public/gallery/publishers/small/vsextensions/php-ci/0.4.2/vspackage -o ${VSCODE_EXTENSION}
-        if [ -e ${VSCODE_EXTENSION} ]; then
-            sudo -u ${USERNAME} code-server --install-extension ${VSCODE_EXTENSION}
-        fi
+# Manually install extensions that code-server can't install from UI
+# Save installing extensions in download folder
+for vsix in ${DIR_SELF}/download/*.vsix; do
+    [ -e "$vsix" ] || continue
+    extname=$(basename "$vsix" | sed -E 's/(.+)-[0-9.]+\.vsix/\1/')
+    if installed $extname; then
+        echo "Already installed $extname ($vsix)"
+    else
+        sudo -u ${USERNAME} code-server --install-extension $vsix
     fi
-fi
+done
 
 # [Code-Server] Extension config
 if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
@@ -309,28 +310,30 @@ if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
 fi
 
 # Explicit Folding "zokugun.explicit-folding"
-jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 # php cs fixer "junstyle.php-cs-fixer"
 PHP_EXTENSION=${DIR_SELF}/download/php-cs-fixer.phar
 if [ ! -e ${PHP_EXTENSION} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_EXTENSION}
 fi
-jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
-jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["workbench.colorTheme"]|="Visual Studio Dark"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+
+jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 #endregion
 
@@ -399,9 +402,9 @@ default-character-set = utf8mb4
 EOF
 
 # [MySQL] Install
-if [ ! -e ${MYSQL_REPO} ]; then
-    sudo -u ${USERNAME} curl -fOL https://dev.mysql.com/get/${MYSQL_REPO}
-    dpkg -i ./${MYSQL_REPO}
+if [ ! -e ${DIR_SELF}/download/${MYSQL_REPO} ]; then
+    sudo -u ${USERNAME} curl -fL https://dev.mysql.com/get/${MYSQL_REPO} -o ${DIR_SELF}/download/${MYSQL_REPO}
+    dpkg -i ${DIR_SELF}/download/${MYSQL_REPO}
     apt-get -y install mysql-server
 fi
 
@@ -432,9 +435,9 @@ if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
 fi
-sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
+sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
+sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
 
 #endregion
 
@@ -806,13 +809,13 @@ systemctl enable --now apache2
 systemctl enable --now nginx
 
 # [Cron] Schedule to pull
-cat <<EOF >crontab.conf
+cat <<EOF >$0.crontab.conf
 # Pull the latest for apache/php
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 # Pull the latest for static
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_CONTENT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 EOF
-crontab -u ${USERNAME} setup_lamp.crontab.conf
+crontab -u ${USERNAME} $0.crontab.conf
 
 #endregion
 

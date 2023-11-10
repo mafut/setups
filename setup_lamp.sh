@@ -5,15 +5,17 @@ DIR_SELF=$(
     pwd
 )
 
-#region Variables from Input
+#region Variables
 
-# Load from default or given conf
 CONF=$1
 if [ -z "${CONF}" ]; then
+    # Load from default if no input
     CONF=$0.conf
 fi
+
 if [ ! -e ${CONF} ]; then
-    echo "Usage: this_script.sh [conf=this_script.sh.conf]"
+    echo "Usage: sudo setup_lamp.sh [conf=setup_lamp.sh.conf]"
+    echo "Run \"touch setup_lamp.sh.conf\" for first run. This is needed action to avoid accidental run."
     exit 1
 fi
 
@@ -30,10 +32,6 @@ if [ -z "${NGINX_CERT_PATH}" ]; then
     NGINX_CERT_PATH=${DIR_SELF}/cert
 fi
 NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
-
-#endregion
-
-#region Valuables from OS/environment
 
 # OS_PHP_VER
 if [ -f /etc/os-release ]; then
@@ -61,10 +59,6 @@ if [ -z "${USERNAME}" ]; then
     echo "Can't get User Name"
     exit 1
 fi
-
-#endregion
-
-#region Config Variables
 
 # Configuration/Data location
 # MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
@@ -100,6 +94,10 @@ CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
+
+#endregion
+
+#region Config confirmation
 
 cat <<EOF
 [Structure]
@@ -160,10 +158,9 @@ ${CODESERVER_EXTS[*]}
 ${CONFIG_CODESERVER_VSCODESETTING}
 
 EOF
+read -p "Hit enter if ok: "
 
 #endregion
-
-read -p "Hit enter if ok: "
 
 #region Base Setup
 

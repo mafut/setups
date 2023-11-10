@@ -57,7 +57,7 @@ If you'd like to use specific config, add "default_server" in listen directive l
     sudo ./setup_lamp.sh
     ```
 
-### dev_ubuntu.sh.conf with real cert
+### setup_lamp.sh.conf with real cert
 ```
 DOCPATH_ROOT=/home/[user]/php_app
 DOCPATH_HTTP=/var/www/html

@@ -7,7 +7,7 @@ DIR_SELF=$(
 
 #region Variables from Input
 
-# Load from dev_ubuntu.sh.conf
+# Load from default or given conf
 CONF=$1
 if [ -z "${CONF}" ]; then
     CONF=$0.conf

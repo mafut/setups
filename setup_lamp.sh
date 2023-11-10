@@ -310,30 +310,32 @@ if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
 fi
 
 # Explicit Folding "zokugun.explicit-folding"
-jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
 # php cs fixer "junstyle.php-cs-fixer"
 PHP_EXTENSION=${DIR_SELF}/download/php-cs-fixer.phar
 if [ ! -e ${PHP_EXTENSION} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_EXTENSION}
 fi
-jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
-jq '.["workbench.colorTheme"]|="Visual Studio Dark"' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["workbench.colorTheme"]|="Visual Studio Dark"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
 
-jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sudo -u ${USERNAME} sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+chown ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}
+chgrp ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}
 
 #endregion
 
@@ -435,9 +437,9 @@ if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
 fi
-sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
-sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
-sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sudo -u ${USERNAME} sponge ${CONFIG_OS_PHP}
+sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 
 #endregion
 

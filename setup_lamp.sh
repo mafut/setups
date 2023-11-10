@@ -190,7 +190,6 @@ apt-get -y install ufw wget zip unzip jq moreutils
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
 apt-get -y autoremove
-python -m pip install --user virtualenv
 
 a2enmod authz_groupfile
 a2enmod headers

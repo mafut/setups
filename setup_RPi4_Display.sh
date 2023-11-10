@@ -20,7 +20,7 @@ apt-get install -y --allow cmatrix
 
 # Screensaver: termsaver
 apt-get install python3-pip build-essential
-pip install termsaver
+sudo -u ${USERNAME} pip install termsaver
 
 # Configure to run screensaver before login as info hub
 CONFIG=/usr/local/bin/loginScreensaver.sh

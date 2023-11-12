@@ -25,8 +25,8 @@ Url | What you can
 -|-
 http://[user].[your_domain]/ | Apache default page as default. This is used for certbot as well.
 https://[user].[your_domain]/ | Your PHP-MySQL site on HTTPS.
-https://[user].[your_domain]/content/ | For static contents.
-https://[user].[your_domain]/vscode/ | Code-Server to develop your PHP-MySQL site.
+https://[user].[your_domain]/content/ | For static contents. location "/content/" can change.
+https://[user].[your_domain]/vscode/ | Code-Server to develop your PHP-MySQL site. location "/vscode/" can change.
 
 Request host doesn't match with configured server_name of /etc/nginx/sites-enabled/, first configuration will be used.
 If you'd like to use specific config, add "default_server" in listen directive like "listen 443 ssl default_server".
@@ -61,9 +61,9 @@ If you'd like to use specific config, add "default_server" in listen directive l
 ```
 DOCPATH_ROOT=/home/[user]/php_app
 DOCPATH_HTTP=/var/www/html
-DOCPATH_CONTENT=/home/[user]/static_content
+DOCPATH_STATIC=/home/[user]/static_content
 ENABLE_HTTP=true
-ENABLE_CONTENT=true
+ENABLE_STATIC=true
 ENABLE_VSCODE=true
 NGINX_CERT_PATH=/etc/letsencrypt/live/[user].[your_domain]
 NGINX_DEFAULT=true

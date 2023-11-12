@@ -25,7 +25,9 @@ source $0.default.conf
 # Trim a trailing slash from path
 DOCPATH_ROOT=${DOCPATH_ROOT%/}
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
-DOCPATH_CONTENT=${DOCPATH_CONTENT%/}
+DOCPATH_STATIC=${DOCPATH_STATIC%/}
+LOCATION_STATIC=${LOCATION_STATIC%/}
+LOCATION_VSCODE=${LOCATION_VSCODE%/}
 
 # NGINX_CERT_PATH
 if [ -z "${NGINX_CERT_PATH}" ]; then
@@ -122,13 +124,13 @@ cat <<EOF
 |   |   +-- PHP Config: ${CONFIG_OS_PHP}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
 |   |
-|   +-- /content
-|   |   +-- Visiable: ${ENABLE_CONTENT}
-|   |   +-- Path: ${DOCPATH_CONTENT}
+|   +-- ${LOCATION_STATIC}
+|   |   +-- Visiable: ${ENABLE_STATIC}
+|   |   +-- Path: ${DOCPATH_STATIC}
 |   |   +-- Config: ${CONFIG_NGINX_USER}
 |   |   +-- App/Port: Nginx:443
 |   |
-|   +-- /vscode
+|   +-- ${LOCATION_VSCODE}
 |       +-- Visiable: ${ENABLE_VSCODE}
 |       +-- Path: ${DIR_DATA_CODESERVER}
 |       +-- Config Code-Server: ${CONFIG_CODESERVER}
@@ -464,13 +466,13 @@ find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${USERNAME} ${DOCPATH_CONTENT}/
-chgrp -R ${USERNAME} ${DOCPATH_CONTENT}/
-find ${DOCPATH_CONTENT}/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_CONTENT}/ -type f -exec chmod 644 {} \;
-find ${DOCPATH_CONTENT}/ -name .htaccess -exec chmod 644 {} \;
-find ${DOCPATH_CONTENT}/ -name index.html -exec chmod 644 {} \;
-find ${DOCPATH_CONTENT}/ -name \*.sh -exec chmod 755 {} \;
+chown -R ${USERNAME} ${DOCPATH_STATIC}/
+chgrp -R ${USERNAME} ${DOCPATH_STATIC}/
+find ${DOCPATH_STATIC}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_STATIC}/ -type f -exec chmod 644 {} \;
+find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
 chown -R ${USERNAME} ${APACHE_LOG}
 chgrp -R ${USERNAME} ${APACHE_LOG}
@@ -656,11 +658,11 @@ else
 fi
 
 NGINX_CONTENT=
-if "${ENABLE_CONTENT}"; then
+if "${ENABLE_STATIC}"; then
     NGINX_CONTENT=$(
         cat <<EOF
-    location /content/ {
-        alias ${DOCPATH_CONTENT}/;
+    location ${LOCATION_STATIC}/ {
+        alias ${DOCPATH_STATIC}/;
         autoindex on;
         index index.html;
     }
@@ -672,7 +674,7 @@ NGINX_VSCODE=
 if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
-    location /vscode/ {
+    location ${LOCATION_VSCODE}/ {
         proxy_pass http://127.0.0.1:${CODESERVER_PORT}/;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
@@ -814,7 +816,7 @@ cat <<EOF >$0.crontab.conf
 # Pull the latest for apache/php
 */5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
 # Pull the latest for static
-*/5 * * * * /bin/sh -c 'cd ${DOCPATH_CONTENT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
+*/5 * * * * /bin/sh -c 'cd ${DOCPATH_STATIC} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
 EOF
 crontab -u ${USERNAME} $0.crontab.conf
 

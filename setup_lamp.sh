@@ -87,9 +87,9 @@ CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
 CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
 CONFIG_LOGROTATION_NGINX=${DIR_CONFIG_LOGROTATION}/nginx
 CONFIG_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
-CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
 CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
-CONFIG_CODESERVER_VSCODESETTING=${DIR_DATA_CODESERVER}/User/settings.json
+CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
+CONFIG_VSCODE=${DIR_DATA_CODESERVER}/User/settings.json
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
@@ -104,35 +104,36 @@ cat <<EOF
 +-- http://${USERNAME}.domain:80
 |   +-- /
 |       +-- Visiable: ${ENABLE_HTTP}
-|       +-- App: Apache
-|       +-- Config: ${CONFIG_APACHE_DEFAULT}
 |       +-- Path: ${DOCPATH_HTTP}
-|       +-- Port: 80 (Fixed and shared across users)
+|       +-- Config: ${CONFIG_APACHE_DEFAULT}
+|       +-- App/Port: Apache:80 (Fixed and shared across users)
 |
 +-- https://${USERNAME}.domain:443
-|   +-- Config: ${CONFIG_OS_NGINX}
+|   +-- Base Config: ${CONFIG_OS_NGINX}
 |   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
 |   +-- SSL:${NGINX_CERT_PATH}
 |   |
 |   +-- /
-|   |   +-- App: Apache
-|   |   +-- Config: ${CONFIG_APACHE_USER}
+|   |   +-- Visiable: true (Fxied)
 |   |   +-- Path: ${DOCPATH_ROOT}
-|   |   +-- Port: ${APACHE_PORT}
+|   |   +-- Config: ${CONFIG_APACHE_USER}
+|   |   +-- App/Port: Apache:${APACHE_PORT}
 |   |   +-- PHP: ${OS_PHP_VER}
 |   |   +-- PHP Config: ${CONFIG_OS_PHP}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
 |   |
 |   +-- /content
 |   |   +-- Visiable: ${ENABLE_CONTENT}
-|   |   +-- App: Nginx
 |   |   +-- Path: ${DOCPATH_CONTENT}
+|   |   +-- Config: ${CONFIG_NGINX_USER}
+|   |   +-- App/Port: Nginx:443
 |   |
 |   +-- /vscode
 |       +-- Visiable: ${ENABLE_VSCODE}
-|       +-- App: Code-Server
-|       +-- Config: ${CONFIG_CODESERVER}
-|       +-- Port: ${CODESERVER_PORT}
+|       +-- Path: ${DIR_DATA_CODESERVER}
+|       +-- Config Code-Server: ${CONFIG_CODESERVER}
+|       +-- Config VS Code: ${CONFIG_VSCODE}
+|       +-- App/Port: Code-Server:${CODESERVER_PORT}
 |       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
 |       +-- Password: ${CODESERVER_PASS}
 |
@@ -153,9 +154,6 @@ LogWatch: ${DIR_DATA_LOGWATCH}
 
 [VS Code Extensions]
 ${CODESERVER_EXTS[*]}
-
-[VS Code Setting]
-${CONFIG_CODESERVER_VSCODESETTING}
 
 EOF
 read -p "Hit enter if ok: "
@@ -301,42 +299,42 @@ for vsix in ${DIR_SELF}/download/*.vsix; do
 done
 
 # [Code-Server] Extension config
-if [ ! -e ${CONFIG_CODESERVER_VSCODESETTING} ]; then
-    sudo -u ${USERNAME} touch ${CONFIG_CODESERVER_VSCODESETTING}
+if [ ! -e ${CONFIG_VSCODE} ]; then
+    sudo -u ${USERNAME} touch ${CONFIG_VSCODE}
 fi
 
 # Explicit Folding "zokugun.explicit-folding"
-jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 
 # php cs fixer "junstyle.php-cs-fixer"
 PHP_EXTENSION=${DIR_SELF}/download/php-cs-fixer.phar
 if [ ! -e ${PHP_EXTENSION} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_EXTENSION}
 fi
-jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 
 # Preference
-jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["git.autofetch"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["git.confirmSync"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["git.enableSmartCommit"]|=true' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-jq '.["explorer.confirmDragAndDrop"]|=false' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
+jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["git.autofetch"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["git.confirmSync"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["git.enableSmartCommit"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["explorer.confirmDragAndDrop"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 
-jq --sort-keys '.' ${CONFIG_CODESERVER_VSCODESETTING} | sponge ${CONFIG_CODESERVER_VSCODESETTING}
-chown ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}
-chgrp ${USERNAME} ${CONFIG_CODESERVER_VSCODESETTING}
+jq --sort-keys '.' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+chown ${USERNAME} ${CONFIG_VSCODE}
+chgrp ${USERNAME} ${CONFIG_VSCODE}
 
 #endregion
 

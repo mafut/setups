@@ -327,6 +327,9 @@ jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE
 jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 
+# Render Line Endings
+jq '.["editor.renderWhitespace"]|="all"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+
 # Preference
 jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 jq '.["git.autofetch"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}

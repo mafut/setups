@@ -447,6 +447,7 @@ fi
 sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 
 #endregion
 
@@ -838,6 +839,7 @@ TIPS
   1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
   2. sudo systemctl restart mysql
   3. Reset
+    mysql -u root
     use mysql;
     update user set authentication_string="" where User='root';
     update user set plugin="mysql_native_password" where User='root';

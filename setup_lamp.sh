@@ -49,6 +49,13 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
+# PHP_VERS
+PHP_VERS=(
+    8.2
+    8.1
+    7.4
+)
+
 # Configuration/Data location
 # MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
 CONFIG_OS_NGINX=/etc/nginx/nginx.conf
@@ -173,22 +180,26 @@ apt-get -y install ufw wget zip unzip jq moreutils
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
 apt-get -y install logrotate logwatch nginx apache2 composer
-apt-get -y install php8.2 libapache2-mod-php8.2 php8.2-apcu php8.2-cli php8.2-common php8.2-gd php8.2-intl php8.2-mbstring php8.2-mysql php8.2-soap
-apt-get -y install php8.1 libapache2-mod-php8.1 php8.1-apcu php8.1-cli php8.1-common php8.1-gd php8.1-intl php8.1-mbstring php8.1-mysql php8.1-soap
-apt-get -y install php7.4 libapache2-mod-php7.4 php7.4-apcu php7.4-cli php7.4-common php7.4-gd php7.4-intl php7.4-mbstring php7.4-mysql php7.4-soap
+for phpver in "${PHP_VERS[@]}"; do
+    apt-get -y install php$phpver libapache2-mod-php$phpver php$phpver-{apcu,cli,common,curl,zip,gd,intl,mbstring,mysql,mysqli,soap,xml}
+done
 apt-get -y autoremove
 
 update-alternatives --list php
 update-alternatives --set php /usr/bin/php${PHP_VER}
 
-a2enmod authz_groupfile
-a2enmod headers
-a2enmod rewrite
-
 a2dismod ssl
 a2dismod proxy
 a2dismod proxy_http
 a2dismod proxy_wstunnel
+for phpver in "${PHP_VERS[@]}"; do
+    a2dismod php$phpver
+done
+
+a2enmod authz_groupfile
+a2enmod headers
+a2enmod rewrite
+a2enmod php${PHP_VER}
 
 a2dissite default-ssl
 
@@ -433,11 +444,6 @@ fi
 #region PHP
 
 # [Php] php.ini
-PHP_VERS=(
-    8.2
-    8.1
-    7.4
-)
 for phpver in "${PHP_VERS[@]}"; do
     CONFIG_OS_PHP=/etc/php/$phpver/apache2/php.ini
 

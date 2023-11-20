@@ -304,38 +304,39 @@ done
 if [ ! -e ${CONFIG_VSCODE} ]; then
     sudo -u ${USERNAME} touch ${CONFIG_VSCODE}
 fi
+PHP_CS_FIXER_PHAR=${DIR_SELF}/download/php-cs-fixer.phar
+if [ ! -e ${PHP_CS_FIXER_PHAR} ]; then
+    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_CS_FIXER_PHAR}
+fi
 
-# Explicit Folding "zokugun.explicit-folding"
-jq '.["editor.foldingStrategy"]|="auto"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[php]"."explicitFolding.rules"|=[]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[shellscript]"."explicitFolding.rules"|=[]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.foldingStrategy"]|="auto"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[php]"."explicitFolding.rules"|=[]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[shellscript]"."explicitFolding.rules"|=[]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # php cs fixer "junstyle.php-cs-fixer"
-PHP_EXTENSION=${DIR_SELF}/download/php-cs-fixer.phar
-if [ ! -e ${PHP_EXTENSION} ]; then
-    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_EXTENSION}
-fi
-jq '.["php-cs-fixer.executablePath"]|="${PHP_EXTENSION}"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["php-cs-fixer.autoFixByBracket"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["php-cs-fixer.formatHtml"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["php-cs-fixer.lastDownload"]|=0' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["php-cs-fixer.rules"]|=""' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["php-cs-fixer.executablePath"]|="'${PHP_CS_FIXER_PHAR}'"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.autoFixByBracket"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.formatHtml"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.lastDownload"]|=0' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.rules"]|=""' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Render Line Endings
-jq '.["editor.renderWhitespace"]|="all"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["editor.renderControlCharacters"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.renderWhitespace"]|="all"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Preference
-jq '.["workbench.colorTheme"]|="Default Dark Modern"' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["git.autofetch"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["git.confirmSync"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["git.enableSmartCommit"]|=true' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-jq '.["explorer.confirmDragAndDrop"]|=false' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
+jq '.["workbench.colorTheme"]|="Default Dark Modern"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.autofetch"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.confirmSync"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.enableSmartCommit"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["explorer.confirmDelete"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["explorer.confirmDragAndDrop"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 jq --sort-keys '.' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 chown ${USERNAME} ${CONFIG_VSCODE}

@@ -35,19 +35,6 @@ if [ -z "${NGINX_CERT_PATH}" ]; then
 fi
 NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
 
-# OS_PHP_VER
-if [ -f /etc/os-release ]; then
-    source /usr/lib/os-release
-    case $VERSION_ID in
-    20.04) OS_PHP_VER=7.4 ;;
-    22.04) OS_PHP_VER=8.1 ;;
-    *) exit 1 ;;
-    esac
-else
-    echo "/etc/os-release is not exist."
-    exit 1
-fi
-
 # OS_ARCH
 ARCH=$(arch)
 case $ARCH in
@@ -66,7 +53,6 @@ fi
 # MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
 CONFIG_OS_NGINX=/etc/nginx/nginx.conf
 CONFIG_OS_APACHE=/etc/apache2/apache2.conf
-CONFIG_OS_PHP=/etc/php/${OS_PHP_VER}/apache2/php.ini
 CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
 CONFIG_OS_LOGROTATION=/etc/logrotate.conf
 
@@ -120,8 +106,7 @@ cat <<EOF
 |   |   +-- Path: ${DOCPATH_ROOT}
 |   |   +-- Config: ${CONFIG_APACHE_USER}
 |   |   +-- App/Port: Apache:${APACHE_PORT}
-|   |   +-- PHP: ${OS_PHP_VER}
-|   |   +-- PHP Config: ${CONFIG_OS_PHP}
+|   |   +-- PHP: ${PHP_VER}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
 |   |
 |   +-- ${LOCATION_STATIC}
@@ -181,12 +166,20 @@ systemctl disable --now code-server
 systemctl disable --now code-server@${USERNAME}
 
 # [Base Setup] Install packages
+add-apt-repository ppa:ondrej/php -y
 apt-get -y update
 apt-get -y upgrade
 apt-get -y install ufw wget zip unzip jq moreutils
 apt-get -y install certbot python3 python3-pip python-is-python3
-apt-get -y install logrotate logwatch nginx apache2 php php-gd php-mbstring php-mysql php-apcu php-soap libapache2-mod-php composer
+apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
+apt-get -y install logrotate logwatch nginx apache2 composer
+apt-get -y install php8.2 libapache2-mod-php8.2 php8.2-apcu php8.2-cli php8.2-common php8.2-gd php8.2-intl php8.2-mbstring php8.2-mysql php8.2-soap
+apt-get -y install php8.1 libapache2-mod-php8.1 php8.1-apcu php8.1-cli php8.1-common php8.1-gd php8.1-intl php8.1-mbstring php8.1-mysql php8.1-soap
+apt-get -y install php7.4 libapache2-mod-php7.4 php7.4-apcu php7.4-cli php7.4-common php7.4-gd php7.4-intl php7.4-mbstring php7.4-mysql php7.4-soap
 apt-get -y autoremove
+
+update-alternatives --list php
+update-alternatives --set php /usr/bin/php${PHP_VER}
 
 a2enmod authz_groupfile
 a2enmod headers
@@ -439,15 +432,26 @@ fi
 
 #region PHP
 
-# [Php] Set display_errors, display_startup_errors as ON
-if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
-    # Backup original
-    cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
-fi
-sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+# [Php] php.ini
+PHP_VERS=(
+    8.2
+    8.1
+    7.4
+)
+for phpver in "${PHP_VERS[@]}"; do
+    CONFIG_OS_PHP=/etc/php/$phpver/apache2/php.ini
+
+    if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
+        # Backup original
+        cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
+    fi
+    sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|;extension_dir = "./"|extension_dir = "./"|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|;extension=mysqli|extension=mysqli|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+done
 
 #endregion
 

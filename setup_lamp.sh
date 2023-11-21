@@ -584,14 +584,14 @@ Listen ${APACHE_PORT}
 
     DocumentRoot ${DOCPATH_ROOT}
     <Directory ${DOCPATH_ROOT}>
-        Options All
+        Options None
         AllowOverride All
         Require all granted
     </Directory>
 
     Alias /application/views ${DOCPATH_ROOT}/application/views
     <Directory ${DOCPATH_ROOT}/application/views>
-        Options All
+        Options None
         AllowOverride All
         Require all granted
     </Directory>

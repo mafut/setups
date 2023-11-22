@@ -93,6 +93,9 @@ CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 #endregion
 
 #region Config confirmation
+LIST_PORTS=$(printf "%s " "${ALLOWED_PORTS[@]}")
+LIST_EXTS=$(printf "%s\n" "${CODESERVER_EXTS[@]}")
+LIST_JOBS=$(printf "%s\n" "${CRON_JOBS[@]}")
 
 cat <<EOF
 [Structure]
@@ -106,7 +109,7 @@ cat <<EOF
 +-- https://${USERNAME}.domain:443
 |   +-- Base Config: ${CONFIG_OS_NGINX}
 |   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
-|   +-- SSL:${NGINX_CERT_PATH}
+|   +-- SSL: ${NGINX_CERT_PATH}
 |   |
 |   +-- /
 |   |   +-- Visiable: true (Fxied)
@@ -132,7 +135,7 @@ cat <<EOF
 |       +-- Password: ${CODESERVER_PASS}
 |
 +-- https://${USERNAME}.domain:XXXX
-    +-- Allowed Ports: ${ALLOWED_PORTS[*]}
+    +-- Allowed Ports: ${LIST_PORTS}
 
 [User]
 Unix: ${USERNAME}
@@ -147,7 +150,10 @@ MySQL: ${MYSQL_LOG}
 LogWatch: ${DIR_DATA_LOGWATCH}
 
 [VS Code Extensions]
-${CODESERVER_EXTS[*]}
+${LIST_EXTS}
+
+[Cron Jobs]
+${LIST_JOBS}
 
 EOF
 read -p "Hit enter if ok: "
@@ -213,7 +219,7 @@ ufw allow 443
 if "${ENABLE_HTTP}"; then
     ufw allow 80
 fi
-for port in ${ALLOWED_PORTS[@]}; do
+for port in "${ALLOWED_PORTS[@]}"; do
     ufw allow $port
 done
 ufw --force enable
@@ -274,7 +280,7 @@ readonly INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 echo "Installed extensions:${INSTALLED[@]}"
 
 installed() {
-    for installed in ${INSTALLED[@]}; do
+    for installed in "${INSTALLED[@]}"; do
         if [[ $installed = ${1} ]]; then
             # true
             return 0
@@ -284,7 +290,7 @@ installed() {
     return 1
 }
 
-for extension in ${CODESERVER_EXTS[@]}; do
+for extension in "${CODESERVER_EXTS[@]}"; do
     if installed $extension; then
         echo "Already installed $extension"
     else
@@ -294,7 +300,7 @@ done
 
 # Manually install extensions that code-server can't install from UI
 # Save installing extensions in download folder
-for vsix in ${DIR_SELF}/download/*.vsix; do
+for vsix in "${DIR_SELF}/download/*.vsix"; do
     [ -e "$vsix" ] || continue
     extname=$(basename "$vsix" | sed -E 's/(.+)-[0-9.]+\.vsix/\1/')
     if installed $extname; then

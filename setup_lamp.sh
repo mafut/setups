@@ -183,6 +183,7 @@ add-apt-repository ppa:ondrej/php -y
 apt-get -y update
 apt-get -y upgrade
 apt-get -y install ufw wget zip unzip jq moreutils
+apt-get -y install postfix dovecot-imapd
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
 apt-get -y install logrotate logwatch nginx apache2 composer

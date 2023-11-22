@@ -829,12 +829,7 @@ systemctl enable --now apache2
 systemctl enable --now nginx
 
 # [Cron] Schedule to pull
-cat <<EOF >$0.crontab.conf
-# Pull the latest for apache/php
-*/5 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git pull origin master'
-# Pull the latest for static
-*/5 * * * * /bin/sh -c 'cd ${DOCPATH_STATIC} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'
-EOF
+printf "%s\n" "${CRON_JOBS[@]}" > $0.crontab.conf
 crontab -u ${USERNAME} $0.crontab.conf
 
 #endregion

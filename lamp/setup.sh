@@ -14,8 +14,8 @@ if [ -z "${CONF}" ]; then
 fi
 
 if [ ! -e ${CONF} ]; then
-    echo "Usage: sudo setup_lamp.sh [conf=setup_lamp.sh.conf]"
-    echo "Run \"touch setup_lamp.sh.conf\" for first run. This is needed action to avoid accidental run."
+    echo "Usage: sudo ./setup.sh [conf=setup.sh.conf]"
+    echo "Run \"touch ./setup.sh.conf\" for first run. This is needed action to avoid accidental run."
     exit 1
 fi
 

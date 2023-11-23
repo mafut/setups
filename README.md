@@ -10,14 +10,14 @@ This is shell script to setup proxy on Synology or cloud VM server like Azure, A
 
 # TV Recorder with PX-S1UD
 
-### tv/setup_ubuntu.sh (Incompleted)
+### tv/setup.sh (Incompleted)
 
 This is for ubuntu 22.04 LTS.
 
 
 # PHP Development with Code-Server
 
-### setup_lamp.sh
+### lamp/setup.sh
 
 This script set up Linux-Apache-MySQL-PHP (LAMP) site with Code-Server on Ubuntu. This also supports multi-user and expects the following as the result.
 
@@ -44,20 +44,21 @@ If you'd like to use specific config, add "default_server" in listen directive l
     ```
 3. Setup a site with default setting
     ```
-    touch ./setup_lamp.sh.conf
-    sudo ./setup_lamp.sh
+    cd setupscripts/lamp
+    touch ./setup.sh.conf
+    sudo ./setup.sh
     ```
 5. Issue a certificate by Let's encrypt
     ```
     sudo certbot certonly --agree-tos --webroot -w /var/www/html/ -d [user].[your_domain]
     ```
-6. Edit setup_lamp.sh.conf
+6. Edit setup.sh.conf
 7. Setup with real cert
     ```
-    sudo ./setup_lamp.sh
+    sudo ./setup.sh
     ```
 
-### setup_lamp.sh.conf
+### setup.sh.conf
 
 Example Case
 * real cert
@@ -85,7 +86,7 @@ CRON_JOBS=(
 
 # Raspberry Pi 4
 
-### setup_RPi4.sh
-### setup_RPi4_Display.sh
+### RPi4/setup.sh
+### RPi4/setup_display.sh
 
 This script setup Raspberry Pi 4 to run one or more of above. Expected OS is ubuntu 22.04.

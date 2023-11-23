@@ -7,8 +7,7 @@ Thumbs.db
 *.pyc
 *~
 
-/download/**
-!/download/.*
-!/download/*.vsix
-setup_lamp.*.conf
-!setup_lamp.sh.default.conf
+/lamp/download/**
+!/lamp/download/*.vsix
+setup.*.conf
+!setup.sh.default.conf

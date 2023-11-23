@@ -162,9 +162,9 @@ read -p "Hit enter if ok: "
 
 #region Base Setup
 
-# [Base Setup] Skip password when sudo. The format is "${USERNAME} ALL=NOPASSWD: ALL"
+# [Base Setup] Skip password when sudo. The format is "${USERNAME} ALL=(ALL) NOPASSWD: ALL"
 if ! grep -q ${USERNAME} /etc/sudoers; then
-    echo ${USERNAME} ALL=\(ALL\) NOPASSWD:ALL >>/etc/sudoers
+    echo ${USERNAME} ALL=\(ALL\) NOPASSWD: ALL>>/etc/sudoers
 fi
 
 # [Base Setup] Reset user primary/secondary group

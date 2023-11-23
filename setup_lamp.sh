@@ -320,10 +320,8 @@ if [ ! -e ${PHP_CS_FIXER_PHAR} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_CS_FIXER_PHAR}
 fi
 
-# Auto Open Preview Panel
-jq '.["autoOpenPreviewPanel.extensionEnabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["autoOpenPreviewPanel.languages"]|="markdown"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["autoOpenPreviewPanel.openPreviewToSide"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+# Preview md as default
+jq '.["workbench.editorAssociations"]|={"**/VSNotes/*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Explicit Folding
 jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"

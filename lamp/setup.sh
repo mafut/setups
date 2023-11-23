@@ -277,7 +277,6 @@ log: debug
 EOF
 
 # [Code-Server] Extensions
-readonly INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 echo "Installed extensions:${INSTALLED[@]}"
 
 installed() {
@@ -291,23 +290,26 @@ installed() {
     return 1
 }
 
+# Manually install extensions that can't install from code-server marketplace
+# Save installing extensions in download folder
+INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
+for vsix in ${DIR_SELF}/download/*.vsix; do
+    extname=$(basename "$vsix" | sed -E 's/(.+)-[0-9.]+\.vsix/\1/')
+    echo $vsix' -> '$extname
+    if installed $extname; then
+        echo "Already manually installed $extname"
+    else
+        sudo -u ${USERNAME} code-server --install-extension $vsix
+    fi
+done
+
+# Install from marketplace
+INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 for extension in "${CODESERVER_EXTS[@]}"; do
     if installed $extension; then
         echo "Already installed $extension"
     else
         sudo -u ${USERNAME} code-server --install-extension $extension
-    fi
-done
-
-# Manually install extensions that code-server can't install from UI
-# Save installing extensions in download folder
-for vsix in "${DIR_SELF}/download/*.vsix"; do
-    [ -e "$vsix" ] || continue
-    extname=$(basename "$vsix" | sed -E 's/(.+)-[0-9.]+\.vsix/\1/')
-    if installed $extname; then
-        echo "Already installed $extname ($vsix)"
-    else
-        sudo -u ${USERNAME} code-server --install-extension $vsix
     fi
 done
 

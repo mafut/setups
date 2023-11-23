@@ -22,10 +22,12 @@ fi
 
 # [Manual] Add user to sudoers
 if ! grep -q ${USERNAME} /etc/sudoers; then
-    echo Add to sudoers manually
-    echo "1. Run \"sudo visudo\""
-    echo "2. Add \"${USERNAME} ALL=(ALL) NOPASSWD:ALL\""
-    echo "3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X"
+cat <<EOF
+    [Add to sudoers manually]
+    1. Run "sudo visudo"
+    2. Add "${USERNAME} ALL=(ALL) NOPASSWD: ALL"
+    3. Nano editor shortcut is ctrl+O -> Y -> Y -> ctrl+X
+EOF
 fi
 
 # apt-get update/upgrade

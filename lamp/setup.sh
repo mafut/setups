@@ -362,6 +362,7 @@ jq '.["git.confirmSync"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["git.enableSmartCommit"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["security.workspace.trust.untrustedFiles"]|="open"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["workbench.colorTheme"]|="Default Dark Modern"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["workbench.iconTheme"]|="vscode-icons"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["workbench.startupEditor"]|="newUntitledFile"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 jq --sort-keys '.' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}

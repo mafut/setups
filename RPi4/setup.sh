@@ -22,7 +22,7 @@ fi
 
 # [Manual] Add user to sudoers
 if ! grep -q ${USERNAME} /etc/sudoers; then
-cat <<EOF
+    cat <<EOF
     [Add to sudoers manually]
     1. Run "sudo visudo"
     2. Add "${USERNAME} ALL=(ALL) NOPASSWD: ALL"

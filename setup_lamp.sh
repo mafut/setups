@@ -320,6 +320,11 @@ if [ ! -e ${PHP_CS_FIXER_PHAR} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_CS_FIXER_PHAR}
 fi
 
+# Auto Open Preview Panel
+jq '.["autoOpenPreviewPanel.extensionEnabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["autoOpenPreviewPanel.languages"]|="markdown"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["autoOpenPreviewPanel.openPreviewToSide"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
 # Explicit Folding
 jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["editor.foldingStrategy"]|="auto"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
@@ -836,7 +841,7 @@ systemctl enable --now apache2
 systemctl enable --now nginx
 
 # [Cron] Schedule to pull
-printf "%s\n" "${CRON_JOBS[@]}" > $0.crontab.conf
+printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf
 crontab -u ${USERNAME} $0.crontab.conf
 
 #endregion

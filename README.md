@@ -1,21 +1,16 @@
-This is personal notes to keep setup script for cloud instance and Raspberry Pi to run some applicatioins.
+# README
 
-# Proxy (squid)
+This is personal notes to keep setup script for cloud instance and Raspberry Pi to run some applications.
 
-Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Viode and even Netflix). Even non-restricted site would have better performance by avoiding unnecessary routing. Both setup scripts support one host name that doesn't require password to access. If the host is for your home ip address by DDNS, no password from home.
+## Proxy (squid)
+
+Main target user is who lives outside of Japan and expects to browse restricted sites and watch ondemand TV (e.g. TVer, Amazon Prime Video and even Netflix). Even non-restricted site would have better performance by avoiding unnecessary routing. Both setup scripts support one host name that doesn't require password to access. If the host is for your home ip address by DDNS, no password from home.
 
 ### proxy/setup.sh
 This is shell script to setup proxy on Synology or cloud VM server like Azure, AWS or VPS. From my experience, I don't recommend to use Azure or AWS because they count traffic volume and it will exceed even free tier.
 
 
-# TV Recorder with PX-S1UD
-
-### tv/setup.sh (Incompleted)
-
-This is for ubuntu 22.04 LTS.
-
-
-# PHP Development with Code-Server
+## PHP Development with Code-Server
 
 ### lamp/setup.sh
 
@@ -31,7 +26,7 @@ https://[user].[your_domain]/vscode/ | Code-Server to develop your PHP-MySQL sit
 Request host doesn't match with configured server_name of /etc/nginx/sites-enabled/, first configuration will be used.
 If you'd like to use specific config, add "default_server" in listen directive like "listen 443 ssl default_server".
 
-## Quick Steps
+### Quick Steps
 1. Create new user and login
     ```
     sudo adduser [user]
@@ -84,9 +79,17 @@ CRON_JOBS=(
 )
 ```
 
-# Raspberry Pi 4
+## Raspberry Pi 4
 
-### RPi4/setup.sh
-### RPi4/setup_display.sh
+These scripts setup Raspberry Pi 4 to run one or more of above. Expected OS is ubuntu 22.04.
 
-This script setup Raspberry Pi 4 to run one or more of above. Expected OS is ubuntu 22.04.
+### RPi4/setup_waveshare-4.3-dsi-lcd.sh
+
+### RPi4/setup_gpi-case-2.sh
+
+
+## TV Recorder with PX-S1UD
+
+### tv/setup.sh (Incompleted)
+
+This is for ubuntu 22.04 LTS.

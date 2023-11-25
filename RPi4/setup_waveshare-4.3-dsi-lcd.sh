@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is for 
+# This is for
 # https://www.waveshare.com/4.3inch-DSI-LCD.htm
 # https://www.waveshare.com/wiki/4.3inch_DSI_LCD
 

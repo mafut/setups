@@ -23,10 +23,10 @@ EOF
 fi
 
 # apt-get update/upgrade
-apt-get -y --allow update
-apt-get -y --allow upgrade
-apt-get -y --allow purge needrestart
-apt-get -y --allow raspi-config
+apt-get -y update
+apt-get -y upgrade
+apt-get -y purge needrestart
+apt-get -y raspi-config
 
 # set vim as default
 update-alternatives --set editor /usr/bin/vim.basic

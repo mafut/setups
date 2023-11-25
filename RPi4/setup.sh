@@ -5,14 +5,6 @@ SCRIPT_PATH=$(
     pwd
 )
 
-WIFIPOINT=$1
-WIFIPASS=$2
-
-if [ -z "${WIFIPOINT}" ] || [ -z "${WIFIPASS}" ]; then
-    echo "Usage: this_script.sh [wifi point] [wifi pass]"
-    exit 1
-fi
-
 # Check sudo or not
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
@@ -36,6 +28,9 @@ apt-get -y --allow upgrade
 apt-get -y --allow purge needrestart
 apt-get -y --allow raspi-config
 
+# set vim as default
+update-alternatives --set editor /usr/bin/vim.basic
+
 # set time zone
 timedatectl set-timezone America/Los_Angeles
 
@@ -53,7 +48,7 @@ tmpfs   /var/log    tmpfs   defaults,size=32m,noatime,mode=0750     0   0
 EOF
 fi
 
-# Make /etc/init.d/prep-varlog
+# Make /etc/init.d/prep-varlog to setup /var/log
 CONFIG=/etc/init.d/prep-varlog
 cat <<EOF >${CONFIG}
 #!/bin/bash
@@ -153,26 +148,4 @@ cd ${SCRIPT_PATH}
 if [ ! -f /etc/ssh/ssh_host_key ] && [ ! -f /etc/ssh/ssh_host_dsa_key ]; then
     echo Add /etc/ssh/ssh_host_key and /etc/ssh/ssh_host_dsa_key
     ssh-keygen -A
-fi
-
-# Add Wifi Access Point
-CONFIG=/etc/netplan/50-cloud-init.yaml
-if ! grep -q ${WIFIPOINT} ${CONFIG}; then
-    echo Configure WiFi Access Point
-    cat <<EOF >${CONFIG}
-network:
-    ethernets:
-        eth0:
-            dhcp4: true
-            optional: true
-    version: 2
-    wifis:
-        wlan0:
-            dhcp4: true
-            optional: true
-            access-points:
-                ${WIFIPOINT}:
-                    password: "${WIFIPASS}"
-EOF
-    netplan apply
 fi

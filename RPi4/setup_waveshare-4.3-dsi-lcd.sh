@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This is for 
+# https://www.waveshare.com/4.3inch-DSI-LCD.htm
+# https://www.waveshare.com/wiki/4.3inch_DSI_LCD
+
 SCRIPT_PATH=$(
     cd $(dirname $0)
     pwd
@@ -12,7 +16,9 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-# xset https://www.waveshare.com/wiki/4.3inch_DSI_LCD
+source ./setup.sh
+
+# xset
 apt-get install -y --allow x11-xserver-utils
 
 # Screensaver: cmatrix

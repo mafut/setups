@@ -38,6 +38,9 @@ exec /bin/login
 EOF
 chmod 755 /usr/local/bin/loginScreensaver.sh
 
+if [ ! -d "/etc/systemd/system/getty@tty1.service.d/" ]; then
+    mkdir /etc/systemd/system/getty@tty1.service.d/
+fi
 CONFIG=/etc/systemd/system/getty@tty1.service.d/override.conf
 cat <<EOF >${CONFIG}
 [Service]

@@ -291,9 +291,9 @@ installed() {
 }
 
 # Manually install extensions that can't install from code-server marketplace
-# Save installing extensions in download folder
+# Save installing extensions in vsix folder
 INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
-for vsix in ${DIR_SELF}/download/*.vsix; do
+for vsix in ${DIR_SELF}/vsix/*.vsix; do
     extname=$(basename "$vsix" | sed -E 's/(.+)-[0-9.]+\.vsix/\1/')
     echo $vsix' -> '$extname
     if installed $extname; then
@@ -350,6 +350,10 @@ jq '.["workbench.editorAssociations"]|={"**/VSNotes/*.md":"vscode.markdown.previ
 
 # Project Manager
 jq '.["projectManager.git.baseFolders"]|=["~/"]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+# VSNotes
+jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+# jq '.["vsnotes.defaultNotePath"]|="/home/'${}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Preference
 jq '.["editor.formatOnPaste"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"

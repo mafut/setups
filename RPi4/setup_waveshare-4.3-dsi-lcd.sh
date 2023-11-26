@@ -16,7 +16,7 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-source ./setup.sh
+./setup.sh
 
 # xset
 apt-get install -y --allow x11-xserver-utils
@@ -36,7 +36,7 @@ cat <<EOF >${CONFIG}
 termsaver clock
 exec /bin/login
 EOF
-chmod 744 /usr/local/bin/loginScreensaver.sh
+chmod 755 /usr/local/bin/loginScreensaver.sh
 
 CONFIG=/etc/systemd/system/getty@tty1.service.d/override.conf
 cat <<EOF >${CONFIG}

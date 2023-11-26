@@ -19,14 +19,15 @@ fi
 ./setup.sh
 
 # xset
-apt-get install -y --allow x11-xserver-utils
+apt-get install -y x11-xserver-utils
 
 # Screensaver: cmatrix
-apt-get install -y --allow cmatrix
+apt-get install -y cmatrix
 
 # Screensaver: termsaver
-apt-get install python3-pip build-essential
-sudo -u ${USERNAME} pip install termsaver
+apt-get install  build-essential python3-pip python3-venv python-is-python3
+sudo -u ${USERNAME} python -m venv env-${USERNAME}
+sudo -u ${USERNAME} pip install termsaver --user
 
 # Configure to run screensaver before login as info hub
 CONFIG=/usr/local/bin/loginScreensaver.sh

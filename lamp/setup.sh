@@ -345,17 +345,19 @@ jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' "${CONFIG_VSCOD
 jq '.["editor.renderControlCharacters"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["editor.renderWhitespace"]|="all"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-# Preview md as default
-jq '.["workbench.editorAssociations"]|={"**/VSNotes/*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-
 # Project Manager
 jq '.["projectManager.git.baseFolders"]|=["~/"]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # VSNotes
+jq '.["workbench.editorAssociations"]|={"**/VSNotes/*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-# jq '.["vsnotes.defaultNotePath"]|="/home/'${}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+if [ -d "/home/${USERNAME}/OneDrive/Notes" ]; then
+    jq '.["vsnotes.defaultNotePath"]|="/home/'${USERNAME}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+fi
 
 # Preference
+jq '."[jsonc]"."editor.defaultFormatter"|="esbenp.prettier-vscode"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["breadcrumbs.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["editor.formatOnPaste"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["editor.formatOnType"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["editor.minimap.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"

@@ -349,10 +349,14 @@ jq '.["editor.renderWhitespace"]|="all"' "${CONFIG_VSCODE}" | sponge "${CONFIG_V
 jq '.["projectManager.git.baseFolders"]|=["~/"]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # VSNotes
-jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 if [ -d "/home/${USERNAME}/OneDrive/Notes" ]; then
     jq '.["vsnotes.defaultNotePath"]|="/home/'${USERNAME}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 fi
+jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["vsnotes.taskGroupBy"]|="file"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["vsnotes.taskIncludeCompleted"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["vsnotes.taskPrefix"]|="ignore"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["vsnotes.treeviewHideTags"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Markdown
 jq '.["workbench.editorAssociations"]|={"*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"

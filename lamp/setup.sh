@@ -355,7 +355,7 @@ fi
 jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["vsnotes.taskGroupBy"]|="file"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["vsnotes.taskIncludeCompleted"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["vsnotes.taskPrefix"]|="ignore"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["vsnotes.taskPrefix"]|="override"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["vsnotes.treeviewHideTags"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 # Markdown

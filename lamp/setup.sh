@@ -223,6 +223,8 @@ fi
 for port in "${ALLOWED_PORTS[@]}"; do
     ufw allow $port
 done
+ufw allow out 25
+ufw allow out 587
 ufw --force enable
 
 #endregion

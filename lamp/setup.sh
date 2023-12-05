@@ -324,33 +324,59 @@ if [ ! -e ${PHP_CS_FIXER_PHAR} ]; then
     sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_CS_FIXER_PHAR}
 fi
 
-# Explicit Folding
-jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.foldingStrategy"]|="auto"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[jsonc]"."editor.defaultFormatter"|="esbenp.prettier-vscode"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '."[markdown]"."editor.defaultFormatter"|="yzhang.markdown-all-in-one"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '."[markdown]"."editor.wordWrap"|="off"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '."[php]"."explicitFolding.rules"|=[]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"(?:case|default)[^:]*:", "endRegex":"break;|(.)(?=case|default|\\})","foldLastLine":[true,false]}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '."[php]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
 jq '."[shellscript]"."explicitFolding.rules"|=[]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"#region", "endRegex":"#endregion", "autoFold":true}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '."[shellscript]"."explicitFolding.rules"+=[{"beginRegex":"\\{", "middleRegex":"\\}[^}]+\\{", "endRegex":"\\}"}]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-# php cs fixer "junstyle.php-cs-fixer"
-jq '.["php-cs-fixer.executablePath"]|="'${PHP_CS_FIXER_PHAR}'"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["breadcrumbs.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["editor.defaultFoldingRangeProvider"]|="zokugun.explicit-folding"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.foldingStrategy"]|="auto"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.formatOnPaste"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.formatOnType"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.minimap.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.renderControlCharacters"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.renderWhitespace"]|="all"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["editor.wordWrap"]|="off"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["explorer.confirmDelete"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["explorer.confirmDragAndDrop"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["extensions.ignoreRecommendations"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["files.associations"]|={"setup.*.conf":"shellscript"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["files.autoSave"]|="afterDelay"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["git.autofetch"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.confirmSync"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.enableSmartCommit"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["markdown.extension.preview.autoShowPreviewToSide"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["markdown.extension.toc.updateOnSave"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
 jq '.["php-cs-fixer.autoFixByBracket"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.executablePath"]|="'${PHP_CS_FIXER_PHAR}'"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.formatHtml"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.lastDownload"]|=0' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.rules"]|=""' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '."[php]"."editor.defaultFormatter"|="junstyle.php-cs-fixer"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-# Render Line Endings
-jq '.["editor.renderControlCharacters"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.renderWhitespace"]|="all"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-
-# Project Manager
 jq '.["projectManager.git.baseFolders"]|=["~/"]' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-# VSNotes
+jq '.["security.workspace.trust.untrustedFiles"]|="open"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
+jq '.["vsicons.dontShowNewVersionMessage"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+
 if [ -d "/home/${USERNAME}/OneDrive/Notes" ]; then
     jq '.["vsnotes.defaultNotePath"]|="/home/'${USERNAME}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 fi
@@ -360,28 +386,8 @@ jq '.["vsnotes.taskIncludeCompleted"]|=false' "${CONFIG_VSCODE}" | sponge "${CON
 jq '.["vsnotes.taskPrefix"]|="override"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["vsnotes.treeviewHideTags"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-# Markdown
-jq '.["workbench.editorAssociations"]|={"*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["markdown.extension.preview.autoShowPreviewToSide"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-
-# Preference
-jq '."[jsonc]"."editor.defaultFormatter"|="esbenp.prettier-vscode"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["breadcrumbs.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.formatOnPaste"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.formatOnType"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.minimap.enabled"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["editor.wordWrap"]|="off"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["explorer.confirmDelete"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["explorer.confirmDragAndDrop"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["extensions.ignoreRecommendations"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["files.associations"]|={"setup.*.conf":"shellscript"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["files.autoSave"]|="afterDelay"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["git.autofetch"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["git.confirmSync"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["git.enableSmartCommit"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["security.workspace.trust.untrustedFiles"]|="open"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["vsicons.dontShowNewVersionMessage"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["workbench.colorTheme"]|="Default Dark Modern"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["workbench.editorAssociations"]|={"*.md":"vscode.markdown.preview.editor"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["workbench.iconTheme"]|="vscode-icons"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["workbench.startupEditor"]|="newUntitledFile"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 

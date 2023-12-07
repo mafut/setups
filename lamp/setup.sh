@@ -357,7 +357,7 @@ jq '.["extensions.ignoreRecommendations"]|=true' "${CONFIG_VSCODE}" | sponge "${
 jq '.["files.associations"]|={"setup.*.conf":"shellscript"}' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["files.autoSave"]|="afterDelay"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-jq '.["git.autofetch"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["git.autofetch"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["git.confirmSync"]|=false' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["git.enableSmartCommit"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 

@@ -63,13 +63,13 @@ request_header_access Cache-Control deny all
 
 visible_hostname unknown
 
-auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
-auth_param basic children 5
-auth_param basic realm Squid Basic Authentication
-auth_param basic credentialsttl 24 hours
-auth_param basic casesensitive off
-acl password proxy_auth REQUIRED
-http_access allow password
+# auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
+# auth_param basic children 5
+# auth_param basic realm Squid Basic Authentication
+# auth_param basic credentialsttl 24 hours
+# auth_param basic casesensitive off
+# acl password proxy_auth REQUIRED
+# http_access allow password
 http_access deny all
 EOF
 }

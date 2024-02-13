@@ -50,6 +50,8 @@ http_access allow localhost
 http_port 8080
 
 coredump_dir /var/spool/squid
+acl blocked_status http_status 500- 400-403
+access_log none blocked_status
 
 refresh_pattern ^ftp:               1440    20% 10080
 refresh_pattern ^gopher:            1440    0%  1440

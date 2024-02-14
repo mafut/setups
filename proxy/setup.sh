@@ -1,10 +1,8 @@
 #!/bin/bash
 
 #region squid_setup
+# $1: 0=false or 1=true
 function squid_setup() {
-    # Create .htpasswd
-    htpasswd -b -c /etc/squid/.htpasswd proxy ${PASS}
-
     # [Proxy] Setup squid
     CONFIG=/etc/squid/squid.conf
     cat <<EOF >${CONFIG}
@@ -64,6 +62,10 @@ request_header_access Via deny all
 request_header_access Cache-Control deny all
 
 visible_hostname unknown
+EOF
+
+    if [ $1 -eq 1 ]; then
+        cat <<EOF >${CONFIG}
 
 # auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
 # auth_param basic children 5
@@ -72,8 +74,14 @@ visible_hostname unknown
 # auth_param basic casesensitive off
 # acl password proxy_auth REQUIRED
 # http_access allow password
+EOF
+    fi
+
+    cat <<EOF >${CONFIG}
+
 http_access deny all
 EOF
+
 }
 #endregion
 
@@ -103,20 +111,14 @@ EOF
 }
 #endregion
 
-if [ $# = 3 ]; then
+if [ $# -ge 2 ]; then
     USERNAME=$SUDO_USER
     if [ -z "${USERNAME}" ]; then
         echo "Can't get User Name"
         exit 1
     fi
 
-    PASS=$2
-    if [ -z "${PASS}" ]; then
-        echo "Can't get password"
-        exit 1
-    fi
-
-    HOMENETWORK=$3
+    HOMENETWORK=$2
     if [ -z "${HOMENETWORK}" ]; then
         echo "Can't get allowed host"
         exit 1
@@ -141,6 +143,11 @@ EOF
     apt-get -y upgrade
     apt-get -y install ufw squid apache2-utils moreutils
 
+    # Create .htpasswd
+    if [ -e "$3" ]; then
+        htpasswd -b -c /etc/squid/.htpasswd proxy $3
+    fi
+
     case $1 in
     ubuntu)
         # Stop Services at the first
@@ -164,7 +171,7 @@ else
     cat <<EOF
 [Usage for Ubuntu]
 1. git clone https://github.com/mafut/setupscripts.git
-2. sudo proxy/setup.sh ubuntu [password] [allowed host]
+2. sudo proxy/setup.sh ubuntu [allowed host] [password(option)]
 
 [Usage for Synology]
 1. Create "ubuntu/squid" docker container (host network instead of bridge)
@@ -172,7 +179,7 @@ else
 3. sudo docker exec it [container] bash
 4. sudo apt-get install git
 5. git clone https://github.com/mafut/setupscripts.git
-6. sudo proxy/setup.sh synology [password] [allowed host]
+6. sudo proxy/setup.sh synology [allowed host] [password(option)]
 
 EOF
 fi

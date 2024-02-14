@@ -134,7 +134,6 @@ if [ $# -ge 2 ]; then
 [Configuration]
 Allowed: ${HOMENETWORK}
 Resolved: ${HOMEIP}
-Password: ${PASS}
 
 EOF
 

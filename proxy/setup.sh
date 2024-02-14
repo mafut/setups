@@ -65,7 +65,7 @@ visible_hostname unknown
 EOF
 
     if [ $1 -eq 1 ]; then
-        cat <<EOF >${CONFIG}
+        cat <<EOF >>${CONFIG}
 
 # auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
 # auth_param basic children 5
@@ -77,7 +77,7 @@ EOF
 EOF
     fi
 
-    cat <<EOF >${CONFIG}
+    cat <<EOF >>${CONFIG}
 
 http_access deny all
 EOF

@@ -148,8 +148,8 @@ EOF
     apt-get -y install ufw squid apache2-utils moreutils
 
     # Create .htpasswd
-    if [ -e "$3" ]; then
-        htpasswd -b -c /etc/squid/.htpasswd proxy $3
+    if [ -e "$4" ]; then
+        htpasswd -b -c /etc/squid/.htpasswd proxy $4
     fi
 
     case $1 in

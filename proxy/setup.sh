@@ -64,16 +64,16 @@ request_header_access Cache-Control deny all
 visible_hostname unknown
 EOF
 
-    if [ $1 -eq 1 ]; then
+    if [ -e $1 ] && [ $1 -eq 1 ]; then
         cat <<EOF >>${CONFIG}
 
-# auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
-# auth_param basic children 5
-# auth_param basic realm Squid Basic Authentication
-# auth_param basic credentialsttl 24 hours
-# auth_param basic casesensitive off
-# acl password proxy_auth REQUIRED
-# http_access allow password
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/.htpasswd
+auth_param basic children 5
+auth_param basic realm Squid Basic Authentication
+auth_param basic credentialsttl 24 hours
+auth_param basic casesensitive off
+acl password proxy_auth REQUIRED
+http_access allow password
 EOF
     fi
 
@@ -154,14 +154,22 @@ EOF
         systemctl stop squid
 
         ufw_setup
-        squid_setup
+        if [ -e "$3" ]; then
+            squid_setup 1
+        else
+            squid_setup 0
+        fi
 
         # Add Auto startup and Start service
         systemctl enable squid
         systemctl restart squid
         ;;
     synology)
-        squid_setup
+        if [ -e "$3" ]; then
+            squid_setup 1
+        else
+            squid_setup 0
+        fi
         ;;
     *) exit 1 ;;
     esac

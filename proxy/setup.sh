@@ -6,20 +6,33 @@ function squid_setup() {
     # [Proxy] Setup squid
     CONFIG=/etc/squid/squid.conf
     cat <<EOF >${CONFIG}
+http_port ${HOMEPORT}
+coredump_dir /var/spool/squid
+
 acl localnet src 10.0.0.0/8
 acl localnet src 172.16.0.0/12
 acl localnet src 192.168.0.0/16
 acl localnet src fc00::/7
 acl localnet src fe80::/10
 acl localnet src ${HOMEIP}/32
+http_access allow localnet
+http_access allow localhost
 
 acl microsoft dstdomain .office.com .office.net .office365.com .live.com .windows.com .windows.net .microsoft.com .skype.com .microsoftonline.com .1drv.ms .sharepoint.com .sharepoint-df.com
 acl apple dstdomain .apple.com .icloud.com .mzstatic.com
 acl google dstdomain .google.com .googleapis.com
 acl iphoneapp dstdomain .slack.com .uber.com .amazon.com .amazone.co.jp
 acl plex dstdomain .plex.tv
+http_access allow microsoft
+http_access allow apple
+http_access allow google
+http_access allow iphoneapp
+http_access allow plex
 
 acl SSL_ports port 443
+acl CONNECT method CONNECT
+http_access deny CONNECT !SSL_ports
+
 acl Safe_ports port 80 # http
 acl Safe_ports port 443 # https
 acl Safe_ports port 25 # exchange smpt
@@ -31,23 +44,8 @@ acl Safe_ports port 5223 # Apple push
 acl Safe_ports port 1900 # Plex DLNA
 acl Safe_ports port 5353 # Plex Bonjour
 acl Safe_ports port 1025-65535 # unregistered ports
-
-acl CONNECT method CONNECT
-
 http_access deny !Safe_ports
-http_access deny CONNECT !SSL_ports
 
-http_access allow microsoft
-http_access allow apple
-http_access allow google
-http_access allow iphoneapp
-http_access allow plex
-http_access allow localnet
-http_access allow localhost
-
-http_port 8080
-
-coredump_dir /var/spool/squid
 acl blocked_status http_status 500- 400-407
 access_log none blocked_status
 
@@ -60,7 +58,6 @@ forwarded_for off
 request_header_access X-Forwarded-For deny all
 request_header_access Via deny all
 request_header_access Cache-Control deny all
-
 visible_hostname unknown
 EOF
 
@@ -89,7 +86,7 @@ EOF
 function ufw_setup() {
     # Reset Firewall
     ufw disable
-    ufw allow 8080
+    ufw allow ${HOMEPORT}
 
     # Enable Port Forward Policy
     CONFIG=/etc/default/ufw
@@ -130,10 +127,18 @@ if [ $# -ge 2 ]; then
         exit 1
     fi
 
+
+    HOMEPORT=$3
+    if [ -z "${HOMEPORT}" ]; then
+        echo "Can't get allowed port"
+        exit 1
+    fi
+
     cat <<EOF
 [Configuration]
 Allowed: ${HOMENETWORK}
 Resolved: ${HOMEIP}
+Port: ${HOMEPORT}
 
 EOF
 
@@ -153,7 +158,7 @@ EOF
         systemctl stop squid
 
         ufw_setup
-        if [ -e "$3" ]; then
+        if [ -e "$4" ]; then
             squid_setup 1
         else
             squid_setup 0
@@ -164,7 +169,7 @@ EOF
         systemctl restart squid
         ;;
     synology)
-        if [ -e "$3" ]; then
+        if [ -e "$4" ]; then
             squid_setup 1
         else
             squid_setup 0
@@ -178,7 +183,7 @@ else
     cat <<EOF
 [Usage for Ubuntu]
 1. git clone https://github.com/mafut/setupscripts.git
-2. sudo proxy/setup.sh ubuntu [allowed host] [password(option)]
+2. sudo proxy/setup.sh ubuntu [allowed host] [port] [password(option)]
 
 [Usage for Synology]
 1. Create "ubuntu/squid" docker container (host network instead of bridge)
@@ -186,7 +191,7 @@ else
 3. sudo docker exec it [container] bash
 4. sudo apt-get install git
 5. git clone https://github.com/mafut/setupscripts.git
-6. sudo proxy/setup.sh synology [allowed host] [password(option)]
+6. sudo proxy/setup.sh synology [allowed host] [port] [password(option)]
 
 EOF
 fi

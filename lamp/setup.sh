@@ -69,6 +69,7 @@ DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
 DIR_DATA_LOGWATCH=/var/cache/logwatch
 DIR_DATA_CODESERVER=/home/${USERNAME}/.local/share/code-server
 
+mkdir -p download
 mkdir -p ${DIR_CONFIG_LOGROTATION}
 mkdir -p ${DIR_CONFIG_LOGWATCH}
 mkdir -p ${DIR_CONFIG_CODESERVER}

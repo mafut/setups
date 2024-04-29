@@ -69,12 +69,13 @@ DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
 DIR_DATA_LOGWATCH=/var/cache/logwatch
 DIR_DATA_CODESERVER=/home/${USERNAME}/.local/share/code-server
 
-mkdir -p download
+sudo -u ${USERNAME} mkdir -p download
+sudo -u ${USERNAME} mkdir -p ${DIR_CONFIG_CODESERVER}
+sudo -u ${USERNAME} mkdir -p ${DIR_DATA_CODESERVER}
+
 mkdir -p ${DIR_CONFIG_LOGROTATION}
 mkdir -p ${DIR_CONFIG_LOGWATCH}
-mkdir -p ${DIR_CONFIG_CODESERVER}
 mkdir -p ${DIR_DATA_LOGWATCH}
-mkdir -p ${DIR_DATA_CODESERVER}
 mkdir -p ${NGINX_LOG}
 mkdir -p ${APACHE_LOG}
 mkdir -p ${MYSQL_LOG}

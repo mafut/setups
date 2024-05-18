@@ -455,6 +455,13 @@ join_buffer_size = 512K
 sort_buffer_size = 512K
 read_rnd_buffer_size = 512K
 
+max_allowed_packet = 134217728
+connect_timeout = 30
+interactive_timeout = 28800
+wait_timeout = 28800
+net_read_timeout = 60
+net_write_timeout = 120
+
 [mysql]
 auto-rehash
 default-character-set = utf8mb4

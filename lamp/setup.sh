@@ -450,17 +450,18 @@ table_open_cache = 65536
 tmp_table_size = 128M
 max_heap_table_size = 128M
 
-read_buffer_size = 256K
+read_buffer_size = 1024K
 join_buffer_size = 512K
 sort_buffer_size = 512K
 read_rnd_buffer_size = 512K
+max_allowed_packet = 8M
+# max_allowed_packet = 512M
 
-max_allowed_packet = 134217728
-connect_timeout = 30
-interactive_timeout = 28800
-wait_timeout = 28800
+connect_timeout = 60
 net_read_timeout = 60
 net_write_timeout = 120
+interactive_timeout = 28800
+wait_timeout = 28800
 
 [mysql]
 auto-rehash

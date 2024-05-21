@@ -412,8 +412,8 @@ cat <<EOF >${CONFIG_OS_MYSQL}
 # skip-grant-tables
 
 character-set-server = utf8mb4
-# collation-server = utf8mb4_general_ci
-collation_server = utf8mb4_ja_0900_as_cs
+# https://zenn.dev/zoeponta/articles/090c68ba820a24
+collation-server = utf8mb4_0900_as_ci
 
 # Timezone
 default-time-zone = SYSTEM

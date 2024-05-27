@@ -514,6 +514,11 @@ for phpver in "${PHP_VERS[@]}"; do
     sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|;extension=mysqli|extension=mysqli|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|max_execution_time = 30|max_execution_time = 60|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|post_max_size = 8M|post_max_size = 8M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 done
 
 #endregion
@@ -686,6 +691,7 @@ http {
         tcp_nodelay on;
         keepalive_timeout 65;
         types_hash_max_size 2048;
+        client_max_body_size 8M;
         # server_tokens off;
 
         # server_names_hash_bucket_size 64;

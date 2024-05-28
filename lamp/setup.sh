@@ -54,6 +54,7 @@ PHP_VERS=(
     8.2
     8.1
     7.4
+    7.3
 )
 
 # Configuration/Data location

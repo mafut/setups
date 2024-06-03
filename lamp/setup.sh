@@ -221,9 +221,7 @@ ufw default deny
 ufw allow 22
 ufw limit 22
 ufw allow 443
-if "${ENABLE_HTTP}"; then
-    ufw allow 80
-fi
+ufw allow 80
 for port in "${ALLOWED_PORTS[@]}"; do
     ufw allow $port
 done
@@ -615,7 +613,8 @@ EOF
 
 # [Apache] Configure http
 # Note: certbot passes this path
-cat <<EOF >${CONFIG_APACHE_DEFAULT}
+if "${ENABLE_HTTP}"; then
+    cat <<EOF >${CONFIG_APACHE_DEFAULT}
 AcceptFilter http none
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -633,6 +632,13 @@ AcceptFilter http none
     </Directory>
 </VirtualHost>
 EOF
+else
+    cat <<EOF >${CONFIG_APACHE_DEFAULT}
+RewriteEngine on
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+EOF
+fi
 rm -f /etc/apache2/sites-enabled/000-default.conf
 a2ensite 000-default
 

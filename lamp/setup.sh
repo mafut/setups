@@ -421,6 +421,8 @@ collation-server = utf8mb4_0900_as_ci
 default-time-zone = SYSTEM
 log_timestamps = SYSTEM
 
+default-authentication-plugin = mysql_native_password
+
 basedir   = /var/lib/mysql
 datadir   = /var/lib/mysql-files
 pid-file  = /var/run/mysqld/mysqld.pid

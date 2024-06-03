@@ -791,7 +791,7 @@ server {
         proxy_pass http://127.0.0.1:${APACHE_PORT}/;
         proxy_set_header Host \$host;
         proxy_set_header Accept-Encoding gzip;
-        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-For \$remote_addr;
     }
 }
 EOF

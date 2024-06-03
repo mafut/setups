@@ -456,8 +456,8 @@ read_buffer_size = 1024K
 join_buffer_size = 512K
 sort_buffer_size = 512K
 read_rnd_buffer_size = 512K
-max_allowed_packet = 8M
-# max_allowed_packet = 512M
+# max_allowed_packet = 8M
+max_allowed_packet = 512M
 
 connect_timeout = 60
 net_read_timeout = 60

@@ -716,7 +716,7 @@ http {
         access_log ${NGINX_LOG}/access.log;
         error_log ${NGINX_LOG}/error.log;
 
-        gzip on;
+        gzip off;
 
         include /etc/nginx/conf.d/*.conf;
         include /etc/nginx/sites-enabled/*;

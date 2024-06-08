@@ -716,7 +716,7 @@ http {
         access_log ${NGINX_LOG}/access.log;
         error_log ${NGINX_LOG}/error.log;
 
-        gzip off;
+        gzip on;
 
         include /etc/nginx/conf.d/*.conf;
         include /etc/nginx/sites-enabled/*;
@@ -790,7 +790,6 @@ server {
     location / {
         proxy_pass http://127.0.0.1:${APACHE_PORT}/;
         proxy_set_header Host \$host;
-        proxy_set_header Accept-Encoding gzip;
         proxy_set_header X-Forwarded-For \$remote_addr;
     }
 }

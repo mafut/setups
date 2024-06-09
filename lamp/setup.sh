@@ -793,6 +793,7 @@ ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}
+su root adm
 daily
 rotate 21
 create

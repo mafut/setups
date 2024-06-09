@@ -805,7 +805,7 @@ cat <<EOF >${CONFIG_LOGROTATION_APACHE}
 ${APACHE_LOG}/*.log {
     compress
     delaycompress
-    notifempty
+    ifempty
     create 0640 ${APACHE_USER} root
     sharedscripts
     postrotate
@@ -819,7 +819,7 @@ cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
 ${MYSQL_LOG}/*.log {
     compress
     delaycompress
-    notifempty
+    ifempty
     create 0640 ${MYSQL_USER} root
     sharedscripts
     postrotate
@@ -841,7 +841,7 @@ cat <<EOF >${CONFIG_LOGROTATION_NGINX}
 ${NGINX_LOG}/*.log {
     compress
     delaycompress
-    notifempty
+    ifempty
     create 0640 ${APACHE_USER} root
     sharedscripts
     postrotate

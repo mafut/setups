@@ -240,13 +240,11 @@ if [ ! -e ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER} ]; then
 fi
 
 # [Code-Server] Reset Permission
-chown -R ${USERNAME} /home/${USERNAME}/.local/
-chgrp -R ${USERNAME} /home/${USERNAME}/.local/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.local/
 find ${DIR_DATA_CODESERVER} -type d -exec chmod 755 {} \;
 find ${DIR_DATA_CODESERVER} -type f -exec chmod 644 {} \;
 
-chown -R ${USERNAME} /home/${USERNAME}/.config/
-chgrp -R ${USERNAME} /home/${USERNAME}/.config/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.config/
 find ${DIR_CONFIG_CODESERVER} -type d -exec chmod 755 {} \;
 find ${DIR_CONFIG_CODESERVER} -type f -exec chmod 644 {} \;
 
@@ -394,8 +392,7 @@ jq '.["workbench.iconTheme"]|="vscode-icons"' "${CONFIG_VSCODE}" | sponge "${CON
 jq '.["workbench.startupEditor"]|="newUntitledFile"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
 jq --sort-keys '.' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
-chown ${USERNAME} ${CONFIG_VSCODE}
-chgrp ${USERNAME} ${CONFIG_VSCODE}
+chown ${USERNAME}:${USERNAME} ${CONFIG_VSCODE}
 
 #endregion
 
@@ -483,7 +480,7 @@ fi
 # [MySQL] Data Permission
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
-chown ${MYSQL_USER}:${MYSQL_USER} ${MYSQL_LOG}
+chown -R ${MYSQL_USER}:root ${MYSQL_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
@@ -531,37 +528,30 @@ done
 # Ubuntu 22.04 the user dir has 750 permissions by default rather than 755.
 chmod 755 /home/${USERNAME}/
 
-chown -R ${USERNAME} ${DOCPATH_HTTP}/
-chgrp -R ${USERNAME} ${DOCPATH_HTTP}/
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTP}/
 find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_HTTP}/ -type f -exec chmod 644 {} \;
 find ${DOCPATH_HTTP}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_HTTP}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_HTTP}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${USERNAME} ${DOCPATH_ROOT}/
-chgrp -R ${USERNAME} ${DOCPATH_ROOT}/
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_ROOT}/
 find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${USERNAME} ${DOCPATH_STATIC}/
-chgrp -R ${USERNAME} ${DOCPATH_STATIC}/
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_STATIC}/
 find ${DOCPATH_STATIC}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_STATIC}/ -type f -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${USERNAME} ${APACHE_LOG}
-chgrp -R ${USERNAME} ${APACHE_LOG}
+chown -R ${APACHE_USER}:root ${APACHE_LOG}
 find ${APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${APACHE_LOG} -type f -exec chmod 644 {} \;
-
-# [Apache] User to APACHE_USER
-chown -R ${APACHE_USER} ${APACHE_LOG}
 
 # [Apache] Configure core
 if [ -f ${CONFIG_OS_APACHE} ] && [ ! -f ${CONFIG_OS_APACHE}.bak ]; then
@@ -677,8 +667,7 @@ a2ensite ${USERNAME}
 #region Nginx
 
 # [Nginx] User to APACHE_USER
-chown -R ${APACHE_USER} ${NGINX_LOG}
-chgrp -R ${USERNAME} ${NGINX_LOG}
+chown -R ${APACHE_USER}:root ${NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -817,7 +806,7 @@ ${APACHE_LOG}/*.log {
     compress
     delaycompress
     notifempty
-    create 0640 ${APACHE_USER} ${USERNAME}
+    create 0640 ${APACHE_USER} root
     sharedscripts
     postrotate
         /bin/systemctl reload apache2 > /dev/null 2>/dev/null || true
@@ -827,9 +816,11 @@ EOF
 
 # [logrotate] mysql-server
 cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
-/var/log/mysql.log ${MYSQL_LOG}/*log {
-    create 640 ${MYSQL_USER} ${MYSQL_USER}
+${MYSQL_LOG}/*.log {
     compress
+    delaycompress
+    notifempty
+    create 0640 ${MYSQL_USER} root
     sharedscripts
     postrotate
         test -x /usr/bin/mysqladmin || exit 0
@@ -850,7 +841,8 @@ cat <<EOF >${CONFIG_LOGROTATION_NGINX}
 ${NGINX_LOG}/*.log {
     compress
     delaycompress
-    create 0640 ${APACHE_USER} ${USERNAME}
+    notifempty
+    create 0640 ${APACHE_USER} root
     sharedscripts
     postrotate
         /bin/systemctl reload nginx > /dev/null 2>/dev/null || true

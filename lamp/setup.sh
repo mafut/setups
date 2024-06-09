@@ -678,6 +678,7 @@ a2ensite ${USERNAME}
 
 # [Nginx] User to APACHE_USER
 chown -R ${APACHE_USER} ${NGINX_LOG}
+chgrp -R ${USERNAME} ${NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -803,11 +804,11 @@ ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}
-weekly
-rotate 10
+daily
+rotate 21
 create
 missingok
-include ${PATH_LOGROTATION_CONFIG}
+include ${DIR_CONFIG_LOGROTATION}
 EOF
 
 # [logrotate] apache2
@@ -816,17 +817,10 @@ ${APACHE_LOG}/*.log {
     compress
     delaycompress
     notifempty
-    create 0640 ${APACHE_USER} root
+    create 0640 ${APACHE_USER} ${USERNAME}
     sharedscripts
     postrotate
-            if invoke-rc.d apache2 status > /dev/null 2>&1; then \
-                invoke-rc.d apache2 reload > /dev/null 2>&1; \
-            fi;
-    endscript
-    prerotate
-            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
-                    run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
-            fi; \
+        /bin/systemctl reload apache2 > /dev/null 2>/dev/null || true
     endscript
 }
 EOF
@@ -838,15 +832,15 @@ cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
     compress
     sharedscripts
     postrotate
-            test -x /usr/bin/mysqladmin || exit 0
-            MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
-            if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
-                if killall -q -s0 -umysql mysqld; then
-                    exit 1
-                fi
-            else
-                $MYADMIN flush-logs
+        test -x /usr/bin/mysqladmin || exit 0
+        MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
+        if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
+            if killall -q -s0 -umysql mysqld; then
+                exit 1
             fi
+        else
+            $MYADMIN flush-logs
+        fi
     endscript
 }
 EOF
@@ -856,15 +850,10 @@ cat <<EOF >${CONFIG_LOGROTATION_NGINX}
 ${NGINX_LOG}/*.log {
     compress
     delaycompress
-    create 0640 ${APACHE_USER} root
+    create 0640 ${APACHE_USER} ${USERNAME}
     sharedscripts
-    prerotate
-            if [ -d ${PATH_LOGROTATION_CONFIG}/httpd-prerotate ]; then \
-                run-parts ${PATH_LOGROTATION_CONFIG}/httpd-prerotate; \
-            fi \
-    endscript
     postrotate
-            invoke-rc.d nginx rotate >/dev/null 2>&1
+        /bin/systemctl reload nginx > /dev/null 2>/dev/null || true
     endscript
 }
 EOF

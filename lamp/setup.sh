@@ -76,14 +76,6 @@ mkdir -p ${DIR_APACHE_LOG}
 mkdir -p ${DIR_MYSQL_LOG}
 mkdir -p ${DIR_MYSQLDUMP_LOG}
 
-# MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
-CONFIG_OS_NGINX=/etc/nginx/nginx.conf
-CONFIG_OS_APACHE=/etc/apache2/apache2.conf
-CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
-CONFIG_OS_LOGROTATION=/etc/logrotate.conf
-CONFIG_OS_LOGWATCH=/etc/logwatch/conf/logwatch.conf
-CONFIG_OS_SSMTP=/etc/ssmtp/ssmtp.conf
-
 CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
 CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
 CONFIG_LOGROTATION_MYSQLDUMP=${DIR_CONFIG_LOGROTATION}/mysqldump
@@ -829,7 +821,7 @@ ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 #endregion
 
-#region logrotate
+#region logrotate/logwatch
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}

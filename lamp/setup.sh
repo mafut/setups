@@ -910,8 +910,15 @@ Output = mail
 Format = html
 Encode = none
 Range = yesterday
-Detail = High
+Detail = 0
+# From /usr/share/logwatch/default.conf/services
 Service = All
+Service = "-cron"
+Service = "-dovecot"
+Service = "-dpkg"
+Service = "-kernel"
+Service = "-rsyslogd"
+Service = "-sendmail"
 MailTo = ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 MailFrom = ${SSMTP_AUTHUSER}
 mailer = "/usr/sbin/sendmail -t"

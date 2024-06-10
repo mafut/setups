@@ -906,16 +906,15 @@ EOF
 # [logwatch] Config
 cat <<EOF >${CONFIG_OS_LOGWATCH}
 TmpDir = ${DIR_DATA_LOGWATCH}
-# Output = mail
-Output = stdout
+Output = mail
 Format = text
 Encode = none
 Range = yesterday
 Detail = High
 Service = All
-# MailTo = root
-# MailFrom = Logwatch
-# mailer = "/usr/sbin/sendmail -t"
+MailTo = ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+MailFrom = ${SSMTP_AUTHUSER}
+mailer = "/usr/sbin/sendmail -t"
 EOF
 
 #endregion

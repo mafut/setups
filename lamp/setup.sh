@@ -507,6 +507,12 @@ if [ ! -e /sbin/initctl ]; then
     ln -s /bin/true /sbin/initctl
 fi
 
+# [MySQL] Create first backup file to trigger logrotate
+if [ ! -e ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql.gz ]; then
+    touch ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql
+    gzip ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql
+fi
+
 #endregion
 
 #region PHP

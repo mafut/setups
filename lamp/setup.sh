@@ -158,6 +158,7 @@ Apache: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
 
 [Log]
+Group: ${LOG_GROUP}
 Nginx: ${DIR_NGINX_LOG}
 Apache: ${DIR_APACHE_LOG}
 MySQL: ${DIR_MYSQL_LOG}
@@ -490,8 +491,8 @@ fi
 # [MySQL] Data Permission
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
-chown -R ${MYSQL_USER}:adm ${DIR_MYSQL_LOG}
-chown -R ${MYSQL_USER}:adm ${DIR_MYSQLDUMP_LOG}
+chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQL_LOG}
+chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
@@ -567,7 +568,7 @@ find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${APACHE_USER}:adm ${DIR_APACHE_LOG}
+chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 644 {} \;
 
@@ -685,7 +686,7 @@ a2ensite ${USERNAME}
 #region Nginx
 
 # [Nginx] User to APACHE_USER
-chown -R ${APACHE_USER}:adm ${DIR_NGINX_LOG}
+chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -811,7 +812,7 @@ ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}
-su root adm
+su root ${LOG_GROUP} 
 daily
 rotate 21
 create
@@ -826,7 +827,7 @@ ${DIR_APACHE_LOG}/*.log {
     delaycompress
     ifempty
     missingok
-    create 0640 ${APACHE_USER} adm
+    create 0640 ${APACHE_USER} ${LOG_GROUP} 
     sharedscripts
     postrotate
         /bin/systemctl reload apache2 > /dev/null 2>/dev/null || true
@@ -841,7 +842,7 @@ ${DIR_MYSQL_LOG}/*.log {
     delaycompress
     ifempty
     missingok
-    create 0640 ${MYSQL_USER} adm
+    create 0640 ${MYSQL_USER} ${LOG_GROUP} 
     sharedscripts
     postrotate
         test -x /usr/bin/mysqladmin || exit 0
@@ -865,7 +866,7 @@ ${DIR_MYSQLDUMP_LOG}/*.sql.gz {
     rotate 14
     size 0
     missingok
-    create 0640 ${MYSQL_USER} adm
+    create 0640 ${MYSQL_USER} ${LOG_GROUP} 
     postrotate
         test -x /usr/bin/mysqldump || exit 0
         MYSQLDUMPOPTION="--single-transaction --quick --disable-keys --extended-insert --column-statistics=0 --compatible=ansi --skip-triggers --skip-quote-names --default-character-set=utf8 --no-tablespaces --set-gtid-purged=OFF --compression-algorithms=zlib -n -t"
@@ -881,7 +882,7 @@ ${DIR_NGINX_LOG}/*.log {
     delaycompress
     ifempty
     missingok
-    create 0640 ${APACHE_USER} adm
+    create 0640 ${APACHE_USER} ${LOG_GROUP} 
     sharedscripts
     postrotate
         /bin/systemctl reload nginx > /dev/null 2>/dev/null || true

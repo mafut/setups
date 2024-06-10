@@ -60,7 +60,6 @@ PHP_VERS=(
 
 # Configuration/Data location
 DIR_CONFIG_LOGROTATION=/etc/logrotate.d
-DIR_CONFIG_LOGWATCH=/etc/logwatch/conf
 DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
 
 DIR_DATA_LOGWATCH=/var/cache/logwatch
@@ -71,7 +70,6 @@ sudo -u ${USERNAME} mkdir -p ${DIR_CONFIG_CODESERVER}
 sudo -u ${USERNAME} mkdir -p ${DIR_DATA_CODESERVER}
 
 mkdir -p ${DIR_CONFIG_LOGROTATION}
-mkdir -p ${DIR_CONFIG_LOGWATCH}
 mkdir -p ${DIR_DATA_LOGWATCH}
 mkdir -p ${DIR_NGINX_LOG}
 mkdir -p ${DIR_APACHE_LOG}
@@ -83,7 +81,8 @@ CONFIG_OS_NGINX=/etc/nginx/nginx.conf
 CONFIG_OS_APACHE=/etc/apache2/apache2.conf
 CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
 CONFIG_OS_LOGROTATION=/etc/logrotate.conf
-CONFIG_OS_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
+CONFIG_OS_LOGWATCH=/etc/logwatch/conf/logwatch.conf
+CONFIG_OS_SSMTP=/etc/ssmtp/ssmtp.conf
 
 CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
 CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
@@ -156,9 +155,9 @@ Unix: ${USERNAME}
 Nginx: ${APACHE_USER}
 Apache: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
+Log Group: ${LOG_GROUP}
 
 [Log]
-Group: ${LOG_GROUP}
 Nginx: ${DIR_NGINX_LOG}
 Apache: ${DIR_APACHE_LOG}
 MySQL: ${DIR_MYSQL_LOG}
@@ -197,11 +196,11 @@ systemctl disable --now code-server@${USERNAME}
 add-apt-repository ppa:ondrej/php -y
 apt-get -y update
 apt-get -y upgrade
-apt-get -y install ufw wget zip unzip jq moreutils
-apt-get -y install postfix dovecot-imapd
+apt-get -y install ufw wget zip unzip jq moreutils ssmtp
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
-apt-get -y install logrotate logwatch nginx apache2 composer
+apt-get -y install nginx apache2 composer
+apt-get -y install logrotate logwatch
 for phpver in "${PHP_VERS[@]}"; do
     apt-get -y install php$phpver libapache2-mod-php$phpver php$phpver-{apcu,cli,common,curl,zip,gd,intl,mbstring,mysql,mysqli,soap,xml}
 done
@@ -239,6 +238,20 @@ done
 ufw allow out 25
 ufw allow out 587
 ufw --force enable
+
+# [Base Setup] ssmtp
+cat <<EOF >${CONFIG_OS_SSMTP}
+MailHub=${SSMTP_HOST}:${SSMTP_PORT}
+root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+RewriteDomain=${SSMTP_ROOTDOMAIN}
+FromLineOverride=YES
+HostName=$(hostname)
+AuthUser=${SSMTP_AUTHUSER}
+AuthPass=${SSMTP_AUTHPASS}
+AuthMethod=LOGIN
+UseTLS=${SSMTP_TLS}
+UseSTARTTLS=${SSMTP_STARTTLS}
+EOF
 
 #endregion
 

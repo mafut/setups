@@ -163,6 +163,14 @@ Apache: ${DIR_APACHE_LOG}
 MySQL: ${DIR_MYSQL_LOG}
 MySQLDump: ${DIR_MYSQLDUMP_LOG}
 
+[SSMTP]
+SMTP Host: ${SSMTP_HOST}:${SSMTP_PORT}
+SMTP TLS: ${SSMTP_TLS}
+SMTP STARTTLS: ${SSMTP_STARTTLS}
+SMTP User: ${SSMTP_AUTHUSER}
+SMTP Pass: ${SSMTP_AUTHPASS}
+Root Orverride: ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+
 [VS Code Extensions]
 ${LIST_EXTS}
 
@@ -242,15 +250,15 @@ ufw --force enable
 # [Base Setup] ssmtp
 cat <<EOF >${CONFIG_OS_SSMTP}
 MailHub=${SSMTP_HOST}:${SSMTP_PORT}
-root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
-RewriteDomain=${SSMTP_ROOTDOMAIN}
-FromLineOverride=YES
-HostName=$(hostname)
 AuthUser=${SSMTP_AUTHUSER}
 AuthPass=${SSMTP_AUTHPASS}
 AuthMethod=LOGIN
 UseTLS=${SSMTP_TLS}
 UseSTARTTLS=${SSMTP_STARTTLS}
+root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+RewriteDomain=${SSMTP_ROOTDOMAIN}
+FromLineOverride=YES
+HostName=$(hostname)
 EOF
 
 #endregion

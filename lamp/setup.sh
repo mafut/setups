@@ -58,33 +58,34 @@ PHP_VERS=(
     5.6
 )
 
-# Configuration/Data location
-DIR_CONFIG_LOGROTATION=/etc/logrotate.d
-DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
+# LOGWATCH_FROM
+LOGWATCH_FROM=${SSMTP_AUTHUSER}
+if [ -z "${LOGWATCH_FROM}" ]; then
+    LOGWATCH_FROM=${USERNAME}@$(hostname)
+fi
 
-DIR_DATA_LOGWATCH=/var/cache/logwatch
-DIR_DATA_CODESERVER=/home/${USERNAME}/.local/share/code-server
+# LOGWATCH_TO
+if [ -z "${LOGWATCH_TO}" ]; then
+    if [ -n "${SSMTP_ROOTUSER}" ] && [ -n "${SSMTP_ROOTDOMAIN}" ]; then
+        LOGWATCH_TO=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+    else
+        LOGWATCH_TO=${USERNAME}@$(hostname)
+    fi
+fi
 
-sudo -u ${USERNAME} mkdir -p download
-sudo -u ${USERNAME} mkdir -p ${DIR_CONFIG_CODESERVER}
-sudo -u ${USERNAME} mkdir -p ${DIR_DATA_CODESERVER}
+# Configuration/Data path
+DIR_CODESERVER_CONFIG=/home/${USERNAME}/.config/code-server
+DIR_CODESERVER_DATA=/home/${USERNAME}/.local/share/code-server
 
-mkdir -p ${DIR_CONFIG_LOGROTATION}
-mkdir -p ${DIR_DATA_LOGWATCH}
-mkdir -p ${DIR_NGINX_LOG}
-mkdir -p ${DIR_APACHE_LOG}
-mkdir -p ${DIR_MYSQL_LOG}
-mkdir -p ${DIR_MYSQLDUMP_LOG}
-
-CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
-CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
-CONFIG_LOGROTATION_MYSQLDUMP=${DIR_CONFIG_LOGROTATION}/mysqldump
-CONFIG_LOGROTATION_NGINX=${DIR_CONFIG_LOGROTATION}/nginx
+CONFIG_LOGROTATION_APACHE=${DIR_LOGROTATION_CONFIG}/apache2
+CONFIG_LOGROTATION_MYSQL=${DIR_LOGROTATION_CONFIG}/mysql-server
+CONFIG_LOGROTATION_MYSQLDUMP=${DIR_LOGROTATION_CONFIG}/mysqldump
+CONFIG_LOGROTATION_NGINX=${DIR_LOGROTATION_CONFIG}/nginx
 
 CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
-CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
+CONFIG_CODESERVER=${DIR_CODESERVER_CONFIG}/config.yaml
 
-CONFIG_VSCODE=${DIR_DATA_CODESERVER}/User/settings.json
+CONFIG_VSCODE=${DIR_CODESERVER_DATA}/User/settings.json
 
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
@@ -128,11 +129,11 @@ cat <<EOF
 |   |
 |   +-- ${LOCATION_VSCODE}
 |       +-- Visiable: ${ENABLE_VSCODE}
-|       +-- Path: ${DIR_DATA_CODESERVER}
-|       +-- Config Code-Server: ${CONFIG_CODESERVER}
-|       +-- Config VS-Code: ${CONFIG_VSCODE}
+|       +-- Path: ${DIR_CODESERVER_DATA}
 |       +-- Port: ${CODESERVER_PORT}
 |       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
+|       +-- Code-Server Config: ${CONFIG_CODESERVER}
+|       +-- VS-Code Config: ${CONFIG_VSCODE}
 |       +-- Password: ${CODESERVER_PASS}
 |
 +-- https://${USERNAME}.domain:XXXX
@@ -151,13 +152,17 @@ Apache: ${DIR_APACHE_LOG}
 MySQL: ${DIR_MYSQL_LOG}
 MySQLDump: ${DIR_MYSQLDUMP_LOG}
 
-[LogRotate/LogWatch]
+[LogRotate]
 LogRotate: ${CONFIG_OS_LOGROTATION}
-LogWatch: ${CONFIG_OS_LOGWATCH}
 Nginx: ${CONFIG_LOGROTATION_NGINX}
 Apache: ${CONFIG_LOGROTATION_APACHE}
 MySQL: ${CONFIG_LOGROTATION_MYSQL}
 MySQLDump: ${CONFIG_LOGROTATION_MYSQLDUMP}
+
+[LogWatch]
+LogWatch: ${CONFIG_OS_LOGWATCH}
+From: ${LOGWATCH_FROM}
+To: ${LOGWATCH_TO}
 
 [SSMTP]
 SMTP Host: ${SSMTP_HOST}:${SSMTP_PORT}
@@ -184,6 +189,20 @@ read -p "Hit enter if ok: "
 if ! grep -q ${USERNAME} /etc/sudoers; then
     echo ${USERNAME} ALL=\(ALL\) NOPASSWD: ALL >>/etc/sudoers
 fi
+
+# [Base Setup] Required directories
+sudo -u ${USERNAME} mkdir -p ${DIR_SELF}/download
+sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_CONFIG}
+sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_DATA}
+
+mkdir -p ${DIR_NGINX_LOG}
+mkdir -p ${DIR_APACHE_LOG}
+mkdir -p ${DIR_MYSQL_LOG}
+mkdir -p ${DIR_MYSQLDUMP_LOG}
+
+mkdir -p ${DIR_LOGROTATION_CONFIG}
+mkdir -p ${DIR_LOGWATCH_DATA}
+rm -rf ${DIR_LOGWATCH_DATA}/*
 
 # [Base Setup] Reset user primary/secondary group
 usermod -g ${USERNAME} ${USERNAME}
@@ -243,20 +262,6 @@ ufw allow out 25
 ufw allow out 587
 ufw --force enable
 
-# [Base Setup] ssmtp
-cat <<EOF >${CONFIG_OS_SSMTP}
-MailHub=${SSMTP_HOST}:${SSMTP_PORT}
-AuthUser=${SSMTP_AUTHUSER}
-AuthPass=${SSMTP_AUTHPASS}
-AuthMethod=LOGIN
-UseTLS=${SSMTP_TLS}
-UseSTARTTLS=${SSMTP_STARTTLS}
-root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
-RewriteDomain=${SSMTP_ROOTDOMAIN}
-FromLineOverride=YES
-HostName=$(hostname)
-EOF
-
 #endregion
 
 #region Code-Server
@@ -269,12 +274,12 @@ fi
 
 # [Code-Server] Reset Permission
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.local/
-find ${DIR_DATA_CODESERVER} -type d -exec chmod 755 {} \;
-find ${DIR_DATA_CODESERVER} -type f -exec chmod 644 {} \;
+find ${DIR_CODESERVER_DATA} -type d -exec chmod 755 {} \;
+find ${DIR_CODESERVER_DATA} -type f -exec chmod 644 {} \;
 
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.config/
-find ${DIR_CONFIG_CODESERVER} -type d -exec chmod 755 {} \;
-find ${DIR_CONFIG_CODESERVER} -type f -exec chmod 644 {} \;
+find ${DIR_CODESERVER_CONFIG} -type d -exec chmod 755 {} \;
+find ${DIR_CODESERVER_CONFIG} -type f -exec chmod 644 {} \;
 
 # [Code-Server] Startup
 cat <<EOF >/etc/systemd/system/code-server@${USERNAME}.service
@@ -289,7 +294,7 @@ WorkingDirectory=/home/${USERNAME}
 Restart=always
 RestartSec=10
 
-ExecStart=/usr/bin/code-server --host 127.0.0.1 --user-data-dir ${DIR_DATA_CODESERVER}
+ExecStart=/usr/bin/code-server --host 127.0.0.1 --user-data-dir ${DIR_CODESERVER_DATA}
 ExecStop=/bin/kill -s QUIT $MAINPID
 
 [Install]
@@ -302,7 +307,7 @@ bind-addr: 127.0.0.1:${CODESERVER_PORT}
 auth: password
 password: ${CODESERVER_PASS}
 cert: false
-user-data-dir: ${DIR_DATA_CODESERVER}
+user-data-dir: ${DIR_CODESERVER_DATA}
 log: debug
 EOF
 
@@ -825,7 +830,7 @@ ln -s ${CONFIG_NGINX_USER} /etc/nginx/sites-enabled/${USERNAME}
 
 #endregion
 
-#region logrotate/logwatch
+#region logrotate
 
 # [logrotate] Config
 cat <<EOF >${CONFIG_OS_LOGROTATION}
@@ -834,7 +839,7 @@ daily
 rotate 21
 create
 missingok
-include ${DIR_CONFIG_LOGROTATION}
+include ${DIR_LOGROTATION_CONFIG}
 EOF
 
 # [logrotate] apache2
@@ -907,9 +912,30 @@ ${DIR_NGINX_LOG}/*.log {
 }
 EOF
 
+#endregion
+
+#region logwatch
+
+# [logwatch] ssmtp
+cat <<EOF >${CONFIG_OS_SSMTP}
+MailHub=${SSMTP_HOST}:${SSMTP_PORT}
+AuthUser=${SSMTP_AUTHUSER}
+AuthPass=${SSMTP_AUTHPASS}
+AuthMethod=LOGIN
+UseTLS=${SSMTP_TLS}
+UseSTARTTLS=${SSMTP_STARTTLS}
+# Forward root mail
+root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
+# Add when domain is missing
+RewriteDomain=${SSMTP_ROOTDOMAIN}
+# Keep actual sender's address
+FromLineOverride=NO
+HostName=$(hostname)
+EOF
+
 # [logwatch] Config
 cat <<EOF >${CONFIG_OS_LOGWATCH}
-TmpDir = ${DIR_DATA_LOGWATCH}
+TmpDir = ${DIR_LOGWATCH_DATA}
 Output = mail
 Format = html
 Encode = none
@@ -923,8 +949,8 @@ Service = "-dpkg"
 Service = "-kernel"
 Service = "-rsyslogd"
 Service = "-sendmail"
-MailTo = ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
-MailFrom = ${SSMTP_AUTHUSER}
+MailFrom = ${LOGWATCH_FRON}
+MailTo = ${LOGWATCH_TO}
 mailer = "/usr/sbin/sendmail -t"
 EOF
 

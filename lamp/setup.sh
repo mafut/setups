@@ -907,7 +907,7 @@ EOF
 cat <<EOF >${CONFIG_OS_LOGWATCH}
 TmpDir = ${DIR_DATA_LOGWATCH}
 Output = mail
-Format = text
+Format = html
 Encode = none
 Range = yesterday
 Detail = High

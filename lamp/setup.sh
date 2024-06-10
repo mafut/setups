@@ -490,8 +490,8 @@ fi
 # [MySQL] Data Permission
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
-chown -R ${MYSQL_USER}:root ${DIR_MYSQL_LOG}
-chown -R ${MYSQL_USER}:root ${DIR_MYSQLDUMP_LOG}
+chown -R ${MYSQL_USER}:adm ${DIR_MYSQL_LOG}
+chown -R ${MYSQL_USER}:adm ${DIR_MYSQLDUMP_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
@@ -567,7 +567,7 @@ find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${APACHE_USER}:root ${DIR_APACHE_LOG}
+chown -R ${APACHE_USER}:adm ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 755 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 644 {} \;
 
@@ -685,7 +685,7 @@ a2ensite ${USERNAME}
 #region Nginx
 
 # [Nginx] User to APACHE_USER
-chown -R ${APACHE_USER}:root ${DIR_NGINX_LOG}
+chown -R ${APACHE_USER}:adm ${DIR_NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then

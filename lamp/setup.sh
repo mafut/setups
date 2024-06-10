@@ -59,15 +59,10 @@ PHP_VERS=(
 )
 
 # Configuration/Data location
-# MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
-CONFIG_OS_NGINX=/etc/nginx/nginx.conf
-CONFIG_OS_APACHE=/etc/apache2/apache2.conf
-CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
-CONFIG_OS_LOGROTATION=/etc/logrotate.conf
-
 DIR_CONFIG_LOGROTATION=/etc/logrotate.d
 DIR_CONFIG_LOGWATCH=/etc/logwatch/conf
 DIR_CONFIG_CODESERVER=/home/${USERNAME}/.config/code-server
+
 DIR_DATA_LOGWATCH=/var/cache/logwatch
 DIR_DATA_CODESERVER=/home/${USERNAME}/.local/share/code-server
 
@@ -78,19 +73,31 @@ sudo -u ${USERNAME} mkdir -p ${DIR_DATA_CODESERVER}
 mkdir -p ${DIR_CONFIG_LOGROTATION}
 mkdir -p ${DIR_CONFIG_LOGWATCH}
 mkdir -p ${DIR_DATA_LOGWATCH}
-mkdir -p ${NGINX_LOG}
-mkdir -p ${APACHE_LOG}
-mkdir -p ${MYSQL_LOG}
+mkdir -p ${DIR_NGINX_LOG}
+mkdir -p ${DIR_APACHE_LOG}
+mkdir -p ${DIR_MYSQL_LOG}
+mkdir -p ${DIR_MYSQLDUMP_LOG}
+
+# MySQL: my.cnf is loaded from /etc/mysql/conf.d/ -> /etc/mysql/mysql.conf.d/
+CONFIG_OS_NGINX=/etc/nginx/nginx.conf
+CONFIG_OS_APACHE=/etc/apache2/apache2.conf
+CONFIG_OS_MYSQL=/etc/mysql/conf.d/my.cnf
+CONFIG_OS_LOGROTATION=/etc/logrotate.conf
+CONFIG_OS_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
 
 CONFIG_LOGROTATION_APACHE=${DIR_CONFIG_LOGROTATION}/apache2
 CONFIG_LOGROTATION_MYSQL=${DIR_CONFIG_LOGROTATION}/mysql-server
+CONFIG_LOGROTATION_MYSQLDUMP=${DIR_CONFIG_LOGROTATION}/mysqldump
 CONFIG_LOGROTATION_NGINX=${DIR_CONFIG_LOGROTATION}/nginx
-CONFIG_LOGWATCH=${DIR_CONFIG_LOGWATCH}/logwatch.conf
+
 CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
 CONFIG_CODESERVER=${DIR_CONFIG_CODESERVER}/config.yaml
+
 CONFIG_VSCODE=${DIR_DATA_CODESERVER}/User/settings.json
+
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
+
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 
@@ -113,28 +120,31 @@ cat <<EOF
 +-- https://${USERNAME}.domain:443
 |   +-- Base Config: ${CONFIG_OS_NGINX}
 |   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
+|   +-- Logrotate Config: ${CONFIG_LOGROTATION_NGINX}
 |   +-- SSL: ${NGINX_CERT_PATH}
 |   |
 |   +-- /
 |   |   +-- Visiable: true (Fxied)
 |   |   +-- Path: ${DOCPATH_ROOT}
-|   |   +-- Config: ${CONFIG_APACHE_USER}
-|   |   +-- App/Port: Apache:${APACHE_PORT}
+|   |   +-- Apache Config: ${CONFIG_APACHE_USER}
+|   |   +-- Apache Port: ${APACHE_PORT}
+|   |   +-- Apache Logrotate: ${CONFIG_LOGROTATION_APACHE}
 |   |   +-- PHP: ${PHP_VER}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
+|   |   +-- MySQL Logrotate: ${CONFIG_LOGROTATION_MYSQL}
+|   |   +-- MySQLDump Logrotate: ${CONFIG_LOGROTATION_MYSQLDUMP}
 |   |
 |   +-- ${LOCATION_STATIC}
 |   |   +-- Visiable: ${ENABLE_STATIC}
 |   |   +-- Path: ${DOCPATH_STATIC}
 |   |   +-- Config: ${CONFIG_NGINX_USER}
-|   |   +-- App/Port: Nginx:443
 |   |
 |   +-- ${LOCATION_VSCODE}
 |       +-- Visiable: ${ENABLE_VSCODE}
 |       +-- Path: ${DIR_DATA_CODESERVER}
 |       +-- Config Code-Server: ${CONFIG_CODESERVER}
-|       +-- Config VS Code: ${CONFIG_VSCODE}
-|       +-- App/Port: Code-Server:${CODESERVER_PORT}
+|       +-- Config VS-Code: ${CONFIG_VSCODE}
+|       +-- Port: ${CODESERVER_PORT}
 |       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
 |       +-- Password: ${CODESERVER_PASS}
 |
@@ -148,10 +158,10 @@ Apache: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
 
 [Log]
-Nginx: ${NGINX_LOG}
-Apache: ${APACHE_LOG}
-MySQL: ${MYSQL_LOG}
-LogWatch: ${DIR_DATA_LOGWATCH}
+Nginx: ${DIR_NGINX_LOG}
+Apache: ${DIR_APACHE_LOG}
+MySQL: ${DIR_MYSQL_LOG}
+MySQLDump: ${DIR_MYSQLDUMP_LOG}
 
 [VS Code Extensions]
 ${LIST_EXTS}
@@ -422,7 +432,7 @@ basedir   = /var/lib/mysql
 datadir   = /var/lib/mysql-files
 pid-file  = /var/run/mysqld/mysqld.pid
 socket    = /var/run/mysqld/mysqld.sock
-log-error = ${MYSQL_LOG}/error.log
+log-error = ${DIR_MYSQL_LOG}/error.log
 lc_messages_dir = /usr/share/mysql-8.0/english
 
 performance-schema = 0
@@ -480,11 +490,13 @@ fi
 # [MySQL] Data Permission
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
 chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
-chown -R ${MYSQL_USER}:root ${MYSQL_LOG}
+chown -R ${MYSQL_USER}:root ${DIR_MYSQL_LOG}
+chown -R ${MYSQL_USER}:root ${DIR_MYSQLDUMP_LOG}
 
 chmod 750 /var/lib/mysql
 chmod 750 /var/lib/mysql-files
-chmod 750 ${MYSQL_LOG}
+chmod 750 ${DIR_MYSQL_LOG}
+chmod 750 ${DIR_MYSQLDUMP_LOG}
 
 usermod -d /var/lib/mysql/ ${MYSQL_USER}
 mysqld --initialize-insecure --user=${MYSQL_USER}
@@ -549,9 +561,9 @@ find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${APACHE_USER}:root ${APACHE_LOG}
-find ${APACHE_LOG} -type d -exec chmod 755 {} \;
-find ${APACHE_LOG} -type f -exec chmod 644 {} \;
+chown -R ${APACHE_USER}:root ${DIR_APACHE_LOG}
+find ${DIR_APACHE_LOG} -type d -exec chmod 755 {} \;
+find ${DIR_APACHE_LOG} -type f -exec chmod 644 {} \;
 
 # [Apache] Configure core
 if [ -f ${CONFIG_OS_APACHE} ] && [ ! -f ${CONFIG_OS_APACHE}.bak ]; then
@@ -611,8 +623,8 @@ AcceptFilter http none
     ServerName localhost:80
 
     LogLevel warn
-    ErrorLog ${APACHE_LOG}/error.log
-    CustomLog ${APACHE_LOG}/access.log combined
+    ErrorLog ${DIR_APACHE_LOG}/error.log
+    CustomLog ${DIR_APACHE_LOG}/access.log combined
 
     DocumentRoot ${DOCPATH_HTTP}
     <Directory ${DOCPATH_HTTP}>
@@ -641,8 +653,8 @@ Listen ${APACHE_PORT}
     ServerName localhost:${APACHE_PORT}
 
     LogLevel warn
-    ErrorLog ${APACHE_LOG}/error.log
-    CustomLog ${APACHE_LOG}/access.log combined
+    ErrorLog ${DIR_APACHE_LOG}/error.log
+    CustomLog ${DIR_APACHE_LOG}/access.log combined
 
     DocumentRoot ${DOCPATH_ROOT}
     <Directory ${DOCPATH_ROOT}>
@@ -667,7 +679,7 @@ a2ensite ${USERNAME}
 #region Nginx
 
 # [Nginx] User to APACHE_USER
-chown -R ${APACHE_USER}:root ${NGINX_LOG}
+chown -R ${APACHE_USER}:root ${DIR_NGINX_LOG}
 
 # [Nginx] Configure core config
 if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
@@ -703,8 +715,8 @@ http {
         ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
         ssl_prefer_server_ciphers on;
 
-        access_log ${NGINX_LOG}/access.log;
-        error_log ${NGINX_LOG}/error.log;
+        access_log ${DIR_NGINX_LOG}/access.log;
+        error_log ${DIR_NGINX_LOG}/error.log;
 
         gzip on;
 
@@ -803,7 +815,7 @@ EOF
 
 # [logrotate] apache2
 cat <<EOF >${CONFIG_LOGROTATION_APACHE}
-${APACHE_LOG}/*.log {
+${DIR_APACHE_LOG}/*.log {
     compress
     delaycompress
     ifempty
@@ -817,7 +829,7 @@ EOF
 
 # [logrotate] mysql-server
 cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
-${MYSQL_LOG}/*.log {
+${DIR_MYSQL_LOG}/*.log {
     compress
     delaycompress
     ifempty
@@ -837,9 +849,27 @@ ${MYSQL_LOG}/*.log {
 }
 EOF
 
+# [logrotate] mysqldump
+cat <<EOF >${CONFIG_LOGROTATION_MYSQLDUMP}
+${DIR_MYSQLDUMP_LOG}/*.sql.gz {
+    nocompress
+    daily
+    rotate 14
+    size 0
+    missingok
+    create 0640 ${MYSQL_USER} root
+    sharedscripts
+    postrotate
+        test -x /usr/bin/mysqldump || exit 0
+        MYSQLDUMPOPTION="--single-transaction --quick --disable-keys --extended-insert --column-statistics=0 --compatible=ansi --skip-triggers --skip-quote-names --default-character-set=utf8 --no-tablespaces --set-gtid-purged=OFF --compression-algorithms=zlib -n -t"
+        /usr/bin/mysqldump $MYSQLDUMPOPTION -h localhost -u root ${MYSQL_BACKUP_DB} | gzip > ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql.gz
+    endscript
+}
+EOF
+
 # [logrotate] nginx
 cat <<EOF >${CONFIG_LOGROTATION_NGINX}
-${NGINX_LOG}/*.log {
+${DIR_NGINX_LOG}/*.log {
     compress
     delaycompress
     ifempty
@@ -852,7 +882,7 @@ ${NGINX_LOG}/*.log {
 EOF
 
 # [logwatch] Config
-cat <<EOF >${CONFIG_LOGWATCH}
+cat <<EOF >${CONFIG_OS_LOGWATCH}
 TmpDir = ${DIR_DATA_LOGWATCH}
 # Output = mail
 Output = stdout

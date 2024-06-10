@@ -825,7 +825,8 @@ ${DIR_APACHE_LOG}/*.log {
     compress
     delaycompress
     ifempty
-    create 0640 ${APACHE_USER} root
+    missingok
+    create 0640 ${APACHE_USER} adm
     sharedscripts
     postrotate
         /bin/systemctl reload apache2 > /dev/null 2>/dev/null || true
@@ -839,17 +840,18 @@ ${DIR_MYSQL_LOG}/*.log {
     compress
     delaycompress
     ifempty
-    create 0640 ${MYSQL_USER} root
+    missingok
+    create 0640 ${MYSQL_USER} adm
     sharedscripts
     postrotate
         test -x /usr/bin/mysqladmin || exit 0
         MYADMIN="/usr/bin/mysqladmin --defaults-file=/etc/mysql/debian.cnf"
-        if [ -z "$($MYADMIN ping 2>/dev/null)" ]; then
+        if [ -z "\`\$MYADMIN ping 2>/dev/null\`" ]; then
             if killall -q -s0 -umysql mysqld; then
                 exit 1
             fi
         else
-            $MYADMIN flush-logs
+            \$MYADMIN flush-logs
         fi
     endscript
 }
@@ -863,8 +865,7 @@ ${DIR_MYSQLDUMP_LOG}/*.sql.gz {
     rotate 14
     size 0
     missingok
-    create 0640 ${MYSQL_USER} root
-    sharedscripts
+    create 0640 ${MYSQL_USER} adm
     postrotate
         test -x /usr/bin/mysqldump || exit 0
         MYSQLDUMPOPTION="--single-transaction --quick --disable-keys --extended-insert --column-statistics=0 --compatible=ansi --skip-triggers --skip-quote-names --default-character-set=utf8 --no-tablespaces --set-gtid-purged=OFF --compression-algorithms=zlib -n -t"
@@ -879,7 +880,8 @@ ${DIR_NGINX_LOG}/*.log {
     compress
     delaycompress
     ifempty
-    create 0640 ${APACHE_USER} root
+    missingok
+    create 0640 ${APACHE_USER} adm
     sharedscripts
     postrotate
         /bin/systemctl reload nginx > /dev/null 2>/dev/null || true

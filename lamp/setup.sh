@@ -1,11 +1,11 @@
 #!/bin/bash
 
+#region Variables
+
 DIR_SELF=$(
     cd $(dirname $0)
     pwd
 )
-
-#region Variables
 
 CONF=$1
 if [ -z "${CONF}" ]; then
@@ -111,7 +111,6 @@ cat <<EOF
 +-- https://${USERNAME}.domain:443
 |   +-- Base Config: ${CONFIG_OS_NGINX}
 |   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
-|   +-- Logrotate Config: ${CONFIG_LOGROTATION_NGINX}
 |   +-- SSL: ${NGINX_CERT_PATH}
 |   |
 |   +-- /
@@ -119,11 +118,8 @@ cat <<EOF
 |   |   +-- Path: ${DOCPATH_ROOT}
 |   |   +-- Apache Config: ${CONFIG_APACHE_USER}
 |   |   +-- Apache Port: ${APACHE_PORT}
-|   |   +-- Apache Logrotate: ${CONFIG_LOGROTATION_APACHE}
 |   |   +-- PHP: ${PHP_VER}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
-|   |   +-- MySQL Logrotate: ${CONFIG_LOGROTATION_MYSQL}
-|   |   +-- MySQLDump Logrotate: ${CONFIG_LOGROTATION_MYSQLDUMP}
 |   |
 |   +-- ${LOCATION_STATIC}
 |   |   +-- Visiable: ${ENABLE_STATIC}
@@ -149,11 +145,19 @@ Apache: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
 Log Group: ${LOG_GROUP}
 
-[Log]
+[Log Raw]
 Nginx: ${DIR_NGINX_LOG}
 Apache: ${DIR_APACHE_LOG}
 MySQL: ${DIR_MYSQL_LOG}
 MySQLDump: ${DIR_MYSQLDUMP_LOG}
+
+[LogRotate/LogWatch]
+LogRotate: ${CONFIG_OS_LOGROTATION}
+LogWatch: ${CONFIG_OS_LOGWATCH}
+Nginx: ${CONFIG_LOGROTATION_NGINX}
+Apache: ${CONFIG_LOGROTATION_APACHE}
+MySQL: ${CONFIG_LOGROTATION_MYSQL}
+MySQLDump: ${CONFIG_LOGROTATION_MYSQLDUMP}
 
 [SSMTP]
 SMTP Host: ${SSMTP_HOST}:${SSMTP_PORT}

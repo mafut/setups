@@ -947,6 +947,7 @@ Service = "-cron"
 Service = "-dovecot"
 Service = "-dpkg"
 Service = "-kernel"
+Service = "-postfix"
 Service = "-rsyslogd"
 Service = "-sendmail"
 MailFrom = ${LOGWATCH_FROM}

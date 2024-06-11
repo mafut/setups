@@ -949,7 +949,7 @@ Service = "-dpkg"
 Service = "-kernel"
 Service = "-rsyslogd"
 Service = "-sendmail"
-MailFrom = ${LOGWATCH_FRON}
+MailFrom = ${LOGWATCH_FROM}
 MailTo = ${LOGWATCH_TO}
 mailer = "/usr/sbin/sendmail -t"
 EOF

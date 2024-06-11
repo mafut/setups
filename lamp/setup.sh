@@ -928,7 +928,8 @@ UseSTARTTLS=${SSMTP_STARTTLS}
 root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 # Add when domain is missing
 RewriteDomain=${SSMTP_ROOTDOMAIN}
-# Keep AuthUser as Sender
+# YES - Allow the user to specify their own From: address
+# NO - Use the system generated From: address
 FromLineOverride=YES
 HostName=$(hostname)
 EOF

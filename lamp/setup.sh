@@ -928,8 +928,8 @@ UseSTARTTLS=${SSMTP_STARTTLS}
 root=${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 # Add when domain is missing
 RewriteDomain=${SSMTP_ROOTDOMAIN}
-# Keep actual sender's address
-FromLineOverride=NO
+# Keep AuthUser as Sender
+FromLineOverride=YES
 HostName=$(hostname)
 EOF
 

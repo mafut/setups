@@ -25,15 +25,13 @@ source $0.default.conf
 # Trim a trailing slash from path
 DOCPATH_ROOT=${DOCPATH_ROOT%/}
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
-DOCPATH_STATIC=${DOCPATH_STATIC%/}
-LOCATION_STATIC=${LOCATION_STATIC%/}
 LOCATION_VSCODE=${LOCATION_VSCODE%/}
 
-# NGINX_CERT_PATH
-if [ -z "${NGINX_CERT_PATH}" ]; then
-    NGINX_CERT_PATH=${DIR_SELF}/cert
+# NGINX_CERTPATH to self signed cert
+if [ -z "${NGINX_CERTPATH}" ]; then
+    NGINX_CERTPATH=${DIR_SELF}/cert
 fi
-NGINX_CERT_PATH=${NGINX_CERT_PATH%/}
+NGINX_CERTPATH=${NGINX_CERTPATH%/}
 
 # OS_ARCH
 ARCH=$(arch)
@@ -57,6 +55,9 @@ PHP_VERS=(
     7.3
     5.6
 )
+
+# NGINX_FQDNS
+NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -89,7 +90,6 @@ CONFIG_VSCODE=${DIR_CODESERVER_DATA}/User/settings.json
 
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
-
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 
@@ -101,42 +101,37 @@ LIST_EXTS=$(printf "%s\n" "${CODESERVER_EXTS[@]}")
 LIST_JOBS=$(printf "%s\n" "${CRON_JOBS[@]}")
 
 cat <<EOF
-[Structure]
-+-- http://${USERNAME}.domain:80
-|   +-- /
-|       +-- Visiable: ${ENABLE_HTTP}
-|       +-- Path: ${DOCPATH_HTTP}
-|       +-- Config: ${CONFIG_APACHE_DEFAULT}
-|       +-- App/Port: Apache:80 (Fixed and shared across users)
-|
-+-- https://${USERNAME}.domain:443
-|   +-- Base Config: ${CONFIG_OS_NGINX}
-|   +-- User Config: ${CONFIG_NGINX_USER} (Default: ${NGINX_DEFAULT})
-|   +-- SSL: ${NGINX_CERT_PATH}
++-- http://*:80
+|   +-- Base Config: ${CONFIG_OS_APACHE}
+|   +-- Default Config: ${CONFIG_APACHE_DEFAULT}
 |   |
 |   +-- /
-|   |   +-- Visiable: true (Fxied)
+|       +-- Path: ${DOCPATH_HTTP}
+|
++-- https://${NGINX_FQDNS}:443
+|   +-- Base Config: ${CONFIG_OS_NGINX}
+|   +-- Default Config: ${CONFIG_NGINX_DEFAULT}
+|   +-- Default SSL: ${NGINX_DEFAULT_CERTPATH}
+|   +-- User Config: ${CONFIG_NGINX_USER}
+|   +-- User SSL: ${NGINX_CERTPATH}
+|   |
+|   +-- /
 |   |   +-- Path: ${DOCPATH_ROOT}
+|   |   +-- Port: ${PORT_ROOT}
 |   |   +-- Apache Config: ${CONFIG_APACHE_USER}
-|   |   +-- Apache Port: ${APACHE_PORT}
 |   |   +-- PHP: ${PHP_VER}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
-|   |
-|   +-- ${LOCATION_STATIC}
-|   |   +-- Visiable: ${ENABLE_STATIC}
-|   |   +-- Path: ${DOCPATH_STATIC}
-|   |   +-- Config: ${CONFIG_NGINX_USER}
 |   |
 |   +-- ${LOCATION_VSCODE}
 |       +-- Visiable: ${ENABLE_VSCODE}
 |       +-- Path: ${DIR_CODESERVER_DATA}
-|       +-- Port: ${CODESERVER_PORT}
+|       +-- Port: ${PORT_VSCODE}
 |       +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
 |       +-- Code-Server Config: ${CONFIG_CODESERVER}
 |       +-- VS-Code Config: ${CONFIG_VSCODE}
 |       +-- Password: ${CODESERVER_PASS}
 |
-+-- https://${USERNAME}.domain:XXXX
++-- https://*:XXXX
     +-- Allowed Ports: ${LIST_PORTS}
 
 [User]
@@ -207,13 +202,6 @@ rm -rf ${DIR_LOGWATCH_DATA}/*
 # [Base Setup] Reset user primary/secondary group
 usermod -g ${USERNAME} ${USERNAME}
 usermod -G ${APACHE_USER} ${USERNAME}
-
-# [Base Setup] Stop Services at the first
-systemctl disable --now nginx
-systemctl disable --now apache2
-systemctl disable --now mysql
-systemctl disable --now code-server
-systemctl disable --now code-server@${USERNAME}
 
 # [Base Setup] Install packages
 add-apt-repository ppa:ondrej/php -y
@@ -303,7 +291,7 @@ EOF
 
 # [Code-Server] User Config
 cat <<EOF >${CONFIG_CODESERVER}
-bind-addr: 127.0.0.1:${CODESERVER_PORT}
+bind-addr: 127.0.0.1:${PORT_VSCODE}
 auth: password
 password: ${CODESERVER_PASS}
 cert: false
@@ -554,9 +542,9 @@ for phpver in "${PHP_VERS[@]}"; do
     sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|;extension=mysqli|extension=mysqli|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|max_execution_time = 30|max_execution_time = 60|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|max_execution_time = 30|max_execution_time = 90|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|post_max_size = 8M|post_max_size = 8M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|post_max_size = 8M|post_max_size = 16M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
     sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
 done
@@ -582,13 +570,6 @@ find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_ROOT}/ -name \*.sh -exec chmod 755 {} \;
-
-chown -R ${USERNAME}:${USERNAME} ${DOCPATH_STATIC}/
-find ${DOCPATH_STATIC}/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_STATIC}/ -type f -exec chmod 644 {} \;
-find ${DOCPATH_STATIC}/ -name .htaccess -exec chmod 644 {} \;
-find ${DOCPATH_STATIC}/ -name index.html -exec chmod 644 {} \;
-find ${DOCPATH_STATIC}/ -name \*.sh -exec chmod 755 {} \;
 
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 755 {} \;
@@ -616,7 +597,7 @@ HostnameLookups Off
 IncludeOptional mods-enabled/*.load
 IncludeOptional mods-enabled/*.conf
 
-Include ports.conf
+Listen 80
 
 <Directory />
         Options FollowSymLinks
@@ -629,23 +610,21 @@ AccessFileName .htaccess
         Require all denied
 </FilesMatch>
 
-ErrorLog ${APACHE_LOG_DIR}/error.log
 LogLevel warn
-LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
 LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
 LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
 LogFormat "%h %l %u %t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 
+ErrorLog ${DIR_APACHE_LOG}/error.log
+
 IncludeOptional conf-enabled/*.conf
 IncludeOptional sites-enabled/*.conf
 EOF
 
-# [Apache] Configure http
-# Note: certbot passes this path
-if "${ENABLE_HTTP}"; then
-    cat <<EOF >${CONFIG_APACHE_DEFAULT}
+# [Apache] Configure default
+cat <<EOF >${CONFIG_APACHE_DEFAULT}
 AcceptFilter http none
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -663,23 +642,16 @@ AcceptFilter http none
     </Directory>
 </VirtualHost>
 EOF
-else
-    cat <<EOF >${CONFIG_APACHE_DEFAULT}
-RewriteEngine on
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
-EOF
-fi
 rm -f /etc/apache2/sites-enabled/000-default.conf
 a2ensite 000-default
 
 # [Apache] Configure user
 cat <<EOF >${CONFIG_APACHE_USER}
 AcceptFilter http none
-Listen ${APACHE_PORT}
-<VirtualHost *:${APACHE_PORT}>
+Listen ${PORT_ROOT}
+<VirtualHost *:${PORT_ROOT}>
     ServerAdmin webmaster@localhost
-    ServerName localhost:${APACHE_PORT}
+    ServerName localhost:${PORT_ROOT}
 
     LogLevel warn
     ErrorLog ${DIR_APACHE_LOG}/error.log
@@ -722,43 +694,46 @@ pid /run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;
 
 events {
-        worker_connections 768;
-        # multi_accept on;
+    worker_connections 768;
+    # multi_accept on;
 }
 
 http {
-        sendfile on;
-        tcp_nopush on;
-        tcp_nodelay on;
-        keepalive_timeout 65;
-        types_hash_max_size 2048;
-        client_max_body_size 8M;
-        # server_tokens off;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    client_max_body_size 16M;
+    # server_tokens off;
 
-        # server_names_hash_bucket_size 64;
-        # server_name_in_redirect off;
+    # server_names_hash_bucket_size 64;
+    # server_name_in_redirect off;
 
-        include /etc/nginx/mime.types;
-        default_type application/octet-stream;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
 
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
-        ssl_prefer_server_ciphers on;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+    ssl_prefer_server_ciphers on;
 
-        access_log ${DIR_NGINX_LOG}/access.log;
-        error_log ${DIR_NGINX_LOG}/error.log;
+    access_log ${DIR_NGINX_LOG}/access.log;
+    error_log ${DIR_NGINX_LOG}/error.log;
 
-        gzip on;
+    gzip on;
 
-        include /etc/nginx/conf.d/*.conf;
-        include /etc/nginx/sites-enabled/*;
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
 }
 EOF
 
-# [Nginx] Configure http 80 as backup
+# [Nginx] Configure 443
 cat <<EOF >${CONFIG_NGINX_DEFAULT}
 server {
-    listen 80 default_server;
+    listen 443 default_server;
     server_name _;
+
+    ssl_certificate ${NGINX_DEFAULT_CERTPATH}/fullchain.pem;
+    ssl_certificate_key ${NGINX_DEFAULT_CERTPATH}/privkey.pem;
 
     root ${DOCPATH_HTTP};
     index index.html;
@@ -769,57 +744,40 @@ server {
 }
 EOF
 rm -f /etc/nginx/sites-enabled/default
+ln -s ${CONFIG_NGINX_DEFAULT} /etc/nginx/sites-enabled/default
 
 # [Nginx] Configure https 443
 # Note: [] is not needed in if. Format is 'if "${boolean}"''
-if "${NGINX_DEFAULT}"; then
-    NGINX_LISTEN='listen 443 ssl default_server;'
-else
-    NGINX_LISTEN='listen 443 ssl;'
-fi
-
-NGINX_CONTENT=
-if "${ENABLE_STATIC}"; then
-    NGINX_CONTENT=$(
-        cat <<EOF
-    location ${LOCATION_STATIC}/ {
-        alias ${DOCPATH_STATIC}/;
-        autoindex on;
-        index index.html;
-    }
-EOF
-    )
-fi
-
 NGINX_VSCODE=
 if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
-    location ${LOCATION_VSCODE}/ {
-        proxy_pass http://127.0.0.1:${CODESERVER_PORT}/;
-        proxy_set_header Host \$host;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection upgrade;
-        proxy_set_header Accept-Encoding gzip;
-    }
+location ${LOCATION_VSCODE}/ {
+    proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
+    proxy_set_header Host \$host;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection upgrade;
+    proxy_set_header Accept-Encoding gzip;
+    proxy_connect_timeout 120;
+    proxy_send_timeout 180;
+    proxy_read_timeout 180;
+}
 EOF
     )
 fi
 
 cat <<EOF >${CONFIG_NGINX_USER}
 server {
-    ${NGINX_LISTEN}
-    server_name ${USERNAME}.*;
+    listen 443 ssl;
+    server_name ${NGINX_FQDNS};
 
-    ssl_certificate ${NGINX_CERT_PATH}/fullchain.pem;
-    ssl_certificate_key ${NGINX_CERT_PATH}/privkey.pem;
-
-    ${NGINX_CONTENT}
+    ssl_certificate ${NGINX_CERTPATH}/fullchain.pem;
+    ssl_certificate_key ${NGINX_CERTPATH}/privkey.pem;
 
     ${NGINX_VSCODE}
 
     location / {
-        proxy_pass http://127.0.0.1:${APACHE_PORT}/;
+        proxy_pass http://127.0.0.1:${PORT_ROOT}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
     }
@@ -964,13 +922,17 @@ EOF
 loginctl enable-linger ${USERNAME}
 
 # Add auto-start and start services
-# systemctl reload mysql
-# systemctl reload apache2
-# systemctl reload nginx
-
+systemctl disable --now code-server
+systemctl disable --now code-server@${USERNAME}
 systemctl enable --now code-server@${USERNAME}
+
+systemctl disable --now mysql
 systemctl enable --now mysql
+
+systemctl disable --now apache2
 systemctl enable --now apache2
+
+systemctl disable --now nginx
 systemctl enable --now nginx
 
 # [Cron] Schedule to pull

@@ -23,9 +23,9 @@ source ${CONF}
 source $0.default.conf
 
 # Trim a trailing slash from path
-DOCPATH_ROOT=${DOCPATH_ROOT%/}
+DOCPATH_HTTPS=${DOCPATH_HTTPS%/}
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
-LOCATION_VSCODE=${LOCATION_VSCODE%/}
+PATH_VSCODE=${PATH_VSCODE%/}
 
 # NGINX_CERTPATH to self signed cert
 if [ -z "${NGINX_CERTPATH}" ]; then
@@ -58,6 +58,10 @@ PHP_VERS=(
 
 # NGINX_FQDNS
 NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
+
+# CERTBOT_COMMAND
+CERTBOT_FQDNS=$(printf " -d %s" "${NGINX_FQDN[@]}")
+CERTBOT_COMMAND="certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}"
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -116,13 +120,13 @@ cat <<EOF
 |   +-- User SSL: ${NGINX_CERTPATH}
 |   |
 |   +-- /
-|   |   +-- Path: ${DOCPATH_ROOT}
-|   |   +-- Port: ${PORT_ROOT}
+|   |   +-- Path: ${DOCPATH_HTTPS}
+|   |   +-- Port: ${PORT_HTTPS}
 |   |   +-- Apache Config: ${CONFIG_APACHE_USER}
 |   |   +-- PHP: ${PHP_VER}
 |   |   +-- MySQL Config: ${CONFIG_OS_MYSQL}
 |   |
-|   +-- ${LOCATION_VSCODE}
+|   +-- ${PATH_VSCODE}
 |       +-- Visiable: ${ENABLE_VSCODE}
 |       +-- Path: ${DIR_CODESERVER_DATA}
 |       +-- Port: ${PORT_VSCODE}
@@ -172,6 +176,9 @@ ${LIST_EXTS}
 
 [Cron Jobs]
 ${LIST_JOBS}
+
+[Certbot Command]
+${CERTBOT_COMMAND}
 
 EOF
 read -p "Hit enter if ok: "
@@ -564,12 +571,12 @@ find ${DOCPATH_HTTP}/ -name .htaccess -exec chmod 644 {} \;
 find ${DOCPATH_HTTP}/ -name index.html -exec chmod 644 {} \;
 find ${DOCPATH_HTTP}/ -name \*.sh -exec chmod 755 {} \;
 
-chown -R ${USERNAME}:${USERNAME} ${DOCPATH_ROOT}/
-find ${DOCPATH_ROOT}/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_ROOT}/ -type f -exec chmod 644 {} \;
-find ${DOCPATH_ROOT}/ -name .htaccess -exec chmod 644 {} \;
-find ${DOCPATH_ROOT}/ -name index.html -exec chmod 644 {} \;
-find ${DOCPATH_ROOT}/ -name \*.sh -exec chmod 755 {} \;
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTPS}/
+find ${DOCPATH_HTTPS}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_HTTPS}/ -type f -exec chmod 644 {} \;
+find ${DOCPATH_HTTPS}/ -name .htaccess -exec chmod 644 {} \;
+find ${DOCPATH_HTTPS}/ -name index.html -exec chmod 644 {} \;
+find ${DOCPATH_HTTPS}/ -name \*.sh -exec chmod 755 {} \;
 
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 755 {} \;
@@ -648,24 +655,24 @@ a2ensite 000-default
 # [Apache] Configure user
 cat <<EOF >${CONFIG_APACHE_USER}
 AcceptFilter http none
-Listen ${PORT_ROOT}
-<VirtualHost *:${PORT_ROOT}>
+Listen ${PORT_HTTPS}
+<VirtualHost *:${PORT_HTTPS}>
     ServerAdmin webmaster@localhost
-    ServerName localhost:${PORT_ROOT}
+    ServerName localhost:${PORT_HTTPS}
 
     LogLevel warn
     ErrorLog ${DIR_APACHE_LOG}/error.log
     CustomLog ${DIR_APACHE_LOG}/access.log combined
 
-    DocumentRoot ${DOCPATH_ROOT}
-    <Directory ${DOCPATH_ROOT}>
+    DocumentRoot ${DOCPATH_HTTPS}
+    <Directory ${DOCPATH_HTTPS}>
         Options None
         AllowOverride All
         Require all granted
     </Directory>
 
-    Alias /application/views ${DOCPATH_ROOT}/application/views
-    <Directory ${DOCPATH_ROOT}/application/views>
+    Alias /application/views ${DOCPATH_HTTPS}/application/views
+    <Directory ${DOCPATH_HTTPS}/application/views>
         Options None
         AllowOverride All
         Require all granted
@@ -752,7 +759,7 @@ NGINX_VSCODE=
 if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
-location ${LOCATION_VSCODE}/ {
+location ${PATH_VSCODE}/ {
     proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
     proxy_set_header Host \$host;
     proxy_set_header Upgrade \$http_upgrade;
@@ -777,7 +784,7 @@ server {
     ${NGINX_VSCODE}
 
     location / {
-        proxy_pass http://127.0.0.1:${PORT_ROOT}/;
+        proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
     }
@@ -938,6 +945,22 @@ systemctl enable --now nginx
 # [Cron] Schedule to pull
 printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf
 crontab -u ${USERNAME} $0.crontab.conf
+
+#endregion
+
+#region Certbot
+
+if "${ENABLE_CERTBOT}"; then
+    if [ -f ${DOCPATH_HTTP}/.htaccess ]; then
+        mv ${DOCPATH_HTTP}/.htaccess ${DOCPATH_HTTP}/htaccess
+    fi
+
+    ${CERTBOT_COMMAND}
+
+    if [ -f ${DOCPATH_HTTP}/htaccess ]; then
+        mv ${DOCPATH_HTTP}/htaccess ${DOCPATH_HTTP}/.htaccess
+    fi
+fi
 
 #endregion
 

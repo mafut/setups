@@ -36,19 +36,15 @@ If you'd like to use specific config, add "default_server" in listen directive l
 2. Get the latest source
     ```
     git clone https://github.com/mafut/setupscripts.git
-    ```
-3. Setup a site with default setting
-    ```
     cd setupscripts/lamp
     touch ./setup.sh.conf
-    sudo ./setup.sh
     ```
-5. Issue a certificate by Let's encrypt
+3. Issue a certificate by Let's encrypt
     ```
     sudo certbot certonly --agree-tos --webroot -w /var/www/html/ -d [user].[your_domain]
     ```
-6. Edit setup.sh.conf
-7. Setup with real cert
+4. Edit setup.sh.conf
+5. Run setup.sh
     ```
     sudo ./setup.sh
     ```
@@ -56,23 +52,33 @@ If you'd like to use specific config, add "default_server" in listen directive l
 ### setup.sh.conf
 
 Example Case
-* real cert
+* Let's Encrypt cert
 * Every hour sync
 * Open 8080 for another purpose
 
 ```
-DOCPATH_ROOT=/home/[user]/php_app
+DOCPATH_HTTPS=/home/[user]/php_app
 DOCPATH_HTTP=/var/www/html
-DOCPATH_STATIC=/home/[user]/static_content
-ENABLE_HTTP=true
-ENABLE_STATIC=true
+
+PORT_HTTPS=8081
+PORT_VSCODE=8082
+
 ENABLE_VSCODE=true
-NGINX_CERT_PATH=/etc/letsencrypt/live/[user].[your_domain]
-NGINX_DEFAULT=true
-APACHE_PORT=8081
+
+NGINX_DEFAULT_CERTPATH=/etc/letsencrypt/live/www.hogehoge.com
+NGINX_CERTPATH=/etc/letsencrypt/live/user.hogehoge.com
+NGINX_FQDN=(
+    "www.hogehoge.com"
+    "user.hogehoge.com"
+)
+APACHE_REWRITE_DOMAIN=www.hogehoge.com
+PHP_VER=5.6
+
+CODESERVER_VER=4.23.1
 CODESERVER_PASS=password
-CODESERVER_PORT=8082
+
 ALLOWED_PORTS=(8080)
+
 CRON_JOBS=(
     "0 * * * * /bin/sh -c 'cd ${DOCPATH_ROOT} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'"
     "0 * * * * /bin/sh -c 'cd ${DOCPATH_STATIC} && /usr/bin/git fetch --all && /usr/bin/git checkout . && /usr/bin/git clean -df && /usr/bin/git reset --hard origin/master && /usr/bin/git pull origin master'"

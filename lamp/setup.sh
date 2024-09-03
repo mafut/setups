@@ -96,6 +96,7 @@ CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
 CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
+CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
 
 #endregion
 
@@ -111,6 +112,8 @@ cat <<EOF
 |   |
 |   +-- /
 |       +-- Path: ${DOCPATH_HTTP}
+|       +-- htaccess: ${CONFIG_APACHE_HTACCESS}
+|       +-- Rewrite : ${APACHE_REWRITE_DOMAIN}
 |
 +-- https://${NGINX_FQDNS}:443
 |   +-- Base Config: ${CONFIG_OS_NGINX}
@@ -560,6 +563,15 @@ done
 
 #region Apache
 
+# [Apache] Default .htaccess
+# Allow certbot path
+cat <<EOF >${CONFIG_APACHE_HTACCESS}
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*) https://${APACHE_REWRITE_DOMAIN}/$1 [R=301,L]
+EOF
+
 # [Apache] Reset Permission: User(6)/UserGroup(4)/Other(4)
 # Ubuntu 22.04 the user dir has 750 permissions by default rather than 755.
 chmod 755 /home/${USERNAME}/
@@ -607,14 +619,14 @@ IncludeOptional mods-enabled/*.conf
 Listen 80
 
 <Directory />
-        Options FollowSymLinks
-        AllowOverride None
-        Require all denied
+    Options FollowSymLinks
+    AllowOverride None
+    Require all denied
 </Directory>
 
 AccessFileName .htaccess
 <FilesMatch "^\.ht">
-        Require all denied
+    Require all denied
 </FilesMatch>
 
 LogLevel warn
@@ -951,15 +963,7 @@ crontab -u ${USERNAME} $0.crontab.conf
 #region Certbot
 
 if "${ENABLE_CERTBOT}"; then
-    if [ -f ${DOCPATH_HTTP}/.htaccess ]; then
-        mv ${DOCPATH_HTTP}/.htaccess ${DOCPATH_HTTP}/htaccess
-    fi
-
     ${CERTBOT_COMMAND}
-
-    if [ -f ${DOCPATH_HTTP}/htaccess ]; then
-        mv ${DOCPATH_HTTP}/htaccess ${DOCPATH_HTTP}/.htaccess
-    fi
 fi
 
 #endregion

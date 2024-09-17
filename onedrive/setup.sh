@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://github.com/abraunegg/onedrive/blob/master/docs/usage.md
+
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
     echo "Can't get User Name"
@@ -7,14 +9,19 @@ if [ -z "${USERNAME}" ]; then
 fi
 
 apt install onedrive
-rm /etc/systemd/user/default.target.wants/onedrive.service
+if [ -e /etc/systemd/user/default.target.wants/onedrive.service ]; then
+    rm /etc/systemd/user/default.target.wants/onedrive.service
+fi
+systemctl disable onedrive@${USERNAME}.service
 
 CONFIG=/home/${USERNAME}/.config/onedrive/config
 cat <<EOF >${CONFIG}
-sync_dir = "~/OneDrive/Notes"
+sync_dir = "~/OneDrive"
 check_nosync = "true"
 no_remote_delete = "true"
 skip_dotfiles = "true"
+skip_symlinks = "true"
+skip_dir = "Documents|Game|Music|Pictures|Videos"
 
 monitor_interval = "600"
 monitor_fullscan_frequency = "12"
@@ -25,10 +32,14 @@ EOF
 
 CONFIG=/home/${USERNAME}/.config/onedrive/sync_list
 cat <<EOF >${CONFIG}
-/Notes
+!/*/*
+/Notes/
 EOF
 
-onedrive --synchronize --download-only --check-for-nosync --no-remote-delete --single-directory 'Notes'
-# onedrive --synchronize
+#sudo -u ${USERNAME} onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Notes'
+sudo -u ${USERNAME} onedrive --synchronize --check-for-nosync --no-remote-delete
+
+read -p "Hit enter if continue: "
+
 systemctl enable onedrive@${USERNAME}.service
 systemctl start onedrive@${USERNAME}.service

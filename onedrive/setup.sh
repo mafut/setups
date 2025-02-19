@@ -9,10 +9,12 @@ if [ -z "${USERNAME}" ]; then
 fi
 
 apt install onedrive
+systemctl disable onedrive@${USERNAME}.service
+
+# Clean up
 if [ -e /etc/systemd/user/default.target.wants/onedrive.service ]; then
     rm /etc/systemd/user/default.target.wants/onedrive.service
 fi
-systemctl disable onedrive@${USERNAME}.service
 
 CONFIG=/home/${USERNAME}/.config/onedrive/config
 cat <<EOF >${CONFIG}

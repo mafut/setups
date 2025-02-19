@@ -166,7 +166,6 @@ alias config='sudo raspi-config'
 alias cls='clear'
 alias off='sudo shutdown now'
 alias on='tty-clock -scbrBS'
-alias rb='sudo reboot now'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
 

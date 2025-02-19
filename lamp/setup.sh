@@ -37,12 +37,6 @@ PATH_PHPMYADMIN=${PATH_PHPMYADMIN%/}
 MACKEREL_PATH_APACHE=${MACKEREL_PATH_APACHE%/}
 MACKEREL_PATH_NGINX=${MACKEREL_PATH_NGINX%/}
 
-# NGINX_CERTPATH to self signed cert
-if [ -z "${NGINX_CERTPATH}" ]; then
-    NGINX_CERTPATH=${DIR_SELF}/cert
-fi
-NGINX_CERTPATH=${NGINX_CERTPATH%/}
-
 # OS_ARCH
 ARCH=$(arch)
 case $ARCH in
@@ -58,6 +52,12 @@ PHP_VERS=(
     7.3
     5.6
 )
+
+# NGINX_CERTPATH to self signed cert
+if [ -z "${NGINX_CERTPATH}" ]; then
+    NGINX_CERTPATH=${DIR_SELF}/cert
+fi
+NGINX_CERTPATH=${NGINX_CERTPATH%/}
 
 # NGINX_FQDNS
 NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
@@ -107,12 +107,34 @@ CONFIG_MACKEREL_CONFIG=/etc/mackerel-agent/mackerel-agent.conf
 # ssh
 DIR_PUB=$(
     cd $(dirname $0)
-    cd ..
-    cd ssh-pubkey
+    cd ../ssh-pubkey/
     pwd
 )
-FILE_SSHKEY=/home/${USERNAME}/.ssh/authorized_keys
+DIR_PUBS=(
+    ${DIR_PUB}/yubikey/
+    ${DIR_PUB}/client/
+)
 
+SSH_AUTHKEYS=/home/${USERNAME}/.ssh/authorized_keys
+SSH_AUTHKEYS_TMP=/home/${USERNAME}/.ssh/authorized_keys.tmp
+
+if [ ! -e $(dirname ${SSH_AUTHKEYS_TMP}) ]; then
+    sudo -u ${USERNAME} mkdir $(dirname ${SSH_AUTHKEYS_TMP})
+fi
+echo -n >${SSH_AUTHKEYS_TMP}
+
+for pubs in "${DIR_PUBS[@]}"; do
+    if [ -e $pubs ]; then
+        # {} represents the file being operated on during this iteration
+        # \; closes the code statement and returns for next iteration
+        find "$pubs" -name "*.pub" -type f -exec awk '1' $1 >>${SSH_AUTHKEYS_TMP} {} \;
+    fi
+done
+
+if [ ! -s ${SSH_AUTHKEYS_TMP} ]; then
+    echo "Can't get public certs"
+    exit 1
+fi
 #endregion
 
 #region Config confirmation
@@ -219,11 +241,15 @@ ${LIST_JOBS}
 [Certbot Command]
 ${CERTBOT_COMMAND}
 
+[Public Certs]
 EOF
+cat ${SSH_AUTHKEYS_TMP}
+
 if "${UPGRADE}"; then
-    echo "Setup will stop/restart services"
+    read -p "Hit enter to setup with upgrade: "
+else
+    read -p "Hit enter to setup: "
 fi
-read -p "Hit enter if ok: "
 
 #endregion
 
@@ -311,6 +337,9 @@ ufw deny 8888
 ufw allow out 25
 ufw allow out 587
 ufw --force enable
+
+#[Base Setup] ssh
+mv -f ${SSH_AUTHKEYS_TMP} ${SSH_AUTHKEYS}
 
 #endregion
 
@@ -790,36 +819,64 @@ sudo ln -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_LIGHTTPD_LOG}
 
 cat <<EOF >${CONFIG_OS_LIGHTTPD}
-server.port = 8888
 server.modules = (
-        "mod_rewrite",
-        "mod_redirect",
-        "mod_access",
-        "mod_auth",
-        "mod_cgi",
-        "mod_ssi",
-        "mod_alias",
-        "mod_compress",
-        "mod_fastcgi",
-        "mod_accesslog",
-"mod_rewrite",
+    "mod_rewrite",
+    "mod_redirect",
+    "mod_access",
+    "mod_auth",
+    "mod_cgi",
+    "mod_ssi",
+    "mod_alias",
+    "mod_compress",
+    "mod_fastcgi",
+    "mod_accesslog",
+    "mod_rewrite",
 )
-server.document-root            = " ${DOCPATH_PHPMYADMIN}"
-server.upload-dirs              = ( "/var/cache/lighttpd/uploads" )
-server.errorlog                 = "${DIR_LIGHTTPD_LOG}/error.log"
-server.pid-file                 = "/var/run/lighttpd.pid"
-server.username                 = "${APACHE_USER}"
-server.groupname                = "${APACHE_USER}"
-server.dir-listing              = "disable"
-dir-listing.activate            = "disable"
-index-file.names                = ( "index.php", "index.html" )
-url.access-deny                 = ( "~", ".inc" )
-static-file.exclude-extensions  = ( ".php", ".pl", ".fcgi" )
-compress.cache-dir              = "/var/cache/lighttpd/compress/" 
-compress.filetype               = ( "application/x-javascript", "text/css", "text/html", "text/plain" )
-include_shell "/usr/share/lighttpd/use-ipv6.pl"
-include_shell "/usr/share/lighttpd/create-mime.assign.pl" 
-include_shell "/usr/share/lighttpd/include-conf-enabled.pl" 
+server.document-root        = " ${DOCPATH_PHPMYADMIN}"
+server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
+server.errorlog             = "${DIR_LIGHTTPD_LOG}/error.log"
+server.pid-file             = "/var/run/lighttpd.pid"
+server.username             = "${APACHE_USER}"
+server.groupname            = "${APACHE_USER}"
+server.port                 = 8888
+
+# features
+#https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_feature-flagsDetails
+server.feature-flags       += ("server.h2proto" => "enable")
+server.feature-flags       += ("server.h2c"     => "enable")
+server.feature-flags       += ("server.graceful-shutdown-timeout" => 5)
+#server.feature-flags      += ("server.graceful-restart-bg" => "enable")
+
+# strict parsing and normalization of URL for consistency and security
+# https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_http-parseoptsDetails
+# (might need to explicitly set "url-path-2f-decode" = "disable"
+#  if a specific application is encoding URLs inside url-path)
+server.http-parseopts = (
+  "header-strict"           => "enable",# default
+  "host-strict"             => "enable",# default
+  "host-normalize"          => "enable",# default
+  "url-normalize-unreserved"=> "enable",# recommended highly
+  "url-normalize-required"  => "enable",# recommended
+  "url-ctrls-reject"        => "enable",# recommended
+  "url-path-2f-decode"      => "enable",# recommended highly (unless breaks app)
+  "url-path-dotseg-remove"  => "enable",# recommended highly (unless breaks app)
+)
+
+index-file.names            = ( "index.php", "index.html" )
+url.access-deny             = ( "~", ".inc" )
+static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
+
+# default listening port for IPv6 falls back to the IPv4 port
+include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
+include_shell "/usr/share/lighttpd/create-mime.conf.pl"
+include "/etc/lighttpd/conf-enabled/*.conf"
+
+server.modules += (
+        "mod_dirlisting",
+        "mod_staticfile",
+)
+
+
 fastcgi.server = (
     ".php" => (
         "localhost" => (
@@ -1050,7 +1107,7 @@ EOF
 
 #endregion
 
-#region monitoring
+#region mackerel
 # [mackerel] Config
 cat <<EOF >${CONFIG_MACKEREL_CONFIG}
 apikey = "${MACKEREL_APIKEY}"
@@ -1128,7 +1185,9 @@ command = "mackerel-plugin-mysql"
 [plugin.metrics.squid]
 command = "mackerel-plugin-squid -port=8080"
 EOF
+#endregion
 
+#region logwatch
 # [logwatch] ssmtp
 cat <<EOF >${CONFIG_OS_SSMTP}
 MailHub=${SSMTP_HOST}:${SSMTP_PORT}
@@ -1202,59 +1261,11 @@ crontab -u ${USERNAME} $0.crontab.conf
 
 #endregion
 
-#region Certbot
-
-if "${ENABLE_CERTBOT}"; then
-    ${CERTBOT_COMMAND}
-fi
-
-#endregion
-
-#region ssh
-
-if [ ! -e $(dirname ${FILE_SSHKEY}) ]; then
-    sudo -u ${USERNAME} mkdir $(dirname ${FILE_SSHKEY})
-fi
-if [ -e ${FILE_SSHKEY} ]; then
-    mv -f ${FILE_SSHKEY} ${FILE_SSHKEY}.bak
-fi
-# {} represents the file being operated on during this iteration
-# \; closes the code statement and returns for next iteration
-find "${DIR_PUB}/yubikey" -name "*.pub" -type f -exec awk '1' $1>>${FILE_SSHKEY} {} \;
-find "${DIR_PUB}/client" -name "*.pub" -type f -exec awk '1' $1>>${FILE_SSHKEY} {} \;
-if [ ! -s ${FILE_SSHKEY} ]; then
-    echo "Rolling back ${FILE_SSHKEY}"
-    mv -f ${FILE_SSHKEY}.bak ${FILE_SSHKEY}
-fi
-
-cat <<EOF
-
-[SSH TIPS]
-
-Cert auth instead of password:
-  1. Add id_rsa.pub to /home/${USERNAME}/.ssh/authorized_keys. 
-  2. Confirm if /etc/ssh/sshd_config allows cert auth
-    PubkeyAuthentication        yes
-    AuthorizedKeysFile          .ssh/authorized_keys
-  3. sudo systemctl restart sshd
-  4. Confirm if ssh works with cert
-  5. Confirm if /etc/ssh/sshd_config doesn't allow password auth
-    PasswordAuthentication      no
-  6. sudo systemctl restart sshd
-
-Allowed Public Cert:
-EOF
-cat ${FILE_SSHKEY}
-
-#endregion
-
 #region Manual setup
 
 cat <<EOF
 
-[MySQL TIPS]
-
-Remove root password:
+[MySQL] Remove root password:
   1. Enable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
   2. sudo systemctl restart mysql
   3. Reset
@@ -1266,8 +1277,21 @@ Remove root password:
   4. Disable "skip-grant-tables" in /etc/mysql/conf.d/my.cnf
   5. sudo systemctl restart mysql
 
-Add root password for Production:
+[MySQL] Add root password for Production:
   sudo mysql_secure_installation
 
+[SSH] Cert auth instead of password:
+  1. Add id_rsa.pub/id_ed25519.pub to /home/${USERNAME}/.ssh/authorized_keys
+  2. Update /etc/ssh/sshd_config to allow cert auth
+    PubkeyAuthentication    yes
+    AuthorizedKeysFile      .ssh/authorized_keys
+  3. sudo systemctl restart sshd
+  4. Confirm if ssh works with cert
+  5. Update /etc/ssh/sshd_config not to allow password auth
+    PasswordAuthentication          no
+    ChallengeResponseAuthentication no
+    PermitEmptyPasswords            no
+    PermitRootLogin                 no
+  6. sudo systemctl restart sshd
 EOF
 #endregion

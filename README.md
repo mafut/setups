@@ -16,12 +16,12 @@ This is shell script to setup proxy on Synology or cloud VM server like Azure, A
 
 This script set up Linux-Apache-MySQL-PHP (LAMP) site with Code-Server on Ubuntu. This also supports multi-user and expects the following as the result.
 
-Url | What you can
--|-
-http://[user].[your_domain]/ | Apache default page as default. This is used for certbot as well.
-https://[user].[your_domain]/ | Your PHP-MySQL site on HTTPS.
-https://[user].[your_domain]/content/ | For static contents. location "/content/" can change.
-https://[user].[your_domain]/vscode/ | Code-Server to develop your PHP-MySQL site. location "/vscode/" can change.
+| Url                                    | What you can                                                                |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| http://[user].[your_domain]/           | Apache default page as default. This is used for certbot as well.           |
+| https://[user].[your_domain]/          | Your PHP-MySQL site on HTTPS.                                               |
+| https://[user].[your_domain]/vscode/   | Code-Server to develop your PHP-MySQL site. location "/vscode/" can change. |
+| https://[user].[your_domain]/database/ | phpMyAdmin to develop your PHP-MySQL site. location "/database/" can change. |
 
 Request host doesn't match with configured server_name of /etc/nginx/sites-enabled/, first configuration will be used.
 If you'd like to use specific config, add "default_server" in listen directive like "listen 443 ssl default_server".
@@ -35,8 +35,8 @@ If you'd like to use specific config, add "default_server" in listen directive l
     ```
 2. Get the latest source
     ```
-    git clone https://github.com/mafut/setupscripts.git
-    cd setupscripts/lamp
+    git clone https://github.com/mafut/setups.git
+    cd setups/lamp
     touch ./setup.sh.conf
     ```
 3. Issue a certificate by Let's encrypt
@@ -71,7 +71,6 @@ NGINX_FQDN=(
     "www.hogehoge.com"
     "user.hogehoge.com"
 )
-APACHE_REWRITE_DOMAIN=www.hogehoge.com
 PHP_VER=5.6
 
 CODESERVER_VER=4.23.1
@@ -85,9 +84,9 @@ CRON_JOBS=(
 )
 ```
 
-## Raspberry Pi 4
+## Raspberry Pi
 
-These scripts setup Raspberry Pi 4 to run one or more of above. Expected OS is ubuntu 22.04.
+These scripts setup Raspberry Pi to run above or play.
 
 ### RPi4/setup_waveshare-4.3-dsi-lcd.sh
 

@@ -1103,7 +1103,7 @@ command = ["check-procs", "--pattern", "lighttpd"]
 
 
 [plugin.checks.user_ssh]
-command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--pattern", "(cron|sudo|runuser):session", "--return"]
+command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--exclude", "(cron|sudo|runuser):session", "--return"]
 prevent_alert_auto_close = true
 
 [plugin.checks.user_add]
@@ -1116,7 +1116,10 @@ prevent_alert_auto_close = true
 
 
 [plugin.checks.login_vscode]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST /vscode/login HTTP/1\\\\..\" 302"]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST ${PATH_VSCODE}/login HTTP/1\\\\..\" 302"]
+
+[plugin.checks.login_database]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET ${PATH_PHPMYADMIN}/ HTTP/1\\\\..\" 200"]
 
 [plugin.checks.login_toolsmysql]
 command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET /tools/mysql/ HTTP/1\\\\..\" 200"]

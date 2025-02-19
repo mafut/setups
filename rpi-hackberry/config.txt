@@ -3,7 +3,7 @@
 # Some settings may impact device functionality. See link above for details
 
 # Uncomment some or all of these to enable the optional hardware interfaces
-#dtparam=i2c_arm=on
+dtparam=i2c_arm=off
 #dtparam=i2s=on
 #dtparam=spi=on
 
@@ -14,7 +14,7 @@ dtparam=audio=on
 # /boot/firmware/overlays/README
 
 # Automatically load overlays for detected cameras
-camera_auto_detect=1
+camera_auto_detect=0
 
 # Automatically load overlays for detected DSI displays
 display_auto_detect=1
@@ -47,3 +47,6 @@ dtoverlay=dwc2,dr_mode=host
 
 [all]
 dtoverlay=vc4-kms-dpi-hyperpixel4sq
+dtoverlay=disable-bt
+dtparam=act_led_trigger=actpwr
+hdmi_blanking=2

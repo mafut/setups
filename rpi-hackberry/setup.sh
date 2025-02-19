@@ -31,7 +31,7 @@ FILE_LIBYKCS11=/usr/lib/arm-linux-gnueabihf/libykcs11.so
 # apt-get update/upgrade
 apt-get -y update
 apt-get -y upgrade
-apt-get -y purge bluez
+apt-get -y purge bluez avahi-daemon
 apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
 apt-get -y autoremove 
 

@@ -280,6 +280,24 @@ usermod -g ${USERNAME} ${USERNAME}
 usermod -a -G ${APACHE_USER} ${USERNAME}
 usermod -a -G ${LOG_GROUP} ${USERNAME}
 
+# [Base Setup] Reset permission
+
+# Ubuntu 22.04 the user dir has 750 permissions by default
+chmod 755 /home/${USERNAME}/
+
+# Unix User as Owner: Read/Write 6xx
+# Apache User as Group member: Read x4x
+# Other User: Read xx4
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTP}/
+find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_HTTP}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
+find ${DOCPATH_HTTP}/ -name "*.sh" -exec chmod 755 {} \;
+
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTPS}/
+find ${DOCPATH_HTTPS}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_HTTPS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
+find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
+
 # [Base Setup] Trigger backup before installing package
 if [ -e ${CONFIG_OS_LOGROTATION} ] && "${UPGRADE}"; then
     logrotate -f ${CONFIG_OS_LOGROTATION}
@@ -671,23 +689,6 @@ RewriteRule ^(.*) https://${NGINX_FQDN[0]}/$1 [R=301,L]
 EOF
 
 # [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
-# Ubuntu 22.04 the user dir has 750 permissions by default
-chmod 755 /home/${USERNAME}/
-
-# Unix User as Owner: Read/Write 6xx
-# Apache User as Group member: Read x4x
-# Other User: Read xx4
-chown -R ${APACHE_USER}:${USERNAME} ${DOCPATH_HTTP}/
-find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_HTTP}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
-find ${DOCPATH_HTTP}/ -name "*.sh" -exec chmod 755 {} \;
-
-chown -R ${APACHE_USER}:${USERNAME} ${DOCPATH_HTTPS}/
-find ${DOCPATH_HTTPS}/ -type d -exec chmod 755 {} \;
-find ${DOCPATH_HTTPS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
-find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
-
-# Allow Log Group to write
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;

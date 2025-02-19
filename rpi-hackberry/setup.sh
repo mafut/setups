@@ -33,7 +33,7 @@ apt-get -y update
 apt-get -y upgrade
 apt-get -y purge bluez
 apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
-apt-get -y autoremove 
+apt-get -y install rubygems
 
 # set time zone
 timedatectl set-timezone America/Los_Angeles
@@ -146,6 +146,11 @@ PKCS11Provider ${FILE_LIBYKCS11}
 EOF
 fi
 
+# mdless and mdl
+apt-get -y autoremove 
+sudo -u ${USERNAME} gem install mdless
+sudo -u ${USERNAME} gem install mdl
+
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
@@ -159,9 +164,9 @@ alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
 alias font='sudo dpkg-reconfigure console-setup'
 alias config='sudo raspi-config'
 alias cls='clear'
-alias sd='sudo shutdown now'
+alias off='sudo shutdown now'
+alias on='tty-clock -scbrBS'
 alias rb='sudo reboot now'
-alias qq='tty-clock -scbrBS'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
 

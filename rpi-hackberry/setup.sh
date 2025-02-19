@@ -12,12 +12,6 @@ DIR_SELF=$(
     cd $(dirname $0)
     pwd
 )
-DIR_PUB=$(
-    cd $(dirname $0)
-    cd ..
-    cd ssh-pubkey
-    pwd
-)
 FILE_FSTAB=/etc/fstab
 FILE_RAMDISKSH=/usr/local/sbin/varlogtmp.sh
 FILE_RAMDISKSVC=/etc/systemd/system/varlogtmp.service
@@ -27,6 +21,37 @@ FILE_SSHKEY=/home/${USERNAME}/.ssh/authorized_keys
 FILE_SSHCONF=/home/${USERNAME}/.ssh/config
 FILE_BASHPROFILE=/home/${USERNAME}/.bash_profile
 FILE_LIBYKCS11=/usr/lib/arm-linux-gnueabihf/libykcs11.so
+
+# SSH_AUTHKEYS_TMP
+DIR_PUB=$(
+    cd $(dirname $0)
+    cd ../ssh-pubkey/
+    pwd
+)
+DIR_PUBS=(
+    ${DIR_PUB}/yubikey/
+    ${DIR_PUB}/client/
+)
+
+SSH_AUTHKEYS_TMP=/home/${USERNAME}/.ssh/authorized_keys.tmp
+
+if [ ! -e $(dirname ${SSH_AUTHKEYS_TMP}) ]; then
+    sudo -u ${USERNAME} mkdir $(dirname ${SSH_AUTHKEYS_TMP})
+fi
+sudo -u ${USERNAME} echo -n >${SSH_AUTHKEYS_TMP}
+
+for pubs in "${DIR_PUBS[@]}"; do
+    if [ -e $pubs ]; then
+        # {} represents the file being operated on during this iteration
+        # \; closes the code statement and returns for next iteration
+        find "$pubs" -name "*.pub" -type f -exec awk '1' $1 >>${SSH_AUTHKEYS_TMP} {} \;
+    fi
+done
+
+if [ ! -s ${SSH_AUTHKEYS_TMP} ]; then
+    echo "Can't get public certs"
+    exit 1
+fi
 
 # apt-get update/upgrade
 apt-get -y update
@@ -122,22 +147,18 @@ ufw allow 22
 ufw limit 22
 ufw enable
 
+# mdless and mdl
+apt-get -y install ruby-dev ruby
+gem install mdless
+gem install mdl
+
 # sshd
 sed "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|g" ${FILE_SSHD} | sponge ${FILE_SSHD}
 sed "s|#AuthorizedKeysFile|AuthorizedKeysFile|g" ${FILE_SSHD} | sponge ${FILE_SSHD}
 sed "s|#PasswordAuthentication yes|PasswordAuthentication no|g" ${FILE_SSHD} | sponge ${FILE_SSHD}
 
 # ssh
-if [ ! -e $(dirname ${FILE_SSHKEY}) ]; then
-    sudo -u ${USERNAME} mkdir $(dirname ${FILE_SSHKEY})
-fi
-if [ -e ${FILE_SSHKEY} ]; then
-    mv -f ${FILE_SSHKEY} ${FILE_SSHKEY}.bak
-fi
-find "${DIR_PUB}/yubikey" -name "*.pub" -type f -exec awk '1' $1>>${FILE_SSHKEY} {} \;
-find "${DIR_PUB}/client" -name "*.pub" -type f -exec awk '1' $1>>${FILE_SSHKEY} {} \;
-# {} represents the file being operated on during this iteration
-# \; closes the code statement and returns for next iteration
+mv -f ${SSH_AUTHKEYS_TMP} ${FILE_SSHKEY}
 cat ${FILE_SSHKEY}
 
 if [ ! -e ${FILE_SSHCONF} ]; then
@@ -145,11 +166,6 @@ if [ ! -e ${FILE_SSHCONF} ]; then
 PKCS11Provider ${FILE_LIBYKCS11}
 EOF
 fi
-
-# mdless and mdl
-apt-get -y install ruby-dev ruby
-gem install mdless
-gem install mdl
 
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}

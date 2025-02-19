@@ -121,7 +121,7 @@ SSH_AUTHKEYS_TMP=/home/${USERNAME}/.ssh/authorized_keys.tmp
 if [ ! -e $(dirname ${SSH_AUTHKEYS_TMP}) ]; then
     sudo -u ${USERNAME} mkdir $(dirname ${SSH_AUTHKEYS_TMP})
 fi
-echo -n >${SSH_AUTHKEYS_TMP}
+sudo -u ${USERNAME} echo -n >${SSH_AUTHKEYS_TMP}
 
 for pubs in "${DIR_PUBS[@]}"; do
     if [ -e $pubs ]; then
@@ -814,7 +814,7 @@ a2ensite ${USERNAME}
 lighty-enable-mod fastcgi 
 lighty-enable-mod fastcgi-php
 
-sudo ln -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
+ln -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
 
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_LIGHTTPD_LOG}
 

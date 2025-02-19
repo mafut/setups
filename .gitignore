@@ -1,0 +1,15 @@
+.gitconfig
+.vscode
+.DS_Store
+Thumbs.db
+
+*.bak
+*.pyc
+*~
+
+/lamp/download/**
+!/lamp/download/*.vsix
+setup.*.conf
+!setup.sh.default.conf
+
+/ssh-pubkey/client/*.pub

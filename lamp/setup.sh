@@ -806,7 +806,7 @@ a2ensite ${USERNAME}
 
 #endregion
 
-#region phpmyadmin on lighttpd
+#region lighttpd (phpmyadmin)
 # Web server to reconfigure automatically: <-- lighttpd
 # Configure database for phpmyadmin with dbconfig-common? <-- Yes
 #   sudo dpkg-reconfigure phpmyadmin
@@ -1103,7 +1103,7 @@ command = ["check-procs", "--pattern", "lighttpd"]
 
 
 [plugin.checks.user_ssh]
-command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "(sshd:session): session opened", "--return"]
+command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--pattern", "(cron|sudo|runuser):session", "--return"]
 prevent_alert_auto_close = true
 
 [plugin.checks.user_add]
@@ -1133,20 +1133,22 @@ command = "mackerel-plugin-linux"
 [plugin.metrics.apache2]
 command = "mackerel-plugin-apache2 -p ${MACKEREL_PORT_APACHE} -s ${MACKEREL_PATH_APACHE}?auto"
 
-[plugin.metrics.accesslog-apache]
-command = "mackerel-plugin-accesslog ${DIR_APACHE_LOG}/access.log"
-
 # Plugin for Nginx (stub_status)
 [plugin.metrics.nginx]
 command = "mackerel-plugin-nginx -port ${MACKEREL_PORT_NGINX} -path ${MACKEREL_PATH_NGINX}"
-
-[plugin.metrics.accesslog-nginx]
-command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
 
 # Plugin for MySQL
 # By default, the plugin accesses MySQL on localhost by 'root' with no password.
 [plugin.metrics.mysql]
 command = "mackerel-plugin-mysql"
+
+
+[plugin.metrics.accesslog-apache]
+command = "mackerel-plugin-accesslog ${DIR_APACHE_LOG}/access.log"
+
+[plugin.metrics.accesslog-nginx]
+command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
+
 
 # Plugin for Squid
 [plugin.metrics.squid]

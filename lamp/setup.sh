@@ -814,7 +814,7 @@ a2ensite ${USERNAME}
 lighty-enable-mod fastcgi 
 lighty-enable-mod fastcgi-php
 
-ln -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
+ln -f -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
 
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_LIGHTTPD_LOG}
 
@@ -824,13 +824,11 @@ server.modules = (
     "mod_redirect",
     "mod_access",
     "mod_auth",
-    "mod_cgi",
-    "mod_ssi",
-    "mod_alias",
-    "mod_compress",
     "mod_fastcgi",
-    "mod_accesslog",
+    "mod_compress",
     "mod_rewrite",
+    "mod_proxy",
+    "mod_accesslog",
 )
 server.document-root        = " ${DOCPATH_PHPMYADMIN}"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
@@ -840,47 +838,15 @@ server.username             = "${APACHE_USER}"
 server.groupname            = "${APACHE_USER}"
 server.port                 = 8888
 
-# features
-#https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_feature-flagsDetails
-server.feature-flags       += ("server.h2proto" => "enable")
-server.feature-flags       += ("server.h2c"     => "enable")
-server.feature-flags       += ("server.graceful-shutdown-timeout" => 5)
-#server.feature-flags      += ("server.graceful-restart-bg" => "enable")
-
-# strict parsing and normalization of URL for consistency and security
-# https://redmine.lighttpd.net/projects/lighttpd/wiki/Server_http-parseoptsDetails
-# (might need to explicitly set "url-path-2f-decode" = "disable"
-#  if a specific application is encoding URLs inside url-path)
-server.http-parseopts = (
-  "header-strict"           => "enable",# default
-  "host-strict"             => "enable",# default
-  "host-normalize"          => "enable",# default
-  "url-normalize-unreserved"=> "enable",# recommended highly
-  "url-normalize-required"  => "enable",# recommended
-  "url-ctrls-reject"        => "enable",# recommended
-  "url-path-2f-decode"      => "enable",# recommended highly (unless breaks app)
-  "url-path-dotseg-remove"  => "enable",# recommended highly (unless breaks app)
-)
-
+accesslog.filename          = "/var/log/lighttpd/access.log"
 index-file.names            = ( "index.php", "index.html" )
 url.access-deny             = ( "~", ".inc" )
 static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
 
-# default listening port for IPv6 falls back to the IPv4 port
-include_shell "/usr/share/lighttpd/use-ipv6.pl " + server.port
-include_shell "/usr/share/lighttpd/create-mime.conf.pl"
-include "/etc/lighttpd/conf-enabled/*.conf"
-
-server.modules += (
-        "mod_dirlisting",
-        "mod_staticfile",
-)
-
-
 fastcgi.server = (
     ".php" => (
         "localhost" => (
-            "socket" => "/var/run/php/php7.0-fpm.sock",
+            "socket" => "/var/run/php/php7.4-fpm.sock",
             "broken-scriptfilename" => "enable"
         )
     )
@@ -1251,8 +1217,10 @@ systemctl enable --now code-server@${USERNAME}
 systemctl enable --now mysql
 systemctl enable --now apache2
 systemctl enable --now nginx
-systemctl enable --now mackerel-agent
+systemctl enable --now php7.4-fpm
+systemctl enable --now lighttpd
 
+systemctl enable --now mackerel-agent
 systemctl restart --now mackerel-agent
 
 # [Cron] Schedule to pull

@@ -33,7 +33,7 @@ apt-get -y update
 apt-get -y upgrade
 apt-get -y purge bluez
 apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
-apt-get -y install rubygems
+apt-get -y autoremove 
 
 # set time zone
 timedatectl set-timezone America/Los_Angeles
@@ -147,9 +147,9 @@ EOF
 fi
 
 # mdless and mdl
-apt-get -y autoremove 
-sudo -u ${USERNAME} gem install mdless
-sudo -u ${USERNAME} gem install mdl
+apt-get -y install ruby-dev rubygems
+gem install mdless
+gem install mdl
 
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}

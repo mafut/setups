@@ -147,7 +147,7 @@ EOF
 fi
 
 # mdless and mdl
-apt-get -y install ruby-dev rubygems
+apt-get -y install ruby-dev ruby
 gem install mdless
 gem install mdl
 

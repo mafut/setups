@@ -1,9 +1,0 @@
-# Radiko
-apt-get install bluez mpv python3 python3-pip
-sudo -u ${USERNAME} python3 -m pip install streamlink --break-system-packages
-cat <<EOF >/home/${USERNAME}/.local/bin/radiko.sh
-#!/bin/sh
-~/.local/bin/streamlink -p mpv http://radiko.jp/#!/live/$1 best
-EOF
-chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.local/bin/radiko.sh
-chmod 755 /home/${USERNAME}/.local/bin/radiko.sh

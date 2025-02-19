@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check sudo or not
+USERNAME=$SUDO_USER
+if [ -z "${USERNAME}" ]; then
+    echo "Can't get User Name"
+    exit 1
+fi
+
 #region Variables
 
 DIR_SELF=$(
@@ -7,6 +14,7 @@ DIR_SELF=$(
     pwd
 )
 
+# Load setting
 CONF=$1
 if [ -z "${CONF}" ]; then
     # Load from default if no input
@@ -21,13 +29,6 @@ fi
 
 source ${CONF}
 source $0.default.conf
-
-# USERNAME
-USERNAME=$SUDO_USER
-if [ -z "${USERNAME}" ]; then
-    echo "Can't get User Name"
-    exit 1
-fi
 
 # Trim a trailing slash from path
 DOCPATH_HTTP=${DOCPATH_HTTP%/}

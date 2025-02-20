@@ -899,7 +899,29 @@ cookie_domains=[${OAUTH2PROXY_FQDNS}]
 # Required to allow redirection back to original requested target.
 whitelist_domains=[${OAUTH2PROXY_FQDNS}]
 EOF
-#    /home/${USERNAME}/.go/bin/oauth2-proxy --config=${CONFIG_OS_OAUTH2PROXY}
+
+    cat <<EOF >${SYSTEMD_OAUTH2PROXY}
+[Unit]
+Description=oauth2_proxy daemon service
+After=syslog.target network.target
+
+[Service]
+ExecStart=/home/${USERNAME}/.go/bin/oauth2_proxy -config=${CONFIG_OS_OAUTH2PROXY}
+ExecReload=/bin/kill -HUP \$MAINPID
+
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    if "${UPGRADE}"; then
+        systemctl disable --now oauth2_proxy
+        systemctl enable --now oauth2_proxy
+    else
+        systemctl restart --now oauth2_proxy
+    fi
 fi
 
 #endregion
@@ -1240,7 +1262,12 @@ command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
 command = "mackerel-plugin-squid -port=8080"
 EOF
 
-    systemctl restart --now mackerel-agent
+    if "${UPGRADE}"; then
+        systemctl disable --now mackerel-agent
+        systemctl enable --now mackerel-agent
+    else
+        systemctl restart --now mackerel-agent
+    fi
 fi
 
 #endregion
@@ -1302,7 +1329,6 @@ if "${UPGRADE}"; then
     systemctl disable --now mysql
     systemctl disable --now apache2
     systemctl disable --now nginx
-    systemctl disable --now mackerel-agent
 fi
 
 systemctl enable --now code-server@${USERNAME}
@@ -1311,7 +1337,6 @@ systemctl enable --now apache2
 systemctl enable --now nginx
 systemctl enable --now php7.4-fpm
 systemctl enable --now lighttpd
-systemctl enable --now mackerel-agent
 
 # [Cron] Schedule to pull
 printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf

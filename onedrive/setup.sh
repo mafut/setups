@@ -36,6 +36,7 @@ CONFIG=/home/${USERNAME}/.config/onedrive/sync_list
 cat <<EOF >${CONFIG}
 !/*/*
 /Notes/
+/Sync/
 EOF
 
 #sudo -u ${USERNAME} onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Notes'

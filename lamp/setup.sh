@@ -7,7 +7,7 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-#region Variables
+#region Constants / Pre-defined variables
 
 DIR_SELF=$(
     cd $(dirname $0)
@@ -63,9 +63,8 @@ NGINX_CERTPATH=${NGINX_CERTPATH%/}
 # NGINX_FQDNS
 NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
 
-# CERTBOT_COMMAND
+# CERTBOT_FQDNS
 CERTBOT_FQDNS=$(printf " -d %s" "${NGINX_FQDN[@]}")
-CERTBOT_COMMAND="certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}"
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -128,7 +127,7 @@ for pubs in "${DIR_PUBS[@]}"; do
     if [ -e $pubs ]; then
         # {} represents the file being operated on during this iteration
         # \; closes the code statement and returns for next iteration
-        find "$pubs" -name "*.pub" -type f -exec awk '1' $1 >>${SSH_AUTHKEYS_TMP} {} \;
+        find "${pubs}" -name "*.pub" -type f -exec awk '1' $1 >>${SSH_AUTHKEYS_TMP} {} \;
     fi
 done
 
@@ -139,9 +138,9 @@ fi
 #endregion
 
 #region Config confirmation
-LIST_PORTS=$(printf "%s " "${ALLOWED_PORTS[@]}")
-LIST_EXTS=$(printf "%s\n" "${CODESERVER_EXTS[@]}")
-LIST_JOBS=$(printf "%s\n" "${CRON_JOBS[@]}")
+list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
+list_exts=$(printf "%s\n" "${CODESERVER_EXTS[@]}")
+list_jobs=$(printf "%s\n" "${CRON_JOBS[@]}")
 
 cat <<EOF
 [Service]
@@ -187,7 +186,7 @@ cat <<EOF
 |       +-- Lighttpd Config: ${CONFIG_OS_LIGHTTPD}
 |
 +-- Others
-    +-- Allowed Ports: ${LIST_PORTS}
+    +-- Allowed Ports: ${list_ports}
 
 [User]
 Unix: ${USERNAME}
@@ -234,13 +233,13 @@ SMTP Pass: ${SSMTP_AUTHPASS}
 Root Orverride: ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 
 [VS Code Extensions]
-${LIST_EXTS}
+${list_exts}
 
 [Cron Jobs]
-${LIST_JOBS}
+${list_jobs}
 
 [Certbot Command]
-${CERTBOT_COMMAND}
+certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}
 
 [Public Certs]
 EOF
@@ -321,7 +320,7 @@ apt-get -y install logrotate logwatch
 apt-get -y install mackerel-agent-plugins mackerel-check-plugins
 
 for phpver in "${PHP_VERS[@]}"; do
-    apt-get -y install php$phpver libapache2-mod-php$phpver php$phpver-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
+    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
 done
 
 apt-get -y autoremove
@@ -340,7 +339,7 @@ ufw allow 22
 ufw allow ${MACKEREL_PORT_APACHE}
 ufw allow ${MACKEREL_PORT_NGINX}
 for port in "${ALLOWED_PORTS[@]}"; do
-    ufw allow $port
+    ufw allow ${port}
 done
 
 # Not more than 6 times in 30 secs
@@ -414,7 +413,7 @@ echo "Installed extensions:${INSTALLED[@]}"
 
 installed() {
     for installed in "${INSTALLED[@]}"; do
-        if [[ $installed = ${1} ]]; then
+        if [[ ${installed} = ${1} ]]; then
             # true
             return 0
         fi
@@ -439,10 +438,10 @@ done
 # Install from marketplace
 INSTALLED=($(sudo -u ${USERNAME} code-server --list-extensions))
 for extension in "${CODESERVER_EXTS[@]}"; do
-    if installed $extension; then
-        echo "Already installed $extension"
+    if installed ${extension}; then
+        echo "Already installed ${extension}"
     else
-        sudo -u ${USERNAME} code-server --install-extension $extension
+        sudo -u ${USERNAME} code-server --install-extension ${extension}
     fi
 done
 
@@ -450,9 +449,9 @@ done
 if [ ! -e ${CONFIG_VSCODE} ]; then
     sudo -u ${USERNAME} touch ${CONFIG_VSCODE}
 fi
-PHP_CS_FIXER_PHAR=${DIR_SELF}/download/php-cs-fixer.phar
-if [ ! -e ${PHP_CS_FIXER_PHAR} ]; then
-    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${PHP_CS_FIXER_PHAR}
+phar=${DIR_SELF}/download/php-cs-fixer.phar
+if [ ! -e ${phar} ]; then
+    sudo -u ${USERNAME} curl -fL https://cs.symfony.com/download/php-cs-fixer-v3.phar -o ${phar}
 fi
 
 jq '."[jsonc]"."editor.defaultFormatter"|="esbenp.prettier-vscode"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
@@ -497,7 +496,7 @@ jq '.["markdown.extension.toc.updateOnSave"]|=false' "${CONFIG_VSCODE}" | sponge
 
 jq '.["php-cs-fixer.autoFixByBracket"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.autoFixBySemicolon"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
-jq '.["php-cs-fixer.executablePath"]|="'${PHP_CS_FIXER_PHAR}'"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
+jq '.["php-cs-fixer.executablePath"]|="'${phar}'"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.formatHtml"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.lastDownload"]|=0' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 jq '.["php-cs-fixer.rules"]|=""' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
@@ -629,35 +628,36 @@ if [ ! -e /sbin/initctl ]; then
 fi
 
 # [MySQL] Create first backup file to trigger logrotate
-if [ ! -e ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql.gz ]; then
-    touch ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql
-    gzip ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql
-    chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql.gz
-fi
-
+for db in "${BACKUP_DB[@]}"; do
+    if [ ! -e ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz ]; then
+        touch ${DIR_MYSQLDUMP_LOG}/${db}.sql
+        gzip ${DIR_MYSQLDUMP_LOG}/${db}.sql
+        chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz
+    fi
+done
 #endregion
 
 #region PHP
 
 # [Php] php.ini
 for phpver in "${PHP_VERS[@]}"; do
-    CONFIG_OS_PHP=/etc/php/$phpver/apache2/php.ini
+    phpini=/etc/php/${phpver}/apache2/php.ini
 
-    if [ -f ${CONFIG_OS_PHP} ] && [ ! -f ${CONFIG_OS_PHP}.bak ]; then
+    if [ -f ${phpini} ] && [ ! -f ${phpini}.bak ]; then
         # Backup original
-        cp -f ${CONFIG_OS_PHP} ${CONFIG_OS_PHP}.bak
+        cp -f ${phpini} ${phpini}.bak
     fi
-    sed "s|display_errors = Off|display_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|;extension_dir = "./"|extension_dir = "./"|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|;extension=curl|extension=curl|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|;extension=mysqli|extension=mysqli|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|max_execution_time = 30|max_execution_time = 90|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|post_max_size = 8M|post_max_size = 16M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
-    sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${CONFIG_OS_PHP} | sponge ${CONFIG_OS_PHP}
+    sed "s|display_errors = Off|display_errors = On|g" ${phpini} | sponge ${phpini}
+    sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension_dir = "./"|extension_dir = "./"|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=curl|extension=curl|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=mysqli|extension=mysqli|g" ${phpini} | sponge ${phpini}
+    sed "s|max_execution_time = 30|max_execution_time = 90|g" ${phpini} | sponge ${phpini}
+    sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${phpini} | sponge ${phpini}
+    sed "s|post_max_size = 8M|post_max_size = 16M|g" ${phpini} | sponge ${phpini}
+    sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${phpini} | sponge ${phpini}
+    sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${phpini} | sponge ${phpini}
 done
 
 #endregion
@@ -669,7 +669,7 @@ a2dismod proxy
 a2dismod proxy_http
 a2dismod proxy_wstunnel
 for phpver in "${PHP_VERS[@]}"; do
-    a2dismod php$phpver
+    a2dismod php${phpver}
 done
 
 a2enmod authz_groupfile
@@ -1042,6 +1042,12 @@ ${DIR_MYSQL_LOG}/*.log {
 EOF
 
 # [logrotate] mysqldump
+cmd_mysqldmp=""
+for db in "${BACKUP_DB[@]}"; do
+    cmd_mysqldmp+="        "
+    cmd_mysqldmp+="/usr/bin/mysqldump \$MYSQLDUMPOPTION -h localhost -u root ${db} | gzip > ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz"
+    cmd_mysqldmp+=$'\n'
+done
 cat <<EOF >${CONFIG_LOGROTATION_MYSQLDUMP}
 ${DIR_MYSQLDUMP_LOG}/*.sql.gz {
     nocompress
@@ -1053,7 +1059,7 @@ ${DIR_MYSQLDUMP_LOG}/*.sql.gz {
     postrotate
         test -x /usr/bin/mysqldump || exit 0
         MYSQLDUMPOPTION="--single-transaction --quick --disable-keys --extended-insert --column-statistics=0 --compatible=ansi --skip-triggers --skip-quote-names --default-character-set=utf8 --no-tablespaces --set-gtid-purged=OFF --compression-algorithms=zlib -n -t"
-        /usr/bin/mysqldump $MYSQLDUMPOPTION -h localhost -u root ${MYSQL_BACKUP_DB} | gzip > ${DIR_MYSQLDUMP_LOG}/${MYSQL_BACKUP_DB}.sql.gz
+${cmd_mysqldmp}
     endscript
 }
 EOF

@@ -887,7 +887,7 @@ email_domains=[${OAUTH2PROXY_FQDNS}]
 client_id="${OAUTH2_CLIENT}"
 client_secret="${OAUTH2_SECRET}"
 
-cookie_secure="false"
+cookie_secure="true"
 reverse_proxy="true"
 
 oidc_issuer_url="https://accounts.google.com"
@@ -900,15 +900,18 @@ cookie_domains=[${OAUTH2PROXY_FQDNS}]
 whitelist_domains=[${OAUTH2PROXY_FQDNS}]
 EOF
 
+    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/oauth2-proxy.service.example
     cat <<EOF >${SYSTEMD_OAUTH2PROXY}
 [Unit]
 Description=oauth2_proxy daemon service
 After=syslog.target network.target
 
 [Service]
-ExecStart=/home/${USERNAME}/.go/bin/oauth2_proxy -config=${CONFIG_OS_OAUTH2PROXY}
+User=${USERNAME}
+Group=${USERNAME}
+ExecStart=/home/${USERNAME}/.go/bin/oauth2_proxy --config=${CONFIG_OS_OAUTH2PROXY}
 ExecReload=/bin/kill -HUP \$MAINPID
-
+NoNewPrivileges=true
 KillMode=process
 Restart=always
 
@@ -917,10 +920,10 @@ WantedBy=multi-user.target
 EOF
 
     if "${UPGRADE}"; then
-        systemctl disable --now oauth2_proxy
-        systemctl enable --now oauth2_proxy
+#        systemctl disable --now oauth2_proxy
+#        systemctl enable --now oauth2_proxy
     else
-        systemctl restart --now oauth2_proxy
+#        systemctl restart --now oauth2_proxy
     fi
 fi
 

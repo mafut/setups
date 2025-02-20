@@ -238,6 +238,11 @@ ${list_jobs}
 [Certbot Command]
 certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}
 
+[API]
+MACKEREL_APIKEY: ${MACKEREL_APIKEY}
+OAUTH2_CLIENT: ${OAUTH2_CLIENT}
+OAUTH2_SECRET: ${OAUTH2_SECRET}
+
 [Public Certs]
 EOF
 cat ${SSH_AUTHKEYS_TMP}
@@ -859,7 +864,9 @@ EOF
 #region oauth2-proxy
 
 # Run if oauth client and secret are available
-if [ -n ${OAUTH2_CLIENT} ] && [ -n ${OAUTH2_SECRET} ]; then
+if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
+    echo "Setting up oauth2-proxy..."
+
     export GOPATH=/home/${USERNAME}/.go
     if [ ! -e "/home/${USERNAME}/.go" ]; then
         sudo -u ${USERNAME} mkdir /home/${USERNAME}/.go
@@ -1148,7 +1155,9 @@ EOF
 
 #region mackerel
 
-if [ -n ${MACKEREL_APIKEY} ]; then
+if [ -n "${MACKEREL_APIKEY}" ]; then
+    echo "Setting up mackerel..."
+
     cat <<EOF >${CONFIG_OS_MACKEREL}
 apikey = "${MACKEREL_APIKEY}"
 # pidfile = "/var/run/mackerel-agent.pid"

@@ -175,13 +175,17 @@ alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scp='scp -F ${FILE_SSHCONF}'
 
 alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
+alias setup='sudo ./setup.sh'
+
 alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
+alias cls='clear'
+alias up='cd ..'
 
 alias font='sudo dpkg-reconfigure console-setup'
 alias config='sudo raspi-config'
-alias cls='clear'
+alias clock='tty-clock -scbrBS'
+
 alias off='sudo shutdown now'
-alias on='tty-clock -scbrBS'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
 

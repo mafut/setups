@@ -60,11 +60,10 @@ if [ -z "${NGINX_CERTPATH}" ]; then
 fi
 NGINX_CERTPATH=${NGINX_CERTPATH%/}
 
-# NGINX_FQDNS
+# FQDNS
 NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
-
-# CERTBOT_FQDNS
 CERTBOT_FQDNS=$(printf " -d %s" "${NGINX_FQDN[@]}")
+OAUTH2PROXY_FQDNS=$(printf "\"%s\"," "${NGINX_FQDN[@]}")
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -101,8 +100,6 @@ CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
-
-CONFIG_MACKEREL_CONFIG=/etc/mackerel-agent/mackerel-agent.conf
 
 # ssh
 DIR_PUB=$(
@@ -305,6 +302,7 @@ fi
 
 # [Base Setup] Install packages
 add-apt-repository ppa:ondrej/php -y
+add-apt-repository ppa:longsleep/golang-backports -y
 apt-get -y update
 
 if "${UPGRADE}"; then
@@ -318,6 +316,7 @@ apt-get -y install nginx apache2 composer
 apt-get -y install phpmyadmin lighttpd
 apt-get -y install logrotate logwatch
 apt-get -y install mackerel-agent-plugins mackerel-check-plugins
+apt-get -y install golang-go
 
 for phpver in "${PHP_VERS[@]}"; do
     apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
@@ -857,6 +856,47 @@ EOF
 
 #endregion
 
+#region oauth2-proxy
+
+# Run if oauth client and secret are available
+if [ -n ${OAUTH2_CLIENT} ] && [ -n ${OAUTH2_SECRET} ]; then
+    export GOPATH=/home/${USERNAME}/.go
+    if [ ! -e "/home/${USERNAME}/.go" ]; then
+        sudo -u ${USERNAME} mkdir /home/${USERNAME}/.go
+    fi
+
+    # https://oauth2-proxy.github.io/oauth2-proxy/installation/
+    go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
+    cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
+
+    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
+    list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
+    cat <<EOF >${CONFIG_OS_OAUTH2PROXY}
+http_address="0.0.0.0:${PORT_OAUTHPROXY}"
+cookie_secret="${cookie_secret}"
+provider="oidc"
+email_domains=[${OAUTH2PROXY_FQDNS}]
+
+client_id="${OAUTH2_CLIENT}"
+client_secret="${OAUTH2_SECRET}"
+
+cookie_secure="false"
+reverse_proxy="true"
+
+oidc_issuer_url="https://accounts.google.com"
+redirect_url="https://azure.mafut.com/oauth2/callback"
+
+# Required so cookie can be read on all subdomains.
+cookie_domains=[${OAUTH2PROXY_FQDNS}]
+
+# Required to allow redirection back to original requested target.
+whitelist_domains=[${OAUTH2PROXY_FQDNS}]
+EOF
+#    /home/${USERNAME}/.go/bin/oauth2-proxy --config=${CONFIG_OS_OAUTH2PROXY}
+fi
+
+#endregion
+
 #region Nginx
 
 # [Nginx] User to APACHE_USER
@@ -907,6 +947,7 @@ http {
 EOF
 
 # [Nginx] Configure default config
+# https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/nginx.conf
 cat <<EOF >${CONFIG_NGINX_DEFAULT}
 server {
     listen 443 default_server;
@@ -920,6 +961,27 @@ server {
 
     location / {
         try_files \$uri \$uri/ =404;
+    }
+
+    location /oauth2/ {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header X-Auth-Request-Redirect \$request_uri;
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header Content-Length "";
+        proxy_pass_request_body off;
+    }
+
+    location = /oauth2/callback {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
     }
 }
 server {
@@ -965,6 +1027,9 @@ server {
     ${NGINX_VSCODE}
 
     location / {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
         proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
@@ -1082,8 +1147,9 @@ EOF
 #endregion
 
 #region mackerel
-# [mackerel] Config
-cat <<EOF >${CONFIG_MACKEREL_CONFIG}
+
+if [ -n ${MACKEREL_APIKEY} ]; then
+    cat <<EOF >${CONFIG_OS_MACKEREL}
 apikey = "${MACKEREL_APIKEY}"
 # pidfile = "/var/run/mackerel-agent.pid"
 # root = "/var/lib/mackerel-agent"
@@ -1164,6 +1230,10 @@ command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
 [plugin.metrics.squid]
 command = "mackerel-plugin-squid -port=8080"
 EOF
+
+    systemctl restart --now mackerel-agent
+fi
+
 #endregion
 
 #region logwatch
@@ -1232,9 +1302,7 @@ systemctl enable --now apache2
 systemctl enable --now nginx
 systemctl enable --now php7.4-fpm
 systemctl enable --now lighttpd
-
 systemctl enable --now mackerel-agent
-systemctl restart --now mackerel-agent
 
 # [Cron] Schedule to pull
 printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf

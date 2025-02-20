@@ -920,10 +920,10 @@ WantedBy=multi-user.target
 EOF
 
     if "${UPGRADE}"; then
-#        systemctl disable --now oauth2_proxy
-#        systemctl enable --now oauth2_proxy
+        systemctl disable --now oauth2_proxy
+        systemctl enable --now oauth2_proxy
     else
-#        systemctl restart --now oauth2_proxy
+        echo systemctl restart --now oauth2_proxy
     fi
 fi
 

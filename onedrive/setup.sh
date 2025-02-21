@@ -8,7 +8,7 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-apt install onedrive
+apt install --no-install-recommends --no-install-suggests onedrive
 
 # Clean up
 if [ -e /etc/systemd/user/default.target.wants/onedrive.service ]; then

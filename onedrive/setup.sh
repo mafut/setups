@@ -29,7 +29,7 @@ check_nosync = "true"
 no_remote_delete = "true"
 skip_dotfiles = "true"
 skip_symlinks = "true"
-skip_dir = "Documents|Game|Music|Pictures|Videos"
+skip_dir = "Comics|Documents|Game|Music|Pictures|Setup|Videos"
 
 monitor_interval = "600"
 monitor_fullscan_frequency = "12"
@@ -47,8 +47,10 @@ cat <<EOF >${CONFIG}
 EOF
 
 # Initialize
-sudo -u ${USERNAME} onedrive --synchronize --download-only
+sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Notes'
+sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Backup'
 
 read -p "Hit enter to run with --resync: "
 
-sudo -u ${USERNAME} onedrive --synchronize --download-only --resync
+sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Notes' --resync
+sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Backup' --resync

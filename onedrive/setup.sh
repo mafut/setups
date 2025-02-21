@@ -66,6 +66,8 @@ If the following error happens, check known solution
 - disk I/O error -> stop service and kill onedrive process
 - The database is currently locked by another process -> same as disk io error
 
+https://github.com/abraunegg/onedrive/blob/master/docs/usage.md
+
 process can be checked by "pidof onedrive"
 
 EOF

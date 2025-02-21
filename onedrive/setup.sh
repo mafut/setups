@@ -47,10 +47,8 @@ cat <<EOF >${CONFIG}
 EOF
 
 # Initialize
-sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Notes'
-sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Backup'
+sudo -u ${USERNAME} onedrive --synchronize --download-only
 
 read -p "Hit enter to run with --resync: "
 
-sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Notes' --resync
-sudo -u ${USERNAME} onedrive --synchronize --download-only --single-directory 'Backup' --resync
+sudo -u ${USERNAME} onedrive --synchronize --download-only --resync

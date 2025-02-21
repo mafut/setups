@@ -48,3 +48,7 @@ EOF
 
 # Initialize
 sudo -u ${USERNAME} onedrive --synchronize --download-only --cleanup-local-files
+
+read -p "Hit enter to run with --resync"
+
+sudo -u ${USERNAME} onedrive --synchronize --download-only --cleanup-local-files --resync

@@ -147,11 +147,6 @@ ufw allow 22
 ufw limit 22
 ufw enable
 
-# mdless and mdl
-apt-get -y install ruby-dev ruby
-gem install mdless
-gem install mdl
-
 # sshd
 sed "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|g" ${FILE_SSHD} | sponge ${FILE_SSHD}
 sed "s|#AuthorizedKeysFile|AuthorizedKeysFile|g" ${FILE_SSHD} | sponge ${FILE_SSHD}

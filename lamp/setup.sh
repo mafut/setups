@@ -1210,7 +1210,7 @@ command = ["check-procs", "--pattern", "lighttpd"]
 
 
 [plugin.checks.user_ssh]
-command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--exclude", "(cron|sudo|runuser):session", "--return"]
+command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--exclude", "(cron|sudo|runuser|systemd-user):session", "--return"]
 prevent_alert_auto_close = true
 
 [plugin.checks.user_add]

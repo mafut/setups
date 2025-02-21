@@ -47,8 +47,8 @@ cat <<EOF >${CONFIG}
 EOF
 
 # Initialize
-sudo -u ${USERNAME} onedrive --synchronize --download-only --cleanup-local-files
+sudo -u ${USERNAME} onedrive --synchronize --download-only
 
-read -p "Hit enter to run with --resync"
+read -p "Hit enter to run with --resync: "
 
-sudo -u ${USERNAME} onedrive --synchronize --download-only --cleanup-local-files --resync
+sudo -u ${USERNAME} onedrive --synchronize --download-only --resync

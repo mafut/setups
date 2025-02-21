@@ -179,6 +179,7 @@ alias up='cd ..'
 alias font='sudo dpkg-reconfigure console-setup'
 alias config='sudo raspi-config'
 alias clock='tty-clock -scbrBS'
+alias wifi='nmcli device wifi connect'
 
 alias off='sudo shutdown now'
 EOF

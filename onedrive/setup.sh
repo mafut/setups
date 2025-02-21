@@ -48,26 +48,3 @@ EOF
 
 # Initialize
 sudo -u ${USERNAME} onedrive --synchronize --download-only --cleanup-local-files
-
-# Tips
-cat <<EOF
-
-Manually run one of the following to initialize
-onedrive --synchronize --download-only --cleanup-local-files
-onedrive --synchronize --download-only --cleanup-local-files --resync
-
-onedrive --synchronize --check-for-nosync --no-remote-delete
-onedrive --synchronize --check-for-nosync --no-remote-delete --resync
-
-onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Notes'
-onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Backup'
-
-If the following error happens, check known solution
-- disk I/O error -> stop service and kill onedrive process
-- The database is currently locked by another process -> same as disk io error
-
-https://github.com/abraunegg/onedrive/blob/master/docs/usage.md
-
-process can be checked by "pidof onedrive"
-
-EOF

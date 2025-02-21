@@ -9,16 +9,15 @@ if [ -z "${USERNAME}" ]; then
 fi
 
 apt install onedrive
-systemctl disable onedrive@${USERNAME}.service
 
-# Clean up
+# Clean up for sure
 if [ -e /etc/systemd/user/default.target.wants/onedrive.service ]; then
     rm /etc/systemd/user/default.target.wants/onedrive.service
 fi
 
 CONFIG=/home/${USERNAME}/.config/onedrive/config
 cat <<EOF >${CONFIG}
-sync_dir = "~/OneDrive"
+sync_dir = "/home/${USERNAME}/OneDrive"
 check_nosync = "true"
 no_remote_delete = "true"
 skip_dotfiles = "true"
@@ -36,13 +35,31 @@ CONFIG=/home/${USERNAME}/.config/onedrive/sync_list
 cat <<EOF >${CONFIG}
 !/*/*
 /Notes/
-/Sync/
+/Backup/
 EOF
 
-#sudo -u ${USERNAME} onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Notes'
-sudo -u ${USERNAME} onedrive --synchronize --check-for-nosync --no-remote-delete
+cat <<EOF
 
-read -p "Hit enter if continue: "
+Manually run one of the following to initialize
+onedrive --synchronize --check-for-nosync --no-remote-delete
+onedrive --synchronize --check-for-nosync --no-remote-delete --resync
+onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Notes'
+onedrive --synchronize --check-for-nosync --no-remote-delete --single-directory 'Backup'
 
-systemctl enable onedrive@${USERNAME}.service
-systemctl start onedrive@${USERNAME}.service
+If the following error happens, check known solution
+- disk I/O error -> stop service and kill onedrive process
+- The database is currently locked by another process -> same as disk io error
+
+process can be checked by "pidof onedrive"
+
+EOF
+
+read -p "Hit enter to start as service: "
+
+pid_onedrive=$(pidof onedrive)
+systemctl disable --now onedrive@${USERNAME}.service
+kill -9 ${pid_onedrive}
+
+systemctl enable --now onedrive@${USERNAME}.service
+
+systemctl status onedrive@${USERNAME}.service

@@ -329,8 +329,11 @@ done
 
 apt-get -y autoremove
 
-update-alternatives --list php
+# update-alternatives --list php
 update-alternatives --set php /usr/bin/php${PHP_VER}
+
+# update-alternatives --list editor
+update-alternatives --set editor /usr/bin/vim.basic
 
 # [Base Setup] Firewall
 ufw disable

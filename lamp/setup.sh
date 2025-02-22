@@ -998,14 +998,6 @@ server {
         try_files \$uri \$uri/ =404;
     }
 
-    location /oauth2/ {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Scheme \$scheme;
-        proxy_set_header X-Auth-Request-Redirect \$request_uri;
-    }
-
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
         proxy_set_header Host \$host;
@@ -1017,6 +1009,14 @@ server {
 
     location = /oauth2/callback {
         proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+    }
+
+    location /oauth2/ {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header X-Auth-Request-Redirect \$request_uri;
     }
 }
 server {
@@ -1037,16 +1037,19 @@ NGINX_VSCODE=
 if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
-location ${PATH_VSCODE}/ {
-    proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
-    proxy_set_header Host \$host;
-    proxy_set_header Upgrade \$http_upgrade;
-    proxy_set_header Connection upgrade;
-    proxy_set_header Accept-Encoding gzip;
-    proxy_connect_timeout 120;
-    proxy_send_timeout 180;
-    proxy_read_timeout 180;
-}
+    location ${PATH_VSCODE}/ {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
+        proxy_set_header Host \$host;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection upgrade;
+        proxy_set_header Accept-Encoding gzip;
+        proxy_connect_timeout 120;
+        proxy_send_timeout 180;
+        proxy_read_timeout 180;
+    }
 EOF
     )
 fi
@@ -1062,9 +1065,6 @@ server {
     ${NGINX_VSCODE}
 
     location / {
-        auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
-
         proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;

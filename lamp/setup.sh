@@ -13,7 +13,7 @@ fi
 # -u                enable apt update/upgrade
 RESTART=false
 UPGRADE=false
-while getopts ":c:r:u" optKey; do
+while getopts "ruc:" optKey; do
     # echo key:$optKey
     # echo value:${OPTARG}
     case "$optKey" in
@@ -31,6 +31,7 @@ while getopts ":c:r:u" optKey; do
         ;;
     esac
 done
+shift $((OPTIND - 1))
 
 #region Constants / Pre-defined variables
 
@@ -270,12 +271,7 @@ OAUTH2_SECRET: ${OAUTH2_SECRET}
 [Public Certs]
 EOF
 cat ${SSH_AUTHKEYS_TMP}
-
-if "${UPGRADE}"; then
-    read -p "Hit enter to setup with upgrade: "
-else
-    read -p "Hit enter to setup: "
-fi
+read -p "Hit enter to setup ([apt:${UPGRADE}],[restart:${RESTART}]): "
 
 #endregion
 

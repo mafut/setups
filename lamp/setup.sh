@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#region args
+
 # Check sudo or not
 USERNAME=$SUDO_USER
 if [ -z "${USERNAME}" ]; then
@@ -32,6 +34,8 @@ while getopts "ruc:" optKey; do
     esac
 done
 shift $((OPTIND - 1))
+
+#endregion
 
 #region Constants / Pre-defined variables
 
@@ -590,7 +594,7 @@ http_address="0.0.0.0:${PORT_OAUTH2PROXY}"
 cookie_secret="${cookie_secret}"
 provider="oidc"
 email_domains=[${OAUTH2PROXY_MAILDOMAINS}]
-authenticated-emails-file=${CONFIG_OAUTH2PROXY_EMAILS}
+#authenticated-emails-file="${CONFIG_OAUTH2PROXY_EMAILS}"
 
 client_id="${OAUTH2_CLIENT}"
 client_secret="${OAUTH2_SECRET}"
@@ -618,7 +622,7 @@ After=syslog.target network.target
 [Service]
 User=${USERNAME}
 Group=${USERNAME}
-ExecStart=/home/${USERNAME}/.go/bin/oauth-2proxy --config=${CONFIG_OAUTH2PROXY}
+ExecStart=/home/${USERNAME}/.go/bin/oauth2-proxy --config=${CONFIG_OAUTH2PROXY} --authenticated-emails-file=${CONFIG_OAUTH2PROXY_EMAILS}
 ExecReload=/bin/kill -HUP \$MAINPID
 NoNewPrivileges=true
 KillMode=process

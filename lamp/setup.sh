@@ -126,6 +126,7 @@ CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
 CONFIG_OAUTH2PROXY=/etc/oauth2-proxy.${USERNAME}.conf
+CONFIG_OAUTH2PROXY_EMAILS=/etc/oauth2-proxy-emails.${USERNAME}.conf
 
 SYSTEMD_CODESERVER=/etc/systemd/system/code-server@${USERNAME}.service
 SYSTEMD_OAUTH2PROXY=/etc/systemd/system/oauth2-proxy@${USERNAME}.service
@@ -148,7 +149,6 @@ if [ ! -e $(dirname ${SSH_AUTHKEYS_TMP}) ]; then
     sudo -u ${USERNAME} mkdir $(dirname ${SSH_AUTHKEYS_TMP})
 fi
 sudo -u ${USERNAME} echo -n >${SSH_AUTHKEYS_TMP}
-
 for pubs in "${DIR_PUBS[@]}"; do
     if [ -e $pubs ]; then
         # {} represents the file being operated on during this iteration
@@ -539,7 +539,7 @@ jq '.["security.workspace.trust.untrustedFiles"]|="open"' "${CONFIG_VSCODE}" | s
 
 jq '.["vsicons.dontShowNewVersionMessage"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-if [ -d "/home/${USERNAME}/OneDrive/Notes" ]; then
+if [ -d -e "/home/${USERNAME}/OneDrive/Notes" ]; then
     jq '.["vsnotes.defaultNotePath"]|="/home/'${USERNAME}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 fi
 jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
@@ -573,6 +573,14 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
     cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
 
+    # [OAuth2-Proxy] Allowed email
+    sudo -u ${USERNAME} echo -n >${CONFIG_OAUTH2PROXY_EMAILS}
+    if [ -n "${OAUTH2_MAILUSERS}" ]; then
+        for email in "${OAUTH2_MAILUSERS[@]}"; do
+            echo $email>>${CONFIG_OAUTH2PROXY_EMAILS}
+        done
+    fi
+
     # [OAuth2-Proxy] User Config
     # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
     list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
@@ -580,7 +588,8 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
 http_address="0.0.0.0:${PORT_OAUTHPROXY}"
 cookie_secret="${cookie_secret}"
 provider="oidc"
-email_domains=[${OAUTH2PROXY_FQDNS}]
+email_domains="${OAUTH2_MAILDOMAIN}"
+authenticated-emails-file=${CONFIG_OAUTH2PROXY_EMAILS}
 
 client_id="${OAUTH2_CLIENT}"
 client_secret="${OAUTH2_SECRET}"
@@ -625,7 +634,7 @@ fi
 #region MySQL
 
 # [MySQL] Config
-if [ -f ${CONFIG_OS_MYSQL} ] && [ ! -f ${CONFIG_OS_MYSQL}.bak ]; then
+if [ -f -e ${CONFIG_OS_MYSQL} ] && [ ! -e ${CONFIG_OS_MYSQL}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_MYSQL} ${CONFIG_OS_MYSQL}.bak
 fi
@@ -739,7 +748,7 @@ done
 for phpver in "${PHP_VERS[@]}"; do
     phpini=/etc/php/${phpver}/apache2/php.ini
 
-    if [ -f ${phpini} ] && [ ! -f ${phpini}.bak ]; then
+    if [ -f -e ${phpini} ] && [ ! -e ${phpini}.bak ]; then
         # Backup original
         cp -f ${phpini} ${phpini}.bak
     fi
@@ -791,7 +800,7 @@ find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;
 
 # [Apache] Configure core
-if [ -f ${CONFIG_OS_APACHE} ] && [ ! -f ${CONFIG_OS_APACHE}.bak ]; then
+if [ -f -e ${CONFIG_OS_APACHE} ] && [ ! -e ${CONFIG_OS_APACHE}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_APACHE} ${CONFIG_OS_APACHE}.bak
 fi
@@ -959,7 +968,7 @@ EOF
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_NGINX_LOG}
 
 # [Nginx] Configure core config
-if [ -f ${CONFIG_OS_NGINX} ] && [ ! -f ${CONFIG_OS_NGINX}.bak ]; then
+if [ -f -e ${CONFIG_OS_NGINX} ] && [ ! -e ${CONFIG_OS_NGINX}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_NGINX} ${CONFIG_OS_NGINX}.bak
 fi

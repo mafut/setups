@@ -589,7 +589,7 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
 http_address="0.0.0.0:${PORT_OAUTH2PROXY}"
 cookie_secret="${cookie_secret}"
 provider="oidc"
-email_domains=["${OAUTH2PROXY_MAILDOMAINS}"]
+email_domains=[${OAUTH2PROXY_MAILDOMAINS}]
 authenticated-emails-file=${CONFIG_OAUTH2PROXY_EMAILS}
 
 client_id="${OAUTH2_CLIENT}"

@@ -125,6 +125,10 @@ CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
+CONFIG_OAUTH2PROXY=/etc/oauth2-proxy/${USERNAME}.conf
+
+SYSTEMD_CODESERVER=/etc/systemd/system/code-server@${USERNAME}.service
+SYSTEMD_OAUTH2PROXY=/etc/systemd/system/oauth2-proxy@${USERNAME}.service
 
 # ssh
 DIR_PUB=$(
@@ -405,15 +409,26 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.config/
 find ${DIR_CODESERVER_CONFIG} -type d -exec chmod 755 {} \;
 find ${DIR_CODESERVER_CONFIG} -type f -exec chmod 644 {} \;
 
+# [Code-Server] User Config
+cat <<EOF >${CONFIG_CODESERVER}
+bind-addr: 127.0.0.1:${PORT_VSCODE}
+auth: password
+password: ${CODESERVER_PASS}
+cert: false
+user-data-dir: ${DIR_CODESERVER_DATA}
+log: debug
+EOF
+
 # [Code-Server] Startup
-cat <<EOF >/etc/systemd/system/code-server@${USERNAME}.service
+cat <<EOF >${SYSTEMD_CODESERVER}
 [Unit]
 Description=code-server
-After=apache2.service
+After=syslog.target network.target
 
 [Service]
 Type=simple
 User=${USERNAME}
+Group=${USERNAME}
 WorkingDirectory=/home/${USERNAME}
 Restart=always
 RestartSec=10
@@ -423,16 +438,6 @@ ExecStop=/bin/kill -s QUIT $MAINPID
 
 [Install]
 WantedBy=multi-user.target
-EOF
-
-# [Code-Server] User Config
-cat <<EOF >${CONFIG_CODESERVER}
-bind-addr: 127.0.0.1:${PORT_VSCODE}
-auth: password
-password: ${CODESERVER_PASS}
-cert: false
-user-data-dir: ${DIR_CODESERVER_DATA}
-log: debug
 EOF
 
 # [Code-Server] Extensions
@@ -550,6 +555,70 @@ jq '.["workbench.startupEditor"]|="newUntitledFile"' "${CONFIG_VSCODE}" | sponge
 
 jq --sort-keys '.' ${CONFIG_VSCODE} | sponge ${CONFIG_VSCODE}
 chown ${USERNAME}:${USERNAME} ${CONFIG_VSCODE}
+
+#endregion
+
+#region oauth2-proxy
+
+# Run if oauth client and secret are available
+if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
+    echo "Setting up oauth2-proxy..."
+
+    export GOPATH=/home/${USERNAME}/.go
+    if [ ! -e "/home/${USERNAME}/.go" ]; then
+        sudo -u ${USERNAME} mkdir /home/${USERNAME}/.go
+    fi
+
+    # https://oauth2-proxy.github.io/oauth2-proxy/installation/
+    go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
+    cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
+
+    # [OAuth2-Proxy] User Config
+    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
+    list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
+    cat <<EOF >${CONFIG_OAUTH2PROXY}
+http_address="0.0.0.0:${PORT_OAUTHPROXY}"
+cookie_secret="${cookie_secret}"
+provider="oidc"
+email_domains=[${OAUTH2PROXY_FQDNS}]
+
+client_id="${OAUTH2_CLIENT}"
+client_secret="${OAUTH2_SECRET}"
+
+cookie_secure="true"
+reverse_proxy="true"
+
+oidc_issuer_url="https://accounts.google.com"
+redirect_url="https://azure.mafut.com/oauth2/callback"
+
+# Required so cookie can be read on all subdomains.
+cookie_domains=[${OAUTH2PROXY_FQDNS}]
+
+# Required to allow redirection back to original requested target.
+whitelist_domains=[${OAUTH2PROXY_FQDNS}]
+EOF
+
+    # [OAuth2-Proxy] Startup
+    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/oauth2-proxy.service.example
+    cat <<EOF >${SYSTEMD_OAUTH2PROXY}
+[Unit]
+Description=oauth2_proxy daemon service
+After=syslog.target network.target
+
+[Service]
+User=${USERNAME}
+Group=${USERNAME}
+ExecStart=/home/${USERNAME}/.go/bin/oauth-2proxy --config=${CONFIG_OAUTH2PROXY}
+ExecReload=/bin/kill -HUP \$MAINPID
+NoNewPrivileges=true
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+fi
 
 #endregion
 
@@ -884,74 +953,6 @@ EOF
 
 #endregion
 
-#region oauth2-proxy
-
-# Run if oauth client and secret are available
-if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
-    echo "Setting up oauth2-proxy..."
-
-    export GOPATH=/home/${USERNAME}/.go
-    if [ ! -e "/home/${USERNAME}/.go" ]; then
-        sudo -u ${USERNAME} mkdir /home/${USERNAME}/.go
-    fi
-
-    # https://oauth2-proxy.github.io/oauth2-proxy/installation/
-    go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
-    cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
-
-    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
-    list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
-    cat <<EOF >${CONFIG_OS_OAUTH2PROXY}
-http_address="0.0.0.0:${PORT_OAUTHPROXY}"
-cookie_secret="${cookie_secret}"
-provider="oidc"
-email_domains=[${OAUTH2PROXY_FQDNS}]
-
-client_id="${OAUTH2_CLIENT}"
-client_secret="${OAUTH2_SECRET}"
-
-cookie_secure="true"
-reverse_proxy="true"
-
-oidc_issuer_url="https://accounts.google.com"
-redirect_url="https://azure.mafut.com/oauth2/callback"
-
-# Required so cookie can be read on all subdomains.
-cookie_domains=[${OAUTH2PROXY_FQDNS}]
-
-# Required to allow redirection back to original requested target.
-whitelist_domains=[${OAUTH2PROXY_FQDNS}]
-EOF
-
-    # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/oauth2-proxy.service.example
-    cat <<EOF >${SYSTEMD_OAUTH2PROXY}
-[Unit]
-Description=oauth2_proxy daemon service
-After=syslog.target network.target
-
-[Service]
-User=${USERNAME}
-Group=${USERNAME}
-ExecStart=/home/${USERNAME}/.go/bin/oauth2_proxy --config=${CONFIG_OS_OAUTH2PROXY}
-ExecReload=/bin/kill -HUP \$MAINPID
-NoNewPrivileges=true
-KillMode=process
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    if "${RESTART}"; then
-        systemctl disable --now oauth2_proxy
-        systemctl enable --now oauth2_proxy
-    else
-        echo systemctl restart --now oauth2_proxy
-    fi
-fi
-
-#endregion
-
 #region Nginx
 
 # [Nginx] User to APACHE_USER
@@ -1015,31 +1016,7 @@ server {
     index index.html;
 
     location / {
-        auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
-
         try_files \$uri \$uri/ =404;
-    }
-
-    location = /oauth2/auth {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Scheme \$scheme;
-        proxy_set_header Content-Length "";
-        proxy_pass_request_body off;
-    }
-
-    location = /oauth2/callback {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
-    }
-
-    location /oauth2/ {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Scheme \$scheme;
-        proxy_set_header X-Auth-Request-Redirect \$request_uri;
     }
 }
 server {
@@ -1061,9 +1038,6 @@ if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
     location ${PATH_VSCODE}/ {
-        # auth_request /oauth2/auth;
-        # error_page 401 = /oauth2/sign_in;
-
         proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
@@ -1086,6 +1060,33 @@ server {
     ssl_certificate_key ${NGINX_CERTPATH}/privkey.pem;
 
     ${NGINX_VSCODE}
+
+    location /test/ {
+        root ${DOCPATH_HTTP};
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+    }
+
+    location = /oauth2/auth {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header Content-Length "";
+        proxy_pass_request_body off;
+    }
+
+    location = /oauth2/callback {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+    }
+
+    location /oauth2/ {
+        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header X-Auth-Request-Redirect \$request_uri;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
@@ -1352,15 +1353,18 @@ loginctl enable-linger ${USERNAME}
 
 # Add auto-start and start services
 systemctl disable --now code-server
+systemctl disable --now oauth2-proxy
 
 if "${RESTART}"; then
     systemctl disable --now code-server@${USERNAME}
+    systemctl disable --now oauth2-proxy@${USERNAME}
     systemctl disable --now mysql
     systemctl disable --now apache2
     systemctl disable --now nginx
 fi
 
 systemctl enable --now code-server@${USERNAME}
+systemctl enable --now oauth2-proxy@${USERNAME}
 systemctl enable --now mysql
 systemctl enable --now apache2
 systemctl enable --now nginx

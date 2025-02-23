@@ -7,6 +7,12 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
+if [ $# = 2 ] && ["$1" = "--restart"] && ["$2" = "true"]; then
+    RESTART=true
+else
+    RESTART=false
+fi
+
 #region Constants / Pre-defined variables
 
 DIR_SELF=$(
@@ -247,7 +253,7 @@ OAUTH2_SECRET: ${OAUTH2_SECRET}
 EOF
 cat ${SSH_AUTHKEYS_TMP}
 
-if "${UPGRADE}"; then
+if "${RESTART}"; then
     read -p "Hit enter to setup with upgrade: "
 else
     read -p "Hit enter to setup: "
@@ -301,7 +307,7 @@ find ${DOCPATH_HTTPS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
 find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
 
 # [Base Setup] Trigger backup before installing package
-if [ -e ${CONFIG_OS_LOGROTATION} ] && "${UPGRADE}"; then
+if [ -e ${CONFIG_OS_LOGROTATION} ] && "${RESTART}"; then
     logrotate -f ${CONFIG_OS_LOGROTATION}
 fi
 
@@ -310,7 +316,7 @@ add-apt-repository ppa:ondrej/php -y
 add-apt-repository ppa:longsleep/golang-backports -y
 apt-get -y update
 
-if "${UPGRADE}"; then
+if "${RESTART}"; then
     apt-get -y upgrade
 fi
 
@@ -922,7 +928,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-    if "${UPGRADE}"; then
+    if "${RESTART}"; then
         systemctl disable --now oauth2_proxy
         systemctl enable --now oauth2_proxy
     else
@@ -1268,7 +1274,7 @@ command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
 command = "mackerel-plugin-squid -port=8080"
 EOF
 
-    if "${UPGRADE}"; then
+    if "${RESTART}"; then
         systemctl disable --now mackerel-agent
         systemctl enable --now mackerel-agent
     else
@@ -1330,7 +1336,7 @@ loginctl enable-linger ${USERNAME}
 # Add auto-start and start services
 systemctl disable --now code-server
 
-if "${UPGRADE}"; then
+if "${RESTART}"; then
     systemctl disable --now code-server@${USERNAME}
     systemctl disable --now mysql
     systemctl disable --now apache2

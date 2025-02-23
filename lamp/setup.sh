@@ -1133,7 +1133,7 @@ ${DIR_LIGHTTPD_LOG}/*.log {
     create 0640 ${APACHE_USER} ${LOG_GROUP} 
     sharedscripts
     postrotate
-        /bin/systemctl reload apache2 > /dev/null 2>/dev/null || true
+        /bin/systemctl reload lighttpd > /dev/null 2>/dev/null || true
     endscript
 }
 EOF

@@ -7,11 +7,23 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
-if [ $# = 2 ] && ["$1" = "--restart"] && ["$2" = "true"]; then
-    RESTART=true
-else
-    RESTART=false
-fi
+# getopts support short options
+# -c [conf path]    default is setup.sh.conf
+# -r                enable service restart
+while getopts ":c:r" optKey; do
+    # echo key:$optKey
+    # echo value:${OPTARG}
+    case "$optKey" in
+    c)
+        echo "-${optKey}:${OPTARG}"
+        CONF=${OPTARG}
+        ;;
+    r)
+        echo "-${optKey}:${OPTARG}"
+        RESTART=true
+        ;;
+    esac
+done
 
 #region Constants / Pre-defined variables
 
@@ -21,7 +33,6 @@ DIR_SELF=$(
 )
 
 # Load setting
-CONF=$1
 if [ -z "${CONF}" ]; then
     # Load from default if no input
     CONF=$0.conf
@@ -130,7 +141,7 @@ for pubs in "${DIR_PUBS[@]}"; do
     if [ -e $pubs ]; then
         # {} represents the file being operated on during this iteration
         # \; closes the code statement and returns for next iteration
-        find "${pubs}" -name "*.pub" -type f -exec awk '1' $1 >>${SSH_AUTHKEYS_TMP} {} \;
+        find "${pubs}" -name "*.pub" -type f -exec awk '1' {} \; >>${SSH_AUTHKEYS_TMP}
     fi
 done
 
@@ -699,7 +710,7 @@ RewriteEngine On
 RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
 RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
 RewriteCond %{HTTPS} off
-RewriteRule ^(.*) https://${NGINX_FQDN[0]}/$1 [R=301,L]
+RewriteRule ^(.*) https://${NGINX_FQDN[0]}/\$1 [R=301,L]
 EOF
 
 # [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
@@ -826,7 +837,7 @@ a2ensite ${USERNAME}
 #   sudo dpkg-reconfigure phpmyadmin
 # MySQL application password for phpmyadmin: <-- Press Enter
 
-lighty-enable-mod fastcgi 
+lighty-enable-mod fastcgi
 lighty-enable-mod fastcgi-php
 
 ln -f -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}

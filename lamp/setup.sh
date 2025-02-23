@@ -11,6 +11,8 @@ fi
 # -c [conf path]    default is setup.sh.conf
 # -r                enable service restart
 # -u                enable apt update/upgrade
+RESTART=false
+UPGRADE=false
 while getopts ":c:r:u" optKey; do
     # echo key:$optKey
     # echo value:${OPTARG}
@@ -269,7 +271,7 @@ OAUTH2_SECRET: ${OAUTH2_SECRET}
 EOF
 cat ${SSH_AUTHKEYS_TMP}
 
-if "${RESTART}"; then
+if "${UPGRADE}"; then
     read -p "Hit enter to setup with upgrade: "
 else
     read -p "Hit enter to setup: "

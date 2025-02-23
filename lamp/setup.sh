@@ -1001,6 +1001,9 @@ server {
     index index.html;
 
     location / {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
         try_files \$uri \$uri/ =404;
     }
 
@@ -1044,8 +1047,8 @@ if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
     location ${PATH_VSCODE}/ {
-        auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
+        # auth_request /oauth2/auth;
+        # error_page 401 = /oauth2/sign_in;
 
         proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
         proxy_set_header Host \$host;

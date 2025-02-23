@@ -89,6 +89,7 @@ NGINX_CERTPATH=${NGINX_CERTPATH%/}
 NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
 CERTBOT_FQDNS=$(printf " -d %s" "${NGINX_FQDN[@]}")
 OAUTH2PROXY_FQDNS=$(printf "\"%s\"," "${NGINX_FQDN[@]}")
+OAUTH2PROXY_MAILDOMAINS=$(printf "\"%s\"," "${OAUTH2_MAILDOMAINS[@]}")
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -585,10 +586,10 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
     list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
     cat <<EOF >${CONFIG_OAUTH2PROXY}
-http_address="0.0.0.0:${PORT_OAUTHPROXY}"
+http_address="0.0.0.0:${PORT_OAUTH2PROXY}"
 cookie_secret="${cookie_secret}"
 provider="oidc"
-email_domains="${OAUTH2_MAILDOMAIN}"
+email_domains=["${OAUTH2PROXY_MAILDOMAINS}"]
 authenticated-emails-file=${CONFIG_OAUTH2PROXY_EMAILS}
 
 client_id="${OAUTH2_CLIENT}"
@@ -1077,7 +1078,7 @@ server {
     }
 
     location = /oauth2/auth {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Scheme \$scheme;
@@ -1086,11 +1087,11 @@ server {
     }
 
     location = /oauth2/callback {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
     }
 
     location /oauth2/ {
-        proxy_pass http://127.0.0.1:${PORT_OAUTHPROXY};
+        proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Scheme \$scheme;

@@ -125,7 +125,7 @@ CONFIG_NGINX_USER=/etc/nginx/sites-available/${USERNAME}
 CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
-CONFIG_OAUTH2PROXY=/etc/oauth2-proxy/${USERNAME}.conf
+CONFIG_OAUTH2PROXY=/etc/oauth2-proxy.${USERNAME}.conf
 
 SYSTEMD_CODESERVER=/etc/systemd/system/code-server@${USERNAME}.service
 SYSTEMD_OAUTH2PROXY=/etc/systemd/system/oauth2-proxy@${USERNAME}.service

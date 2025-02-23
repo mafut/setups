@@ -1052,7 +1052,31 @@ if "${ENABLE_VSCODE}"; then
     NGINX_VSCODE=$(
         cat <<EOF
     location ${PATH_VSCODE}/ {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
         proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
+        proxy_set_header Host \$host;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection upgrade;
+        proxy_set_header Accept-Encoding gzip;
+        proxy_connect_timeout 120;
+        proxy_send_timeout 180;
+        proxy_read_timeout 180;
+    }
+EOF
+    )
+fi
+
+NGINX_PHPMYADMIN=
+if "${ENABLE_PHPMYADMIN}"; then
+    NGINX_PHPMYADMIN=$(
+        cat <<EOF
+    location ${PATH_PHPMYADMIN}/ {
+        auth_request /oauth2/auth;
+        error_page 401 = /oauth2/sign_in;
+
+        proxy_pass http://127.0.0.1:8888/;
         proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection upgrade;
@@ -1075,11 +1099,7 @@ server {
 
     ${NGINX_VSCODE}
 
-    location /test/ {
-        root ${DOCPATH_HTTP};
-        auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
-    }
+    ${NGINX_PHPMYADMIN}
 
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};

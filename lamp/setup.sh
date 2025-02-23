@@ -10,7 +10,8 @@ fi
 # getopts support short options
 # -c [conf path]    default is setup.sh.conf
 # -r                enable service restart
-while getopts ":c:r" optKey; do
+# -u                enable apt update/upgrade
+while getopts ":c:r:u" optKey; do
     # echo key:$optKey
     # echo value:${OPTARG}
     case "$optKey" in
@@ -21,6 +22,10 @@ while getopts ":c:r" optKey; do
     r)
         echo "-${optKey}:${OPTARG}"
         RESTART=true
+        ;;
+    u)
+        echo "-${optKey}:${OPTARG}"
+        UPGRADE=true
         ;;
     esac
 done
@@ -325,9 +330,9 @@ fi
 # [Base Setup] Install packages
 add-apt-repository ppa:ondrej/php -y
 add-apt-repository ppa:longsleep/golang-backports -y
-apt-get -y update
 
-if "${RESTART}"; then
+if "${UPGRADE}"; then
+    apt-get -y update
     apt-get -y upgrade
 fi
 

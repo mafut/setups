@@ -1098,7 +1098,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                 }
             }
         },
-        "nginx": {
+        "nginx2": {
             "display"   : "Nginx Access",
             "path"      : "${DIR_NGINX_LOG//\//\\/}\/access_log",
             "refresh"   : 0,

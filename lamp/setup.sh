@@ -947,6 +947,199 @@ fi
 unzip -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
 
+# [pimp-my-log] Config
+cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
+<?php if(realpath(__FILE__)===realpath($_SERVER["SCRIPT_FILENAME"])){header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');die();}?>
+{
+    "globals": {
+        "_remove_me_to_set_AUTH_LOG_FILE_COUNT"         : 100,
+        "_remove_me_to_set_AUTO_UPGRADE"                : false,
+        "_remove_me_to_set_CHECK_UPGRADE"               : false,
+        "_remove_me_to_set_EXPORT"                      : true,
+        "_remove_me_to_set_FILE_SELECTOR"               : "bs",
+        "_remove_me_to_set_GOOGLE_ANALYTICS"            : "UA-XXXXX-X",
+        "_remove_me_to_set_LOCALE"                      : "gb_US",
+        "_remove_me_to_set_LOGS_MAX"                    : 50,
+        "_remove_me_to_set_LOGS_REFRESH"                : 0,
+        "_remove_me_to_set_MAX_SEARCH_LOG_TIME"         : 5,
+        "_remove_me_to_set_NAV_TITLE"                   : "",
+        "_remove_me_to_set_NOTIFICATION"                : true,
+        "_remove_me_to_set_NOTIFICATION_TITLE"          : "New logs [%f]",
+        "_remove_me_to_set_PULL_TO_REFRESH"             : true,
+        "_remove_me_to_set_SORT_LOG_FILES"              : "default",
+        "_remove_me_to_set_TAG_DISPLAY_LOG_FILES_COUNT" : true,
+        "_remove_me_to_set_TAG_NOT_TAGGED_FILES_ON_TOP" : true,
+        "_remove_me_to_set_TAG_SORT_TAG"                : "default | display-asc | display-insensitive | display-desc | display-insensitive-desc",
+        "_remove_me_to_set_TITLE"                       : "Pimp my Log",
+        "_remove_me_to_set_TITLE_FILE"                  : "Pimp my Log [%f]",
+        "_remove_me_to_set_USER_CONFIGURATION_DIR"      : "config.user.d",
+        "_remove_me_to_set_USER_TIME_ZONE"              : "PST8PDT"
+    },
+
+    "badges": {
+        "severity": {
+            "debug"       : "success",
+            "info"        : "success",
+            "notice"      : "default",
+            "Notice"      : "info",
+            "warn"        : "warning",
+            "error"       : "danger",
+            "crit"        : "danger",
+            "alert"       : "danger",
+            "emerg"       : "danger",
+            "Notice"      : "info",
+            "Fatal error" : "danger",
+            "Parse error" : "danger",
+            "Warning"     : "warning"
+        },
+        "http": {
+            "1" : "info",
+            "2" : "success",
+            "3" : "default",
+            "4" : "warning",
+            "5" : "danger"
+        }
+    },
+
+    "files": {
+        "apache1": {
+            "display"   : "Apache Error",
+            "path"      : "${DIR_APACHE_LOG//\//\\/}\/error_log",
+            "refresh"   : 0,
+            "max"       : 10,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : "|^\\[(.*)\\] \\[(.*)\\] (\\[client (.*)\\] )*((?!\\[client ).*)(, referer: (.*))*$|U",
+                "export_title" : "Log",
+                "match"        : {
+                    "Date"     : 1,
+                    "IP"       : 4,
+                    "Log"      : 5,
+                    "Severity" : 2,
+                    "Referer"  : 7
+                },
+                "types": {
+                    "Date"     : "date:H:i:s",
+                    "IP"       : "ip:http",
+                    "Log"      : "pre",
+                    "Severity" : "badge:severity",
+                    "Referer"  : "link"
+                },
+                "exclude": {
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\. \/"]
+                }
+            }
+        },
+        "nginx1": {
+            "display"   : "Nginx Error",
+            "path"      : "${DIR_NGINX_LOG//\//\\/}\/error_log",
+            "refresh"   : 0,
+            "max"       : 10,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : "|^\\[(.*)\\] \\[(.*)\\] (\\[client (.*)\\] )*((?!\\[client ).*)(, referer: (.*))*$|U",
+                "export_title" : "Log",
+                "match"        : {
+                    "Date"     : 1,
+                    "IP"       : 4,
+                    "Log"      : 5,
+                    "Severity" : 2,
+                    "Referer"  : 7
+                },
+                "types": {
+                    "Date"     : "date:H:i:s",
+                    "IP"       : "ip:http",
+                    "Log"      : "pre",
+                    "Severity" : "badge:severity",
+                    "Referer"  : "link"
+                },
+                "exclude": {
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\. \/"]
+                }
+            }
+        },
+        "apache2": {
+            "display"   : "Apache Access",
+            "path"      : "${DIR_APACHE_LOG//\//\\/}\/access_log",
+            "refresh"   : 0,
+            "max"       : 10,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : " |^(.*) (.*) (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "export_title" : "URL",
+                "match"        : {
+                    "Date"    : 4,
+                    "IP"      : 1,
+                    "CMD"     : 5,
+                    "URL"     : 6,
+                    "Code"    : 8,
+                    "Size"    : 9,
+                    "Referer" : 10,
+                    "UA"      : 11,
+                    "User"    : 3,
+                    "\u03bcs" : 13
+                },
+                "types": {
+                    "Date"    : "date:H:i:s",
+                    "IP"      : "ip:geo",
+                    "URL"     : "txt",
+                    "Code"    : "badge:http",
+                    "Size"    : "numeral:0b",
+                    "Referer" : "link",
+                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100",
+                    "\u03bcs" : "numeral:0,0"
+                },
+                "exclude": {
+                    "URL": ["\/favicon.ico\/", "\/\\.pml\\.php.*$\/"],
+                    "CMD": ["\/OPTIONS\/"]
+                }
+            }
+        },
+        "nginx": {
+            "display"   : "Nginx Access",
+            "path"      : "${DIR_NGINX_LOG//\//\\/}\/access_log",
+            "refresh"   : 0,
+            "max"       : 10,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : " |^(.*) (.*) (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "export_title" : "URL",
+                "match"        : {
+                    "Date"    : 4,
+                    "IP"      : 1,
+                    "CMD"     : 5,
+                    "URL"     : 6,
+                    "Code"    : 8,
+                    "Size"    : 9,
+                    "Referer" : 10,
+                    "UA"      : 11,
+                    "User"    : 3,
+                    "\u03bcs" : 13
+                },
+                "types": {
+                    "Date"    : "date:H:i:s",
+                    "IP"      : "ip:geo",
+                    "URL"     : "txt",
+                    "Code"    : "badge:http",
+                    "Size"    : "numeral:0b",
+                    "Referer" : "link",
+                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100",
+                    "\u03bcs" : "numeral:0,0"
+                },
+                "exclude": {
+                    "URL": ["\/favicon.ico\/", "\/\\.pml\\.php.*$\/"],
+                    "CMD": ["\/OPTIONS\/"]
+                }
+            }
+        }
+    }
+}
+EOF
+
 # [lighttpd] Link
 ln -f -s ${DIR_PIMPMYLOG} ${DOCPATH_TOOLS}/${PATH_TOOLS_PIMPMYLOG}
 ln -f -s ${DIR_PHPMYADMIN} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}

@@ -1079,15 +1079,26 @@ ln -s ${CONFIG_NGINX_DEFAULT} /etc/nginx/sites-enabled/default
 
 # [Nginx] Configure https 443
 # Note: [] is not needed in if. Format is 'if "${boolean}"''
+nginx_oauth2proxy=
 nginx_vscode=
-if "${ENABLE_VSCODE}"; then
-    nginx_vscode=$(
+nginx_tools=
+
+if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
+    nginx_oauth2proxy=$(
         cat <<EOF
-    location ${PATH_VSCODE}/ {
         auth_request /oauth2/auth;
         error_page 401 =403 /oauth2/sign_in;
         auth_request_set \$auth_cookie \$upstream_http_set_cookie;
         add_header Set-Cookie \$auth_cookie;
+EOF
+    )
+fi
+
+if "${ENABLE_VSCODE}"; then
+    nginx_vscode=$(
+        cat <<EOF
+    location ${PATH_VSCODE}/ {
+        ${nginx_oauth2proxy}
 
         proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
         proxy_set_header Host \$host;
@@ -1102,15 +1113,11 @@ EOF
     )
 fi
 
-nginx_tools=
 if "${ENABLE_TOOLS}"; then
     nginx_tools=$(
         cat <<EOF
     location ${PATH_TOOLS}/ {
-        auth_request /oauth2/auth;
-        error_page 401 =403 /oauth2/sign_in;
-        auth_request_set \$auth_cookie \$upstream_http_set_cookie;
-        add_header Set-Cookie \$auth_cookie;
+        ${nginx_oauth2proxy}
 
         proxy_pass http://127.0.0.1:8888/;
         proxy_set_header Host \$host;

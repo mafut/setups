@@ -603,7 +603,7 @@ cookie_secure="true"
 reverse_proxy="true"
 
 oidc_issuer_url="https://accounts.google.com"
-redirect_url="https://azure.mafut.com/oauth2/callback"
+#redirect_url="https://azure.mafut.com/oauth2/callback"
 
 # Required so cookie can be read on all subdomains.
 cookie_domains=[${OAUTH2PROXY_FQDNS}]
@@ -1053,7 +1053,9 @@ if "${ENABLE_VSCODE}"; then
         cat <<EOF
     location ${PATH_VSCODE}/ {
         auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
+        error_page 401 =403 /oauth2/sign_in;
+        auth_request_set \$auth_cookie \$upstream_http_set_cookie;
+        add_header Set-Cookie \$auth_cookie;
 
         proxy_pass http://127.0.0.1:${PORT_VSCODE}/;
         proxy_set_header Host \$host;
@@ -1074,7 +1076,9 @@ if "${ENABLE_PHPMYADMIN}"; then
         cat <<EOF
     location ${PATH_PHPMYADMIN}/ {
         auth_request /oauth2/auth;
-        error_page 401 = /oauth2/sign_in;
+        error_page 401 =403 /oauth2/sign_in;
+        auth_request_set \$auth_cookie \$upstream_http_set_cookie;
+        add_header Set-Cookie \$auth_cookie;
 
         proxy_pass http://127.0.0.1:8888/;
         proxy_set_header Host \$host;
@@ -1101,25 +1105,29 @@ server {
 
     ${NGINX_PHPMYADMIN}
 
+    location /test/ {
+        auth_request /oauth2/auth;
+        error_page 401 =403 /oauth2/sign_in;
+        auth_request_set \$auth_cookie \$upstream_http_set_cookie;
+        add_header Set-Cookie \$auth_cookie;
+
+        root ${DOCPATH_HTTP};
+    }
+
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Scheme \$scheme;
+        proxy_set_header X-Forwarded-Uri \$request_uri;
         proxy_set_header Content-Length "";
         proxy_pass_request_body off;
-    }
-
-    location = /oauth2/callback {
-        proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
     }
 
     location /oauth2/ {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Scheme \$scheme;
-        proxy_set_header X-Auth-Request-Redirect \$request_uri;
+        proxy_set_header X-Auth-Request-Redirect \$scheme://\$host\$request_uri;
     }
 
     location / {

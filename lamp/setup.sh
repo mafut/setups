@@ -308,7 +308,6 @@ fi
 sudo -u ${USERNAME} mkdir -p ${DIR_SELF}/download
 sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_CONFIG}
 sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_DATA}
-sudo -u ${USERNAME} mkdir -p ${DOCPATH_TOOLS}
 
 mkdir -p ${DIR_APACHE_LOG}
 mkdir -p ${DIR_LIGHTTPD_LOG}
@@ -343,6 +342,9 @@ find ${DOCPATH_HTTPS}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_HTTPS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
 find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
 
+if [ ! -e ${DOCPATH_TOOLS} ]; then
+    mkdir -p ${DOCPATH_TOOLS}
+fi
 chown -R ${USERNAME}:${USERNAME} ${DOCPATH_TOOLS}/
 find ${DOCPATH_TOOLS}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_TOOLS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
@@ -601,7 +603,7 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     sudo -u ${USERNAME} echo -n >${CONFIG_OAUTH2PROXY_EMAILS}
     if [ -n "${OAUTH2_MAILUSERS}" ]; then
         for email in "${OAUTH2_MAILUSERS[@]}"; do
-            echo $email>>${CONFIG_OAUTH2PROXY_EMAILS}
+            echo $email >>${CONFIG_OAUTH2PROXY_EMAILS}
         done
     fi
 

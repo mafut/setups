@@ -949,7 +949,7 @@ mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
 
 # [pimp-my-log] Config
 cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
-<?php if(realpath(__FILE__)===realpath($_SERVER["SCRIPT_FILENAME"])){header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');die();}?>
+<?php if(realpath(__FILE__)===realpath(\$_SERVER["SCRIPT_FILENAME"])){header(\$_SERVER['SERVER_PROTOCOL'].' 404 Not Found');die();}?>
 {
     "globals": {
         "_remove_me_to_set_AUTH_LOG_FILE_COUNT"         : 100,

@@ -62,6 +62,7 @@ source $0.default.conf
 # Trim a trailing slash from path
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
 DOCPATH_HTTPS=${DOCPATH_HTTPS%/}
+DOCPATH_TOOLS=${DOCPATH_TOOLS%/}
 PATH_VSCODE=${PATH_VSCODE%/}
 PATH_TOOLS=${PATH_TOOLS%/}
 PATH_TOOLS_PHPMYADMIN=${PATH_TOOLS_PHPMYADMIN%/}
@@ -307,6 +308,7 @@ fi
 sudo -u ${USERNAME} mkdir -p ${DIR_SELF}/download
 sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_CONFIG}
 sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_DATA}
+sudo -u ${USERNAME} mkdir -p ${DOCPATH_TOOLS}
 
 mkdir -p ${DIR_APACHE_LOG}
 mkdir -p ${DIR_LIGHTTPD_LOG}
@@ -340,6 +342,11 @@ chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTPS}/
 find ${DOCPATH_HTTPS}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_HTTPS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
 find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
+
+chown -R ${USERNAME}:${USERNAME} ${DOCPATH_TOOLS}/
+find ${DOCPATH_TOOLS}/ -type d -exec chmod 755 {} \;
+find ${DOCPATH_TOOLS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
+find ${DOCPATH_TOOLS}/ -name "*.sh" -exec chmod 755 {} \;
 
 # [Base Setup] Trigger backup before installing package
 if [ -e ${CONFIG_OS_LOGROTATION} ] && "${RESTART}"; then

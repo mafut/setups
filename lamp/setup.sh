@@ -1010,7 +1010,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : "|^\\[(.*)\\] \\[(.*)\\] (\\[client (.*)\\] )*((?!\\[client ).*)(, referer: (.*))*$|U",
+                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
                 "export_title" : "Log",
                 "match"        : {
                     "Date"     : 1,
@@ -1027,7 +1027,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Referer"  : "link"
                 },
                 "exclude": {
-                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\. \/"]
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
                 }
             }
         },
@@ -1039,7 +1039,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : "|^\\[(.*)\\] \\[(.*)\\] (\\[client (.*)\\] )*((?!\\[client ).*)(, referer: (.*))*$|U",
+                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
                 "export_title" : "Log",
                 "match"        : {
                     "Date"     : 1,
@@ -1056,7 +1056,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Referer"  : "link"
                 },
                 "exclude": {
-                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\. \/"]
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
                 }
             }
         },
@@ -1068,7 +1068,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : " |^(.*) (.*) (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "regex"        : " |^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
                 "export_title" : "URL",
                 "match"        : {
                     "Date"    : 4,
@@ -1093,7 +1093,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "\u03bcs" : "numeral:0,0"
                 },
                 "exclude": {
-                    "URL": ["\/favicon.ico\/", "\/\\.pml\\.php.*$\/"],
+                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/"],
                     "CMD": ["\/OPTIONS\/"]
                 }
             }
@@ -1106,7 +1106,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : " |^(.*) (.*) (.*) \\[(.*)\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "regex"        : " |^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
                 "export_title" : "URL",
                 "match"        : {
                     "Date"    : 4,
@@ -1131,7 +1131,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "\u03bcs" : "numeral:0,0"
                 },
                 "exclude": {
-                    "URL": ["\/favicon.ico\/", "\/\\.pml\\.php.*$\/"],
+                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/"],
                     "CMD": ["\/OPTIONS\/"]
                 }
             }

@@ -63,7 +63,9 @@ source $0.default.conf
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
 DOCPATH_HTTPS=${DOCPATH_HTTPS%/}
 PATH_VSCODE=${PATH_VSCODE%/}
-PATH_PHPMYADMIN=${PATH_PHPMYADMIN%/}
+PATH_TOOLS=${PATH_TOOLS%/}
+PATH_TOOLS_PHPMYADMIN=${PATH_TOOLS_PHPMYADMIN%/}
+PATH_TOOLS_PIMPMYLOG=${PATH_TOOLS_PIMPMYLOG%/}
 MACKEREL_PATH_APACHE=${MACKEREL_PATH_APACHE%/}
 MACKEREL_PATH_NGINX=${MACKEREL_PATH_NGINX%/}
 
@@ -111,8 +113,13 @@ if [ -z "${LOGWATCH_TO}" ]; then
 fi
 
 # Configuration/Data path
+INSTALLER_CODESERVER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
+INSTALLER_PIMPMYLOG=pimp-my-log_master.zip
+
 DIR_CODESERVER_CONFIG=/home/${USERNAME}/.config/code-server
 DIR_CODESERVER_DATA=/home/${USERNAME}/.local/share/code-server
+DIR_PHPMYADMIN=/usr/share/phpmyadmin
+DIR_PIMPMYLOG=/usr/share/pimp-my-log
 
 CONFIG_LOGROTATION_APACHE=${DIR_LOGROTATION_CONFIG}/apache2
 CONFIG_LOGROTATION_LIGHTTPD=${DIR_LOGROTATION_CONFIG}/lighttpd
@@ -120,9 +127,7 @@ CONFIG_LOGROTATION_MYSQL=${DIR_LOGROTATION_CONFIG}/mysql-server
 CONFIG_LOGROTATION_MYSQLDUMP=${DIR_LOGROTATION_CONFIG}/mysqldump
 CONFIG_LOGROTATION_NGINX=${DIR_LOGROTATION_CONFIG}/nginx
 
-CONFIG_CODESERVER_INSTALLER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
 CONFIG_CODESERVER=${DIR_CODESERVER_CONFIG}/config.yaml
-
 CONFIG_VSCODE=${DIR_CODESERVER_DATA}/User/settings.json
 
 CONFIG_NGINX_DEFAULT=/etc/nginx/sites-available/default
@@ -209,12 +214,19 @@ cat <<EOF
 |   |   +-- Visible: ${ENABLE_VSCODE}
 |   |   +-- Data Path: ${DIR_CODESERVER_DATA}
 |   |   +-- Config: ${CONFIG_VSCODE}
-|   |   +-- Installer: ${CONFIG_CODESERVER_INSTALLER}
+|   |   +-- Installer: ${INSTALLER_CODESERVER}
 |   |   +-- Password: ${CODESERVER_PASS}
 |   |
-|   +-- ${PATH_PHPMYADMIN}:443 -> Lighttpd:8888
-|       +-- Visible: ${ENABLE_PHPMYADMIN}
-|       +-- Lighttpd Config: ${CONFIG_OS_LIGHTTPD}
+|   +-- ${PATH_TOOLS}:443 -> Lighttpd:8888
+|       +-- Visible: ${ENABLE_TOOLS}
+|       +-- Config: ${CONFIG_OS_LIGHTTPD}
+|       +-- Doc Path: ${DOCPATH_TOOLS}
+|       |
+|       +-- ${PATH_TOOLS_PHPMYADMIN}
+|           +-- Doc Path: ${DIR_PHPMYADMIN}
+|       |
+|       +-- ${PATH_TOOLS_PIMPMYLOG}
+|           +-- Doc Path: ${DIR_PIMPMYLOG}
 |
 +-- Others
     +-- Allowed Ports: ${list_ports}
@@ -400,9 +412,9 @@ mv -f ${SSH_AUTHKEYS_TMP} ${SSH_AUTHKEYS}
 #region Code-Server
 
 # [Code-Server] Install
-if [ ! -e ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER} ]; then
-    sudo -u ${USERNAME} curl -fL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${CONFIG_CODESERVER_INSTALLER} -o ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER}
-    dpkg -i ${DIR_SELF}/download/${CONFIG_CODESERVER_INSTALLER}
+if [ ! -e ${DIR_SELF}/download/${INSTALLER_CODESERVER} ]; then
+    sudo -u ${USERNAME} curl -fL https://github.com/coder/code-server/releases/download/v${CODESERVER_VER}/${INSTALLER_CODESERVER} -o ${DIR_SELF}/download/${INSTALLER_CODESERVER}
+    dpkg -i ${DIR_SELF}/download/${INSTALLER_CODESERVER}
 fi
 
 # [Code-Server] Reset Permission
@@ -917,7 +929,20 @@ a2ensite ${USERNAME}
 
 #endregion
 
-#region lighttpd (phpmyadmin)
+#region lighttpd (pimp-my-log/phpmyadmin)
+
+# [pimp-my-log] Download
+if [ ! -e ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG} ]; then
+    sudo -u ${USERNAME} curl -fL https://github.com/potsky/PimpMyLog/zipball/master -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
+fi
+unzip -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
+mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
+
+# [lighttpd] Link
+ln -f -s ${DIR_PIMPMYLOG} ${DOCPATH_TOOLS}/${PATH_TOOLS_PIMPMYLOG}
+ln -f -s ${DIR_PHPMYADMIN} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
+
+# [lighttpd] Config
 # Web server to reconfigure automatically: <-- lighttpd
 # Configure database for phpmyadmin with dbconfig-common? <-- Yes
 #   sudo dpkg-reconfigure phpmyadmin
@@ -925,8 +950,6 @@ a2ensite ${USERNAME}
 
 lighty-enable-mod fastcgi
 lighty-enable-mod fastcgi-php
-
-ln -f -s /usr/share/phpmyadmin ${DOCPATH_PHPMYADMIN}
 
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_LIGHTTPD_LOG}
 
@@ -942,7 +965,7 @@ server.modules = (
     "mod_proxy",
     "mod_accesslog",
 )
-server.document-root        = "${DOCPATH_PHPMYADMIN}"
+server.document-root        = "${DOCPATH_TOOLS}"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
 server.errorlog             = "${DIR_LIGHTTPD_LOG}/error.log"
 server.pid-file             = "/var/run/lighttpd.pid"
@@ -1047,9 +1070,9 @@ ln -s ${CONFIG_NGINX_DEFAULT} /etc/nginx/sites-enabled/default
 
 # [Nginx] Configure https 443
 # Note: [] is not needed in if. Format is 'if "${boolean}"''
-NGINX_VSCODE=
+nginx_vscode=
 if "${ENABLE_VSCODE}"; then
-    NGINX_VSCODE=$(
+    nginx_vscode=$(
         cat <<EOF
     location ${PATH_VSCODE}/ {
         auth_request /oauth2/auth;
@@ -1070,11 +1093,11 @@ EOF
     )
 fi
 
-NGINX_PHPMYADMIN=
-if "${ENABLE_PHPMYADMIN}"; then
-    NGINX_PHPMYADMIN=$(
+nginx_tools=
+if "${ENABLE_TOOLS}"; then
+    nginx_tools=$(
         cat <<EOF
-    location ${PATH_PHPMYADMIN}/ {
+    location ${PATH_TOOLS}/ {
         auth_request /oauth2/auth;
         error_page 401 =403 /oauth2/sign_in;
         auth_request_set \$auth_cookie \$upstream_http_set_cookie;
@@ -1101,9 +1124,9 @@ server {
     ssl_certificate ${NGINX_CERTPATH}/fullchain.pem;
     ssl_certificate_key ${NGINX_CERTPATH}/privkey.pem;
 
-    ${NGINX_VSCODE}
+    ${nginx_vscode}
 
-    ${NGINX_PHPMYADMIN}
+    ${nginx_tools}
 
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
@@ -1285,14 +1308,8 @@ prevent_alert_auto_close = true
 [plugin.checks.login_vscode]
 command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST ${PATH_VSCODE}/login HTTP/1\\\\..\" 302"]
 
-[plugin.checks.login_database]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET ${PATH_PHPMYADMIN}/ HTTP/1\\\\..\" 200"]
-
-[plugin.checks.login_toolsmysql]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET /tools/mysql/ HTTP/1\\\\..\" 200"]
-
-[plugin.checks.login_toolslog]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET /tools/log/ HTTP/1\\\\..\" 200"]
+[plugin.checks.login_tools]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET ${PATH_TOOLS}/ HTTP/1\\\\..\" 200"]
 
 
 # Plugin for Linux

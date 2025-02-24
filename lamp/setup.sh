@@ -942,7 +942,7 @@ server.modules = (
     "mod_proxy",
     "mod_accesslog",
 )
-server.document-root        = " ${DOCPATH_PHPMYADMIN}"
+server.document-root        = "${DOCPATH_PHPMYADMIN}"
 server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
 server.errorlog             = "${DIR_LIGHTTPD_LOG}/error.log"
 server.pid-file             = "/var/run/lighttpd.pid"
@@ -950,7 +950,7 @@ server.username             = "${APACHE_USER}"
 server.groupname            = "${APACHE_USER}"
 server.port                 = 8888
 
-accesslog.filename          = "/var/log/lighttpd/access.log"
+accesslog.filename          = "${DIR_LIGHTTPD_LOG}/access.log"
 index-file.names            = ( "index.php", "index.html" )
 url.access-deny             = ( "~", ".inc" )
 static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )

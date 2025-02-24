@@ -1105,15 +1105,6 @@ server {
 
     ${NGINX_PHPMYADMIN}
 
-    location /test/ {
-        auth_request /oauth2/auth;
-        error_page 401 =403 /oauth2/sign_in;
-        auth_request_set \$auth_cookie \$upstream_http_set_cookie;
-        add_header Set-Cookie \$auth_cookie;
-
-        root ${DOCPATH_HTTP};
-    }
-
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
         proxy_set_header Host \$host;

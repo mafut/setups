@@ -958,7 +958,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
         "_remove_me_to_set_EXPORT"                      : true,
         "_remove_me_to_set_FILE_SELECTOR"               : "bs",
         "_remove_me_to_set_GOOGLE_ANALYTICS"            : "UA-XXXXX-X",
-        "_remove_me_to_set_LOCALE"                      : "gb_US",
+        "_remove_me_to_set_LOCALE"                      : "en_US",
         "_remove_me_to_set_LOGS_MAX"                    : 50,
         "_remove_me_to_set_LOGS_REFRESH"                : 0,
         "_remove_me_to_set_MAX_SEARCH_LOG_TIME"         : 5,

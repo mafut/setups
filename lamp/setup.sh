@@ -1310,6 +1310,14 @@ fi
 if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     nginx_tools=$(
         cat <<EOF
+    location = ${PATH_TOOLS}${PATH_TOOLS_PHPMYADMIN} {
+        rewrite ^([^.]+[^/])$ \$1/ permanent;
+    }
+
+    location = ${PATH_TOOLS}${PATH_TOOLS_PIMPMYLOG} {
+        rewrite ^([^.]+[^/])$ \$1/ permanent;
+    }
+
     location ${PATH_TOOLS}/ {
         ${nginx_oauth2proxy}
 

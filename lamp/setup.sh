@@ -116,10 +116,12 @@ fi
 # Configuration/Data path
 INSTALLER_CODESERVER=code-server_${CODESERVER_VER}_${OS_ARCH}.deb
 INSTALLER_PIMPMYLOG=pimp-my-log_master.zip
+INSTALLER_PHPMYADMIN=phpmyadmin_${PHPMYADMIN_VER}.zip
 
 DIR_CODESERVER_CONFIG=/home/${USERNAME}/.config/code-server
 DIR_CODESERVER_DATA=/home/${USERNAME}/.local/share/code-server
 DIR_PHPMYADMIN=/usr/share/phpmyadmin
+DIR_PHPMYADMIN4=/usr/share/phpmyadmin4
 DIR_PIMPMYLOG=/usr/share/pimp-my-log
 
 CONFIG_LOGROTATION_APACHE=${DIR_LOGROTATION_CONFIG}/apache2
@@ -370,7 +372,7 @@ apt-get -y install mackerel-agent-plugins mackerel-check-plugins
 apt-get -y install golang-go
 
 for phpver in "${PHP_VERS[@]}"; do
-    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
+    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
 done
 
 apt-get -y autoremove
@@ -861,9 +863,18 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
 }
 EOF
 
+# [phpmyadmin] Download old version for old php
+if [ ! -e ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN} ]; then
+    sudo -u ${USERNAME} curl -fL https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VER}/phpMyAdmin-${PHPMYADMIN_VER}-all-languages.zip -o ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
+fi
+rm -rf ${DIR_PHPMYADMIN4}
+unzip -o -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
+mv -f ${DIR_SELF}/download/phpMyAdmin-${PHPMYADMIN_VER}-* ${DIR_PHPMYADMIN4}
+
 # [pimp-my-log/phpmyadmin] Link
 ln -f -s ${DIR_PIMPMYLOG} ${DOCPATH_TOOLS}/${PATH_TOOLS_PIMPMYLOG}
-ln -f -s ${DIR_PHPMYADMIN} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
+ln -f -s ${DIR_PHPMYADMIN4} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
+#ln -f -s ${DIR_PHPMYADMIN} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
 
 #endregion
 
@@ -1279,7 +1290,8 @@ EOF
     )
 fi
 
-if "${ENABLE_TOOLS}"; then
+# Enable if oauth is enabled
+if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     nginx_tools=$(
         cat <<EOF
     location ${PATH_TOOLS}/ {

@@ -1011,6 +1011,8 @@ for phpver in "${PHP_VERS[@]}"; do
     sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${phpini} | sponge ${phpini}
     sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${phpini} | sponge ${phpini}
     sed "s|session.cookie_samesite =$|session.cookie_samesite = Lax|g" ${phpini} | sponge ${phpini}
+    sed "s|session.cookie_httponly =$|session.cookie_httponly = On|g" ${phpini} | sponge ${phpini}
+    sed "s|session.cookie_lifetime = 0|session.cookie_lifetime = 7200|g" ${phpini} | sponge ${phpini}
 done
 
 #endregion
@@ -1305,6 +1307,9 @@ if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; 
         proxy_connect_timeout 120;
         proxy_send_timeout 180;
         proxy_read_timeout 180;
+        #if (\$phpsessid != "") {
+            #proxy_set_header Cookie "PHPSESSID=\$phpsessid; path=/; SameSite=Lax; HttpOnly";
+        #}
     }
 EOF
     )
@@ -1342,6 +1347,7 @@ server {
         proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_set_header Cookie \$http_cookie;
     }
 }
 EOF

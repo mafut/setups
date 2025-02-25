@@ -667,7 +667,7 @@ if [ ! -e ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG} ]; then
     sudo -u ${USERNAME} curl -fL https://github.com/potsky/PimpMyLog/zipball/master -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 fi
 rm -rf ${DIR_PIMPMYLOG}
-unzip -o -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
+unzip -o -q -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
 
 # [pimp-my-log] Config
@@ -868,7 +868,7 @@ if [ ! -e ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN} ]; then
     sudo -u ${USERNAME} curl -fL https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN_VER}/phpMyAdmin-${PHPMYADMIN_VER}-all-languages.zip -o ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
 fi
 rm -rf ${DIR_PHPMYADMIN4}
-unzip -o -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
+unzip -o -q -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
 mv -f ${DIR_SELF}/download/phpMyAdmin-${PHPMYADMIN_VER}-* ${DIR_PHPMYADMIN4}
 
 # [pimp-my-log/phpmyadmin] Link

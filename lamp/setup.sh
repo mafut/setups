@@ -1135,7 +1135,7 @@ AcceptFilter http none
 </VirtualHost>
 
 ExtendedStatus On
-<VirtualHost *:${MACKEREL_PORT_APACHE}>
+<VirtualHost 127.0.0.1:${MACKEREL_PORT_APACHE}>
     <Location ${MACKEREL_PATH_APACHE}>
         SetHandler server-status
         Order deny,allow
@@ -1247,10 +1247,12 @@ server {
 }
 server {
     listen ${MACKEREL_PORT_NGINX};
-    server_name _;
-
+    server_name localhost;
     location ${MACKEREL_PATH_NGINX} {
-        stub_status;
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
     }
 }
 EOF

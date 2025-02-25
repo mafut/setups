@@ -123,7 +123,6 @@ DIR_PHPMYADMIN=/usr/share/phpmyadmin
 DIR_PIMPMYLOG=/usr/share/pimp-my-log
 
 CONFIG_LOGROTATION_APACHE=${DIR_LOGROTATION_CONFIG}/apache2
-CONFIG_LOGROTATION_LIGHTTPD=${DIR_LOGROTATION_CONFIG}/lighttpd
 CONFIG_LOGROTATION_MYSQL=${DIR_LOGROTATION_CONFIG}/mysql-server
 CONFIG_LOGROTATION_MYSQLDUMP=${DIR_LOGROTATION_CONFIG}/mysqldump
 CONFIG_LOGROTATION_NGINX=${DIR_LOGROTATION_CONFIG}/nginx
@@ -190,6 +189,14 @@ cat <<EOF
 |   |   +-- htaccess: ${CONFIG_APACHE_HTACCESS}
 |   |   +-- Redirect : ${NGINX_FQDN[0]}
 |   |
+|   +-- /:8888 (Fixed)
+|   |   +-- Visible: ${ENABLE_TOOLS}
+|   |   +-- Doc Path: ${DOCPATH_TOOLS}
+|   |   |
+|   |   +-- ${PATH_TOOLS_PHPMYADMIN}: ${DIR_PHPMYADMIN}
+|   |   |
+|   |   +-- ${PATH_TOOLS_PIMPMYLOG}: ${DIR_PIMPMYLOG}
+|   |
 |   +-- ${MACKEREL_PATH_APACHE}:${MACKEREL_PORT_APACHE}
 |
 +-- Nginx by Default
@@ -218,16 +225,7 @@ cat <<EOF
 |   |   +-- Installer: ${INSTALLER_CODESERVER}
 |   |   +-- Password: ${CODESERVER_PASS}
 |   |
-|   +-- ${PATH_TOOLS}:443 -> Lighttpd:8888
-|       +-- Visible: ${ENABLE_TOOLS}
-|       +-- Config: ${CONFIG_OS_LIGHTTPD}
-|       +-- Doc Path: ${DOCPATH_TOOLS}
-|       |
-|       +-- ${PATH_TOOLS_PHPMYADMIN}
-|           +-- Doc Path: ${DIR_PHPMYADMIN}
-|       |
-|       +-- ${PATH_TOOLS_PIMPMYLOG}
-|           +-- Doc Path: ${DIR_PIMPMYLOG}
+|   +-- ${PATH_TOOLS}:443 -> Apache:8888
 |
 +-- Others
     +-- Allowed Ports: ${list_ports}
@@ -235,14 +233,12 @@ cat <<EOF
 [User]
 Unix: ${USERNAME}
 Apache: ${APACHE_USER}
-Lighttpd: ${APACHE_USER}
 MySQL: ${MYSQL_USER}
 Nginx: ${APACHE_USER}
 
 [Config]
 Apache: ${CONFIG_OS_APACHE}
 Code-Server: ${CONFIG_CODESERVER}
-Lighttpd: ${CONFIG_OS_LIGHTTPD}
 Nginx: ${CONFIG_OS_NGINX}
 MySQL: ${CONFIG_OS_MYSQL}
 PHP: ${PHP_VER}
@@ -250,7 +246,6 @@ PHP: ${PHP_VER}
 [Log Directories]
 Group: ${LOG_GROUP}
 Apache: ${DIR_APACHE_LOG}
-Lighttpd: ${DIR_LIGHTTPD_LOG}
 MySQL: ${DIR_MYSQL_LOG}
 MySQLDump: ${DIR_MYSQLDUMP_LOG}
 Nginx: ${DIR_NGINX_LOG}
@@ -258,7 +253,6 @@ Nginx: ${DIR_NGINX_LOG}
 [LogRotate]
 Base: ${CONFIG_OS_LOGROTATION}
 Apache: ${CONFIG_LOGROTATION_APACHE}
-Lighttpd: ${CONFIG_LOGROTATION_LIGHTTPD}
 MySQL: ${CONFIG_LOGROTATION_MYSQL}
 MySQLDump: ${CONFIG_LOGROTATION_MYSQLDUMP}
 Nginx: ${CONFIG_LOGROTATION_NGINX}
@@ -310,7 +304,6 @@ sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_CONFIG}
 sudo -u ${USERNAME} mkdir -p ${DIR_CODESERVER_DATA}
 
 mkdir -p ${DIR_APACHE_LOG}
-mkdir -p ${DIR_LIGHTTPD_LOG}
 mkdir -p ${DIR_MYSQL_LOG}
 mkdir -p ${DIR_MYSQLDUMP_LOG}
 mkdir -p ${DIR_NGINX_LOG}
@@ -367,14 +360,14 @@ fi
 apt-get -y install ufw wget zip unzip jq moreutils ssmtp
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
-apt-get -y install nginx apache2 composer
-apt-get -y install phpmyadmin lighttpd
+apt-get -y install nginx apache2
+apt-get -y install composer phpmyadmin
 apt-get -y install logrotate logwatch
 apt-get -y install mackerel-agent-plugins mackerel-check-plugins
 apt-get -y install golang-go
 
 for phpver in "${PHP_VERS[@]}"; do
-    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
+    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
 done
 
 apt-get -y autoremove
@@ -657,288 +650,7 @@ fi
 
 #endregion
 
-#region MySQL
-
-# [MySQL] Config
-if [ -f -e ${CONFIG_OS_MYSQL} ] && [ ! -e ${CONFIG_OS_MYSQL}.bak ]; then
-    # Backup original
-    cp -f ${CONFIG_OS_MYSQL} ${CONFIG_OS_MYSQL}.bak
-fi
-cat <<EOF >${CONFIG_OS_MYSQL}
-[mysqld]
-# When reset root password
-# skip-grant-tables
-
-character-set-server = utf8mb4
-# https://zenn.dev/zoeponta/articles/090c68ba820a24
-collation-server = utf8mb4_0900_as_ci
-
-# Timezone
-default-time-zone = SYSTEM
-log_timestamps = SYSTEM
-
-default-authentication-plugin = mysql_native_password
-
-basedir   = /var/lib/mysql
-datadir   = /var/lib/mysql-files
-pid-file  = /var/run/mysqld/mysqld.pid
-socket    = /var/run/mysqld/mysqld.sock
-log-error = ${DIR_MYSQL_LOG}/error.log
-lc_messages_dir = /usr/share/mysql-8.0/english
-
-performance-schema = 0
-local-infile = 0
-mysqlx = 0
-bind-address = 127.0.0.1
-symbolic-links = 0
-explicit_defaults_for_timestamp = 0
-default-storage-engine=innodb
-default_password_lifetime = 0
-log_bin_trust_function_creators = 1
-sql-mode = "TRADITIONAL,ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"
-
-innodb_dedicated_server = 1
-innodb_log_buffer_size = 64M
-innodb_read_io_threads = 12
-innodb_write_io_threads = 12
-innodb_stats_on_metadata = 0
-innodb_file_per_table = 1
-
-table_definition_cache = 65536
-table_open_cache = 65536
-
-tmp_table_size = 128M
-max_heap_table_size = 128M
-
-read_buffer_size = 1024K
-join_buffer_size = 512K
-sort_buffer_size = 512K
-read_rnd_buffer_size = 512K
-# max_allowed_packet = 8M
-max_allowed_packet = 512M
-
-connect_timeout = 60
-net_read_timeout = 60
-net_write_timeout = 120
-interactive_timeout = 28800
-wait_timeout = 28800
-
-[mysql]
-auto-rehash
-default-character-set = utf8mb4
-
-[mysqldump]
-default-character-set = utf8mb4
-EOF
-
-# [MySQL] Install
-if [ ! -e ${DIR_SELF}/download/${MYSQL_REPO} ]; then
-    sudo -u ${USERNAME} curl -fL https://dev.mysql.com/get/${MYSQL_REPO} -o ${DIR_SELF}/download/${MYSQL_REPO}
-    dpkg -i ${DIR_SELF}/download/${MYSQL_REPO}
-    apt-get -y install mysql-server
-fi
-
-# [MySQL] Data Permission
-chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
-chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
-chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQL_LOG}
-chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}
-
-chmod 750 /var/lib/mysql
-chmod 750 /var/lib/mysql-files
-chmod 750 ${DIR_MYSQL_LOG}
-chmod 750 ${DIR_MYSQLDUMP_LOG}
-
-usermod -d /var/lib/mysql/ ${MYSQL_USER}
-mysqld --initialize-insecure --user=${MYSQL_USER}
-
-# [MySQL] Resolve warning at start
-dpkg-divert --local --rename --add /sbin/initctl
-if [ ! -e /sbin/initctl ]; then
-    ln -s /bin/true /sbin/initctl
-fi
-
-# [MySQL] Create first backup file to trigger logrotate
-for db in "${BACKUP_DB[@]}"; do
-    if [ ! -e ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz ]; then
-        touch ${DIR_MYSQLDUMP_LOG}/${db}.sql
-        gzip ${DIR_MYSQLDUMP_LOG}/${db}.sql
-        chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz
-    fi
-done
-#endregion
-
-#region PHP
-
-# [Php] php.ini
-for phpver in "${PHP_VERS[@]}"; do
-    phpini=/etc/php/${phpver}/apache2/php.ini
-
-    if [ -f -e ${phpini} ] && [ ! -e ${phpini}.bak ]; then
-        # Backup original
-        cp -f ${phpini} ${phpini}.bak
-    fi
-    sed "s|display_errors = Off|display_errors = On|g" ${phpini} | sponge ${phpini}
-    sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${phpini} | sponge ${phpini}
-    sed "s|;extension_dir = "./"|extension_dir = "./"|g" ${phpini} | sponge ${phpini}
-    sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${phpini} | sponge ${phpini}
-    sed "s|;extension=curl|extension=curl|g" ${phpini} | sponge ${phpini}
-    sed "s|;extension=mysqli|extension=mysqli|g" ${phpini} | sponge ${phpini}
-    sed "s|max_execution_time = 30|max_execution_time = 90|g" ${phpini} | sponge ${phpini}
-    sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${phpini} | sponge ${phpini}
-    sed "s|post_max_size = 8M|post_max_size = 16M|g" ${phpini} | sponge ${phpini}
-    sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${phpini} | sponge ${phpini}
-    sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${phpini} | sponge ${phpini}
-done
-
-#endregion
-
-#region Apache
-
-a2dismod ssl
-a2dismod proxy
-a2dismod proxy_http
-a2dismod proxy_wstunnel
-for phpver in "${PHP_VERS[@]}"; do
-    a2dismod php${phpver}
-done
-
-a2enmod authz_groupfile
-a2enmod headers
-a2enmod rewrite
-a2enmod php${PHP_VER}
-
-a2dissite default-ssl
-
-# [Apache] Default .htaccess
-# Allow certbot path
-cat <<EOF >${CONFIG_APACHE_HTACCESS}
-RewriteEngine On
-RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
-RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*) https://${NGINX_FQDN[0]}/\$1 [R=301,L]
-EOF
-
-# [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
-chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
-find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
-find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;
-
-# [Apache] Configure core
-if [ -f -e ${CONFIG_OS_APACHE} ] && [ ! -e ${CONFIG_OS_APACHE}.bak ]; then
-    # Backup original
-    cp -f ${CONFIG_OS_APACHE} ${CONFIG_OS_APACHE}.bak
-fi
-cat <<EOF >${CONFIG_OS_APACHE}
-DefaultRuntimeDir \${APACHE_RUN_DIR}
-PidFile \${APACHE_PID_FILE}
-Timeout 300
-KeepAlive On
-MaxKeepAliveRequests 100
-KeepAliveTimeout 5
-
-# These need to be set in /etc/apache2/envvars
-User \${APACHE_RUN_USER}
-Group \${APACHE_RUN_GROUP}
-
-HostnameLookups Off
-
-IncludeOptional mods-enabled/*.load
-IncludeOptional mods-enabled/*.conf
-
-Listen 80
-Listen ${MACKEREL_PORT_APACHE}
-
-<Directory />
-    Options FollowSymLinks
-    AllowOverride None
-    Require all denied
-</Directory>
-
-AccessFileName .htaccess
-<FilesMatch "^\.ht">
-    Require all denied
-</FilesMatch>
-
-LogLevel warn
-LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-LogFormat "%h %l %u %t \"%r\" %>s %O" common
-LogFormat "%{Referer}i -> %U" referer
-LogFormat "%{User-agent}i" agent
-
-ErrorLog ${DIR_APACHE_LOG}/error.log
-
-IncludeOptional conf-enabled/*.conf
-IncludeOptional sites-enabled/*.conf
-EOF
-
-# [Apache] Configure default
-cat <<EOF >${CONFIG_APACHE_DEFAULT}
-AcceptFilter http none
-<VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-    ServerName localhost:80
-
-    LogLevel warn
-    ErrorLog ${DIR_APACHE_LOG}/error.log
-    CustomLog ${DIR_APACHE_LOG}/access.log combined
-
-    DocumentRoot ${DOCPATH_HTTP}
-    <Directory ${DOCPATH_HTTP}>
-        Options All
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-
-ExtendedStatus On
-<VirtualHost *:${MACKEREL_PORT_APACHE}>
-    <Location ${MACKEREL_PATH_APACHE}>
-        SetHandler server-status
-        Order deny,allow
-        Deny from all
-        Allow from localhost
-    </Location>
-</VirtualHost>
-EOF
-rm -f /etc/apache2/sites-enabled/000-default.conf
-a2ensite 000-default
-
-# [Apache] Configure user
-cat <<EOF >${CONFIG_APACHE_USER}
-AcceptFilter http none
-Listen ${PORT_HTTPS}
-<VirtualHost *:${PORT_HTTPS}>
-    ServerAdmin webmaster@localhost
-    ServerName localhost:${PORT_HTTPS}
-
-    LogLevel warn
-    ErrorLog ${DIR_APACHE_LOG}/error.log
-    CustomLog ${DIR_APACHE_LOG}/access.log combined
-
-    DocumentRoot ${DOCPATH_HTTPS}
-    <Directory ${DOCPATH_HTTPS}>
-        Options None
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    Alias /application/views ${DOCPATH_HTTPS}/application/views
-    <Directory ${DOCPATH_HTTPS}/application/views>
-        Options None
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-EOF
-rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
-a2ensite ${USERNAME}
-
-#endregion
-
-#region lighttpd (pimp-my-log/phpmyadmin)
+#region pimp-my-log/phpmyadmin
 
 # [pimp-my-log] Download
 if [ ! -e ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG} ]; then
@@ -1140,55 +852,307 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
 }
 EOF
 
-# [lighttpd] Link
+# [pimp-my-log/phpmyadmin] Link
 ln -f -s ${DIR_PIMPMYLOG} ${DOCPATH_TOOLS}/${PATH_TOOLS_PIMPMYLOG}
 ln -f -s ${DIR_PHPMYADMIN} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
 
-# [lighttpd] Config
-# Web server to reconfigure automatically: <-- lighttpd
-# Configure database for phpmyadmin with dbconfig-common? <-- Yes
-#   sudo dpkg-reconfigure phpmyadmin
-# MySQL application password for phpmyadmin: <-- Press Enter
+#endregion
 
-lighty-enable-mod fastcgi
-lighty-enable-mod fastcgi-php
+#region MySQL
 
-chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_LIGHTTPD_LOG}
+# [MySQL] Config
+if [ -f -e ${CONFIG_OS_MYSQL} ] && [ ! -e ${CONFIG_OS_MYSQL}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_MYSQL} ${CONFIG_OS_MYSQL}.bak
+fi
+cat <<EOF >${CONFIG_OS_MYSQL}
+[mysqld]
+# When reset root password
+# skip-grant-tables
 
-cat <<EOF >${CONFIG_OS_LIGHTTPD}
-server.modules = (
-    "mod_rewrite",
-    "mod_redirect",
-    "mod_access",
-    "mod_auth",
-    "mod_fastcgi",
-    "mod_compress",
-    "mod_rewrite",
-    "mod_proxy",
-    "mod_accesslog",
-)
-server.document-root        = "${DOCPATH_TOOLS}"
-server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
-server.errorlog             = "${DIR_LIGHTTPD_LOG}/error.log"
-server.pid-file             = "/var/run/lighttpd.pid"
-server.username             = "${APACHE_USER}"
-server.groupname            = "${APACHE_USER}"
-server.port                 = 8888
+character-set-server = utf8mb4
+# https://zenn.dev/zoeponta/articles/090c68ba820a24
+collation-server = utf8mb4_0900_as_ci
 
-accesslog.filename          = "${DIR_LIGHTTPD_LOG}/access.log"
-index-file.names            = ( "index.php", "index.html" )
-url.access-deny             = ( "~", ".inc" )
-static-file.exclude-extensions = ( ".php", ".pl", ".fcgi" )
+# Timezone
+default-time-zone = SYSTEM
+log_timestamps = SYSTEM
 
-fastcgi.server = (
-    ".php" => (
-        "localhost" => (
-            "socket" => "/var/run/php/php7.4-fpm.sock",
-            "broken-scriptfilename" => "enable"
-        )
-    )
-)
+default-authentication-plugin = mysql_native_password
+
+basedir   = /var/lib/mysql
+datadir   = /var/lib/mysql-files
+pid-file  = /var/run/mysqld/mysqld.pid
+socket    = /var/run/mysqld/mysqld.sock
+log-error = ${DIR_MYSQL_LOG}/error.log
+lc_messages_dir = /usr/share/mysql-8.0/english
+
+performance-schema = 0
+local-infile = 0
+mysqlx = 0
+bind-address = 127.0.0.1
+symbolic-links = 0
+explicit_defaults_for_timestamp = 0
+default-storage-engine=innodb
+default_password_lifetime = 0
+log_bin_trust_function_creators = 1
+sql-mode = "TRADITIONAL,ALLOW_INVALID_DATES,NO_ENGINE_SUBSTITUTION"
+
+innodb_dedicated_server = 1
+innodb_log_buffer_size = 64M
+innodb_read_io_threads = 12
+innodb_write_io_threads = 12
+innodb_stats_on_metadata = 0
+innodb_file_per_table = 1
+
+table_definition_cache = 65536
+table_open_cache = 65536
+
+tmp_table_size = 128M
+max_heap_table_size = 128M
+
+read_buffer_size = 1024K
+join_buffer_size = 512K
+sort_buffer_size = 512K
+read_rnd_buffer_size = 512K
+# max_allowed_packet = 8M
+max_allowed_packet = 512M
+
+connect_timeout = 60
+net_read_timeout = 60
+net_write_timeout = 120
+interactive_timeout = 28800
+wait_timeout = 28800
+
+[mysql]
+auto-rehash
+default-character-set = utf8mb4
+
+[mysqldump]
+default-character-set = utf8mb4
 EOF
+
+# [MySQL] Install
+if [ ! -e ${DIR_SELF}/download/${MYSQL_REPO} ]; then
+    sudo -u ${USERNAME} curl -fL https://dev.mysql.com/get/${MYSQL_REPO} -o ${DIR_SELF}/download/${MYSQL_REPO}
+    dpkg -i ${DIR_SELF}/download/${MYSQL_REPO}
+    apt-get -y install mysql-server
+fi
+
+# [MySQL] Data Permission
+chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql
+chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
+chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQL_LOG}
+chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}
+
+chmod 750 /var/lib/mysql
+chmod 750 /var/lib/mysql-files
+chmod 750 ${DIR_MYSQL_LOG}
+chmod 750 ${DIR_MYSQLDUMP_LOG}
+
+usermod -d /var/lib/mysql/ ${MYSQL_USER}
+mysqld --initialize-insecure --user=${MYSQL_USER}
+
+# [MySQL] Resolve warning at start
+dpkg-divert --local --rename --add /sbin/initctl
+if [ ! -e /sbin/initctl ]; then
+    ln -s /bin/true /sbin/initctl
+fi
+
+# [MySQL] Create first backup file to trigger logrotate
+for db in "${BACKUP_DB[@]}"; do
+    if [ ! -e ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz ]; then
+        touch ${DIR_MYSQLDUMP_LOG}/${db}.sql
+        gzip ${DIR_MYSQLDUMP_LOG}/${db}.sql
+        chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}/${db}.sql.gz
+    fi
+done
+#endregion
+
+#region PHP
+
+# [Php] php.ini
+for phpver in "${PHP_VERS[@]}"; do
+    phpini=/etc/php/${phpver}/apache2/php.ini
+
+    if [ -f -e ${phpini} ] && [ ! -e ${phpini}.bak ]; then
+        # Backup original
+        cp -f ${phpini} ${phpini}.bak
+    fi
+    sed "s|display_errors = Off|display_errors = On|g" ${phpini} | sponge ${phpini}
+    sed "s|display_startup_errors = Off|display_startup_errors = On|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension_dir = "./"|extension_dir = "./"|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=php_soap.dll|extension=php_soap.dll|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=curl|extension=curl|g" ${phpini} | sponge ${phpini}
+    sed "s|;extension=mysqli|extension=mysqli|g" ${phpini} | sponge ${phpini}
+    sed "s|max_execution_time = 30|max_execution_time = 90|g" ${phpini} | sponge ${phpini}
+    sed "s|mmemory_limit = 128M|memory_limit = 256M|g" ${phpini} | sponge ${phpini}
+    sed "s|post_max_size = 8M|post_max_size = 16M|g" ${phpini} | sponge ${phpini}
+    sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${phpini} | sponge ${phpini}
+    sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${phpini} | sponge ${phpini}
+done
+
+#endregion
+
+#region Apache
+
+a2dismod ssl
+a2dismod proxy
+a2dismod proxy_http
+a2dismod proxy_wstunnel
+for phpver in "${PHP_VERS[@]}"; do
+    a2dismod php${phpver}
+done
+
+a2enmod authz_groupfile
+a2enmod headers
+a2enmod rewrite
+a2enmod php${PHP_VER}
+
+a2dissite default-ssl
+
+# [Apache] Default .htaccess
+# Allow certbot path
+cat <<EOF >${CONFIG_APACHE_HTACCESS}
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
+RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*) https://${NGINX_FQDN[0]}/\$1 [R=301,L]
+EOF
+
+# [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
+chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
+find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
+find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;
+
+# [Apache] Configure core config
+if [ -f -e ${CONFIG_OS_APACHE} ] && [ ! -e ${CONFIG_OS_APACHE}.bak ]; then
+    # Backup original
+    cp -f ${CONFIG_OS_APACHE} ${CONFIG_OS_APACHE}.bak
+fi
+cat <<EOF >${CONFIG_OS_APACHE}
+DefaultRuntimeDir \${APACHE_RUN_DIR}
+PidFile \${APACHE_PID_FILE}
+Timeout 300
+KeepAlive On
+MaxKeepAliveRequests 100
+KeepAliveTimeout 5
+
+# These need to be set in /etc/apache2/envvars
+User \${APACHE_RUN_USER}
+Group \${APACHE_RUN_GROUP}
+
+HostnameLookups Off
+
+IncludeOptional mods-enabled/*.load
+IncludeOptional mods-enabled/*.conf
+
+Listen 80
+Listen 8888
+Listen ${MACKEREL_PORT_APACHE}
+
+<Directory />
+    Options FollowSymLinks
+    AllowOverride None
+    Require all denied
+</Directory>
+
+AccessFileName .htaccess
+<FilesMatch "^\.ht">
+    Require all denied
+</FilesMatch>
+
+LogLevel warn
+LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%{Referer}i -> %U" referer
+LogFormat "%{User-agent}i" agent
+
+ErrorLog ${DIR_APACHE_LOG}/error.log
+
+IncludeOptional conf-enabled/*.conf
+IncludeOptional sites-enabled/*.conf
+EOF
+
+# [Apache] Configure default
+cat <<EOF >${CONFIG_APACHE_DEFAULT}
+AcceptFilter http none
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    ServerName localhost:80
+
+    LogLevel warn
+    ErrorLog ${DIR_APACHE_LOG}/error.log
+    CustomLog ${DIR_APACHE_LOG}/access.log combined
+
+    DocumentRoot ${DOCPATH_HTTP}
+    <Directory ${DOCPATH_HTTP}>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+<VirtualHost *:8888>
+    ServerAdmin webmaster@localhost
+    ServerName localhost:8888
+
+    LogLevel warn
+    ErrorLog ${DIR_APACHE_LOG}/error.log
+    CustomLog ${DIR_APACHE_LOG}/access.log combined
+
+    DocumentRoot ${DOCPATH_TOOLS}
+    <Directory ${DOCPATH_TOOLS}>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+ExtendedStatus On
+<VirtualHost *:${MACKEREL_PORT_APACHE}>
+    <Location ${MACKEREL_PATH_APACHE}>
+        SetHandler server-status
+        Order deny,allow
+        Deny from all
+        Allow from localhost
+    </Location>
+</VirtualHost>
+EOF
+rm -f /etc/apache2/sites-enabled/000-default.conf
+a2ensite 000-default
+
+# [Apache] Configure user
+cat <<EOF >${CONFIG_APACHE_USER}
+AcceptFilter http none
+Listen ${PORT_HTTPS}
+<VirtualHost *:${PORT_HTTPS}>
+    ServerAdmin webmaster@localhost
+    ServerName localhost:${PORT_HTTPS}
+
+    LogLevel warn
+    ErrorLog ${DIR_APACHE_LOG}/error.log
+    CustomLog ${DIR_APACHE_LOG}/access.log combined
+
+    DocumentRoot ${DOCPATH_HTTPS}
+    <Directory ${DOCPATH_HTTPS}>
+        Options None
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    Alias /application/views ${DOCPATH_HTTPS}/application/views
+    <Directory ${DOCPATH_HTTPS}/application/views>
+        Options None
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+EOF
+rm -f /etc/apache2/sites-enabled/${USERNAME}.conf
+a2ensite ${USERNAME}
 
 #endregion
 
@@ -1392,21 +1356,6 @@ ${DIR_APACHE_LOG}/*.log {
 }
 EOF
 
-# [logrotate] lighttpd
-cat <<EOF >${CONFIG_LOGROTATION_LIGHTTPD}
-${DIR_LIGHTTPD_LOG}/*.log {
-    compress
-    delaycompress
-    ifempty
-    missingok
-    create 0640 ${APACHE_USER} ${LOG_GROUP} 
-    sharedscripts
-    postrotate
-        /bin/systemctl reload lighttpd > /dev/null 2>/dev/null || true
-    endscript
-}
-EOF
-
 # [logrotate] mysql-server
 cat <<EOF >${CONFIG_LOGROTATION_MYSQL}
 ${DIR_MYSQL_LOG}/*.log {
@@ -1496,9 +1445,6 @@ command = ["check-procs", "--pattern", "apache2"]
 
 [plugin.checks.procs-mysqld]
 command = ["check-procs", "--pattern", "mysqld"]
-
-[plugin.checks.procs-lighttpd]
-command = ["check-procs", "--pattern", "lighttpd"]
 
 
 [plugin.checks.user_ssh]
@@ -1628,7 +1574,6 @@ systemctl enable --now mysql
 systemctl enable --now apache2
 systemctl enable --now nginx
 systemctl enable --now php7.4-fpm
-systemctl enable --now lighttpd
 
 # [Cron] Schedule to pull
 printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf

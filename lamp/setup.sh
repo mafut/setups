@@ -1010,6 +1010,7 @@ for phpver in "${PHP_VERS[@]}"; do
     sed "s|post_max_size = 8M|post_max_size = 16M|g" ${phpini} | sponge ${phpini}
     sed "s|upload_max_filesize = 2M|upload_max_filesize = 8M|g" ${phpini} | sponge ${phpini}
     sed "s|;mbstring.language = Japanese|;mbstring.language = Japanese|g" ${phpini} | sponge ${phpini}
+    sed "s|session.cookie_samesite =$|session.cookie_samesite = Lax|g" ${phpini} | sponge ${phpini}
 done
 
 #endregion

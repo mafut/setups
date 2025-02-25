@@ -746,9 +746,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Code"    : 8,
                     "Size"    : 9,
                     "Referer" : 10,
-                    "UA"      : 11,
-                    "User"    : 3,
-                    "\u03bcs" : 13
+                    "UA"      : 11
                 },
                 "types": {
                     "Date"    : "date:H:i:s",
@@ -757,8 +755,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Code"    : "badge:http",
                     "Size"    : "numeral:0b",
                     "Referer" : "link",
-                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100",
-                    "\u03bcs" : "numeral:0,0"
+                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100"
                 },
                 "exclude": {
                     "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_APACHE//\//\\/}\/"],
@@ -784,9 +781,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Code"    : 8,
                     "Size"    : 9,
                     "Referer" : 10,
-                    "UA"      : 11,
-                    "User"    : 3,
-                    "\u03bcs" : 13
+                    "UA"      : 11
                 },
                 "types": {
                     "Date"    : "date:H:i:s",
@@ -795,8 +790,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "Code"    : "badge:http",
                     "Size"    : "numeral:0b",
                     "Referer" : "link",
-                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100",
-                    "\u03bcs" : "numeral:0,0"
+                    "UA"      : "ua:{os.name} {os.version} | {browser.name} {browser.version}\/100"
                 },
                 "exclude": {
                     "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_NGINX//\//\\/}\/"],

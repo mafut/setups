@@ -1038,6 +1038,7 @@ a2dissite default-ssl
 # Allow certbot path
 cat <<EOF >${CONFIG_APACHE_HTACCESS}
 RewriteEngine On
+RewriteCond %{REQUEST_URI} !(^/${MACKEREL_PATH_APACHE}(.*)$)
 RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
 RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
 RewriteCond %{HTTPS} off
@@ -1146,16 +1147,13 @@ AcceptFilter http none
 
     DocumentRoot ${DOCPATH_HTTP}
     <Directory ${DOCPATH_HTTP}>
-        Options FollowSymLinks
+        Options All
         AllowOverride All
         Require all granted
     </Directory>
 
-    <Location ${MACKEREL_PATH_APACHE}>
+    <Location "${MACKEREL_PATH_APACHE}">
         SetHandler server-status
-        Order allow,deny
-        Deny from all
-        Allow from all
     </Location>
 </VirtualHost>
 EOF
@@ -1513,8 +1511,8 @@ command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "G
 command = "mackerel-plugin-linux"
 
 # Plugin for Apache2 (mod_status)
-# [plugin.metrics.apache2]
-# command = "mackerel-plugin-apache2 -p ${MACKEREL_PORT_APACHE} -s ${MACKEREL_PATH_APACHE}?auto"
+[plugin.metrics.apache2]
+command = "mackerel-plugin-apache2 -p ${MACKEREL_PORT_APACHE} -s ${MACKEREL_PATH_APACHE}?auto"
 
 # Plugin for Nginx (stub_status)
 [plugin.metrics.nginx]

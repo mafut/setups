@@ -812,14 +812,14 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
+                "regex"        : "|^\\\\[([^\\\\]]*)\\\\] \\\\[([^\\\\]]*)\\\\] (\\\\[pid ([^\\\\]]*)\\\\] )*(\\\\[client ([^\\\\]]*)\\\\] )*(\\\\[referer ([^\\\\]]*)\\\\] )*(.*)$|U",
                 "export_title" : "Log",
                 "match"        : {
                     "Date"     : 1,
-                    "IP"       : 4,
-                    "Log"      : 5,
+                    "IP"       : 6,
+                    "Log"      : 9,
                     "Severity" : 2,
-                    "Referer"  : 7
+                    "Referer"  : 8
                 },
                 "types": {
                     "Date"     : "date:H:i:s",
@@ -841,14 +841,14 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
+                "regex"        : "|^\\\\[([^\\\\]]*)\\\\] \\\\[([^\\\\]]*)\\\\] (\\\\[pid ([^\\\\]]*)\\\\] )*(\\\\[client ([^\\\\]]*)\\\\] )*(\\\\[referer ([^\\\\]]*)\\\\] )*(.*)$|U",
                 "export_title" : "Log",
                 "match"        : {
                     "Date"     : 1,
-                    "IP"       : 4,
-                    "Log"      : 5,
+                    "IP"       : 6,
+                    "Log"      : 9,
                     "Severity" : 2,
-                    "Referer"  : 7
+                    "Referer"  : 8
                 },
                 "types": {
                     "Date"     : "date:H:i:s",
@@ -1099,7 +1099,7 @@ LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 
-ErrorLogFormat "[%{%Y/%m/%d %T %Z}t] [%l] [pid %P] %F: %E: [client %a] %M, referer: \"%{Referer}i\"
+ErrorLogFormat "[%{%Y/%m/%d %T %Z}t] [%l] [pid %P] [client %a] [referer %{Referer}i] %F: %E: %M"
 ErrorLog ${DIR_APACHE_LOG}/error.log
 
 IncludeOptional conf-enabled/*.conf

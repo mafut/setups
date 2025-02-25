@@ -1093,12 +1093,13 @@ AccessFileName .htaccess
 </FilesMatch>
 
 LogLevel warn
-LogFormat "%v:%p %h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-LogFormat "%h %l %u %t \"%r\" %>s %O" common
+LogFormat "%v:%p %h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 
+ErrorLogFormat "[%{%Y/%m/%d %T %Z}t] [%l] [pid %P] %F: %E: [client %a] %M, Referrer: \"%{Referer}i\"
 ErrorLog ${DIR_APACHE_LOG}/error.log
 
 IncludeOptional conf-enabled/*.conf

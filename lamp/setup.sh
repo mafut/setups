@@ -656,7 +656,8 @@ fi
 if [ ! -e ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG} ]; then
     sudo -u ${USERNAME} curl -fL https://github.com/potsky/PimpMyLog/zipball/master -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 fi
-unzip -o ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
+rm -rf ${DIR_PIMPMYLOG}
+unzip -o -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
 
 # [pimp-my-log] Config

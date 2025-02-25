@@ -385,7 +385,7 @@ update-alternatives --set editor /usr/bin/vim.basic
 
 # [Base Setup] Firewall
 ufw disable
-ufw --force reset
+#ufw --force reset
 ufw default deny
 
 ufw allow 443
@@ -401,7 +401,10 @@ ufw limit 22
 # explicitly deny behide nginx
 ufw deny ${PORT_HTTPS}
 ufw deny ${PORT_VSCODE}
+ufw deny ${PORT_OAUTH2PROXY}
 ufw deny 8888
+ufw deny ${MACKEREL_PORT_APACHE}
+ufw deny ${MACKEREL_PORT_NGINX}
 
 ufw allow out 25
 ufw allow out 587

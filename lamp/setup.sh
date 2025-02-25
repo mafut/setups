@@ -1038,7 +1038,7 @@ a2dissite default-ssl
 # Allow certbot path
 cat <<EOF >${CONFIG_APACHE_HTACCESS}
 RewriteEngine On
-RewriteCond %{REQUEST_URI} !(^/${MACKEREL_PATH_APACHE}(.*)$)
+RewriteCond %{REQUEST_URI} !(^${MACKEREL_PATH_APACHE}(.*)$)
 RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
 RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
 RewriteCond %{HTTPS} off

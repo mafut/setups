@@ -391,16 +391,12 @@ ufw default deny
 ufw allow 443
 ufw allow 80
 ufw allow 22
-ufw allow ${MACKEREL_PORT_APACHE}
-ufw allow ${MACKEREL_PORT_NGINX}
 for port in "${ALLOWED_PORTS[@]}"; do
     ufw allow ${port}
 done
 
 # Not more than 6 times in 30 secs
 ufw limit 22
-ufw limit ${MACKEREL_PORT_APACHE}
-ufw limit ${MACKEREL_PORT_NGINX}
 
 # explicitly deny behide nginx
 ufw deny ${PORT_HTTPS}

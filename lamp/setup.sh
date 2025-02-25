@@ -670,6 +670,10 @@ rm -rf ${DIR_PIMPMYLOG}
 unzip -o -q -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG}
 mv -f ${DIR_SELF}/download/potsky-PimpMyLog-* ${DIR_PIMPMYLOG}
 
+# [pimp-my-log] Modify csrf_verify
+# PHPSESSID doesn't stay in cookie
+sed "s|return ( .s === .*;|return true;|g" ${DIR_PIMPMYLOG}/inc/global.inc.php | sponge ${DIR_PIMPMYLOG}/inc/global.inc.php
+
 # [pimp-my-log] Config
 cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
 <?php if(realpath(__FILE__)===realpath(\$_SERVER["SCRIPT_FILENAME"])){header(\$_SERVER['SERVER_PROTOCOL'].' 404 Not Found');die();}?>
@@ -1307,9 +1311,6 @@ if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; 
         proxy_connect_timeout 120;
         proxy_send_timeout 180;
         proxy_read_timeout 180;
-        #if (\$phpsessid != "") {
-            #proxy_set_header Cookie "PHPSESSID=\$phpsessid; path=/; SameSite=Lax; HttpOnly";
-        #}
     }
 EOF
     )

@@ -1299,8 +1299,7 @@ if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; 
 
         proxy_pass http://127.0.0.1:8888/;
         proxy_set_header Host \$host;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection upgrade;
+        proxy_set_header X-Forwarded-For \$remote_addr;
         proxy_set_header Accept-Encoding gzip;
         proxy_connect_timeout 120;
         proxy_send_timeout 180;

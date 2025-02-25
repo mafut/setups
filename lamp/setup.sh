@@ -727,7 +727,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
     "files": {
         "apache1": {
             "display"   : "Apache Error",
-            "path"      : "${DIR_APACHE_LOG//\//\\/}\/error_log",
+            "path"      : "${DIR_APACHE_LOG//\//\\/}\/error.log",
             "refresh"   : 0,
             "max"       : 10,
             "notify"    : false,
@@ -756,7 +756,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
         },
         "nginx1": {
             "display"   : "Nginx Error",
-            "path"      : "${DIR_NGINX_LOG//\//\\/}\/error_log",
+            "path"      : "${DIR_NGINX_LOG//\//\\/}\/error.log",
             "refresh"   : 0,
             "max"       : 10,
             "notify"    : false,
@@ -785,7 +785,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
         },
         "apache2": {
             "display"   : "Apache Access",
-            "path"      : "${DIR_APACHE_LOG//\//\\/}\/access_log",
+            "path"      : "${DIR_APACHE_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
             "max"       : 10,
             "notify"    : false,
@@ -823,7 +823,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
         },
         "nginx2": {
             "display"   : "Nginx Access",
-            "path"      : "${DIR_NGINX_LOG//\//\\/}\/access_log",
+            "path"      : "${DIR_NGINX_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
             "max"       : 10,
             "notify"    : false,

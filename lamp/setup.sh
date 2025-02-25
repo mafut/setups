@@ -1099,7 +1099,7 @@ LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 
-ErrorLogFormat "[%{%Y/%m/%d %T %Z}t] [%l] [pid %P] %F: %E: [client %a] %M, referrer: \"%{Referer}i\"
+ErrorLogFormat "[%{%Y/%m/%d %T %Z}t] [%l] [pid %P] %F: %E: [client %a] %M, referer: \"%{Referer}i\"
 ErrorLog ${DIR_APACHE_LOG}/error.log
 
 IncludeOptional conf-enabled/*.conf

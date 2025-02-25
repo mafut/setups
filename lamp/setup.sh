@@ -729,7 +729,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "display"   : "Apache Error",
             "path"      : "${DIR_APACHE_LOG//\//\\/}\/error.log",
             "refresh"   : 0,
-            "max"       : 10,
+            "max"       : 50,
             "notify"    : false,
             "multiline" : "",
             "format"    : {
@@ -758,7 +758,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "display"   : "Nginx Error",
             "path"      : "${DIR_NGINX_LOG//\//\\/}\/error.log",
             "refresh"   : 0,
-            "max"       : 10,
+            "max"       : 50,
             "notify"    : false,
             "multiline" : "",
             "format"    : {
@@ -787,11 +787,11 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "display"   : "Apache Access",
             "path"      : "${DIR_APACHE_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
-            "max"       : 10,
+            "max"       : 50,
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : " |^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "regex"        : "|^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
                 "export_title" : "URL",
                 "match"        : {
                     "Date"    : 4,
@@ -825,11 +825,11 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "display"   : "Nginx Access",
             "path"      : "${DIR_NGINX_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
-            "max"       : 10,
+            "max"       : 50,
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : " |^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
+                "regex"        : "|^(.*) (.*) (.*) \\\\[(.*)\\\\] \"(.*) (.*) (.*)\" ([0-9]*) (.*) \"(.*)\" \"(.*)\"( [0-9]*\/([0-9]*))*$|U",
                 "export_title" : "URL",
                 "match"        : {
                     "Date"    : 4,

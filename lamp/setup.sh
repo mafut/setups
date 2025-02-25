@@ -338,6 +338,9 @@ find ${DOCPATH_HTTPS}/ -name "*.sh" -exec chmod 755 {} \;
 if [ ! -e ${DOCPATH_TOOLS} ]; then
     mkdir -p ${DOCPATH_TOOLS}
 fi
+if [ ! -e ${DOCPATH_TOOLS}/index.php ]; then
+    touch -p ${DOCPATH_TOOLS}/index.php
+fi
 chown -R ${USERNAME}:${USERNAME} ${DOCPATH_TOOLS}/
 find ${DOCPATH_TOOLS}/ -type d -exec chmod 755 {} \;
 find ${DOCPATH_TOOLS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
@@ -651,6 +654,11 @@ fi
 #endregion
 
 #region pimp-my-log/phpmyadmin
+
+# phpinfo
+cat <<EOF >${DOCPATH_TOOLS}/index.php
+<?php phpinfo(); ?>
+EOF
 
 # [pimp-my-log] Download
 if [ ! -e ${DIR_SELF}/download/${INSTALLER_PIMPMYLOG} ]; then

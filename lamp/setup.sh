@@ -728,65 +728,7 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
     },
 
     "files": {
-        "apache1": {
-            "display"   : "Apache Error",
-            "path"      : "${DIR_APACHE_LOG//\//\\/}\/error.log",
-            "refresh"   : 0,
-            "max"       : 50,
-            "notify"    : false,
-            "multiline" : "",
-            "format"    : {
-                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
-                "export_title" : "Log",
-                "match"        : {
-                    "Date"     : 1,
-                    "IP"       : 4,
-                    "Log"      : 5,
-                    "Severity" : 2,
-                    "Referer"  : 7
-                },
-                "types": {
-                    "Date"     : "date:H:i:s",
-                    "IP"       : "ip:http",
-                    "Log"      : "pre",
-                    "Severity" : "badge:severity",
-                    "Referer"  : "link"
-                },
-                "exclude": {
-                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
-                }
-            }
-        },
-        "nginx1": {
-            "display"   : "Nginx Error",
-            "path"      : "${DIR_NGINX_LOG//\//\\/}\/error.log",
-            "refresh"   : 0,
-            "max"       : 50,
-            "notify"    : false,
-            "multiline" : "",
-            "format"    : {
-                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
-                "export_title" : "Log",
-                "match"        : {
-                    "Date"     : 1,
-                    "IP"       : 4,
-                    "Log"      : 5,
-                    "Severity" : 2,
-                    "Referer"  : 7
-                },
-                "types": {
-                    "Date"     : "date:H:i:s",
-                    "IP"       : "ip:http",
-                    "Log"      : "pre",
-                    "Severity" : "badge:severity",
-                    "Referer"  : "link"
-                },
-                "exclude": {
-                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
-                }
-            }
-        },
-        "apache2": {
+        "apache_access": {
             "display"   : "Apache Access",
             "path"      : "${DIR_APACHE_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
@@ -819,12 +761,12 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "\u03bcs" : "numeral:0,0"
                 },
                 "exclude": {
-                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_APACHE//\//\\/}\/", ],
+                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_APACHE//\//\\/}\/"],
                     "CMD": ["\/OPTIONS\/"]
                 }
             }
         },
-        "nginx2": {
+        "nginx_access": {
             "display"   : "Nginx Access",
             "path"      : "${DIR_NGINX_LOG//\//\\/}\/access.log",
             "refresh"   : 0,
@@ -857,8 +799,66 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                     "\u03bcs" : "numeral:0,0"
                 },
                 "exclude": {
-                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_NGINX//\//\\/}\/", ],
+                    "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_NGINX//\//\\/}\/"],
                     "CMD": ["\/OPTIONS\/"]
+                }
+            }
+        },
+        "apache_error": {
+            "display"   : "Apache Error",
+            "path"      : "${DIR_APACHE_LOG//\//\\/}\/error.log",
+            "refresh"   : 0,
+            "max"       : 50,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
+                "export_title" : "Log",
+                "match"        : {
+                    "Date"     : 1,
+                    "IP"       : 4,
+                    "Log"      : 5,
+                    "Severity" : 2,
+                    "Referer"  : 7
+                },
+                "types": {
+                    "Date"     : "date:H:i:s",
+                    "IP"       : "ip:http",
+                    "Log"      : "pre",
+                    "Severity" : "badge:severity",
+                    "Referer"  : "link"
+                },
+                "exclude": {
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
+                }
+            }
+        },
+        "nginx_error": {
+            "display"   : "Nginx Error",
+            "path"      : "${DIR_NGINX_LOG//\//\\/}\/error.log",
+            "refresh"   : 0,
+            "max"       : 50,
+            "notify"    : false,
+            "multiline" : "",
+            "format"    : {
+                "regex"        : "|^\\\\[(.*)\\\\] \\\\[(.*)\\\\] (\\\\[client (.*)\\\\] )*((?!\\\\[client ).*)(, referer: (.*))*$|U",
+                "export_title" : "Log",
+                "match"        : {
+                    "Date"     : 1,
+                    "IP"       : 4,
+                    "Log"      : 5,
+                    "Severity" : 2,
+                    "Referer"  : 7
+                },
+                "types": {
+                    "Date"     : "date:H:i:s",
+                    "IP"       : "ip:http",
+                    "Log"      : "pre",
+                    "Severity" : "badge:severity",
+                    "Referer"  : "link"
+                },
+                "exclude": {
+                    "Log": ["\/PHP Stack trace:\/", "\/PHP *[0-9]*\\\\. \/"]
                 }
             }
         }

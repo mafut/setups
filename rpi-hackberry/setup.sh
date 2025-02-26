@@ -56,7 +56,7 @@ fi
 # apt-get update/upgrade
 apt-get -y update
 apt-get -y upgrade
-apt-get -y purge bluez avahi-daemon
+apt-get -y purge bluez avahi-daemon triggerhappy modemmanager
 apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
 apt-get -y autoremove 
 
@@ -167,7 +167,7 @@ cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
-alias scp='scp -F ${FILE_SSHCONF}'
+alias scpyk='scp -F ${FILE_SSHCONF}'
 
 alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
 alias setup='sudo ./setup.sh'
@@ -186,6 +186,8 @@ EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
 
 # Restart
+systemctl disable polkit
+systemctl disable keyboard-setup
 systemctl daemon-reload
 systemctl restart rsyslog
 systemctl restart sshd

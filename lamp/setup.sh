@@ -594,7 +594,6 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
 
     # https://oauth2-proxy.github.io/oauth2-proxy/installation/
     go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
-    cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
 
     # [OAuth2-Proxy] Allowed email
     sudo -u ${USERNAME} echo -n >${CONFIG_OAUTH2PROXY_EMAILS}
@@ -606,6 +605,7 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
 
     # [OAuth2-Proxy] User Config
     # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
+    cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
     list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
     cat <<EOF >${CONFIG_OAUTH2PROXY}
 http_address="0.0.0.0:${PORT_OAUTH2PROXY}"
@@ -865,6 +865,23 @@ fi
 rm -rf ${DIR_PHPMYADMIN4}
 unzip -o -q -d ${DIR_SELF}/download/ ${DIR_SELF}/download/${INSTALLER_PHPMYADMIN}
 mv -f ${DIR_SELF}/download/phpMyAdmin-${PHPMYADMIN_VER}-* ${DIR_PHPMYADMIN4}
+
+# [phpmyadmin] Config
+cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
+cat <<EOF >${DIR_PHPMYADMIN4}/config.inc.php
+<?php
+\$cfg['blowfish_secret'] = '${cookie_secret}';
+\$cfg['PmaAbsoluteUri'] = 'https://${NGINX_FQDN[0]}${PATH_TOOLS}${PATH_TOOLS_PHPMYADMIN}';
+\$cfg['SendErrorReports'] = 'never';
+\$cfg['UploadDir'] = '';
+\$cfg['SaveDir'] = '';
+\$cfg['TempDir'] = '/tmp';
+\$i = 1;
+\$cfg['Servers'][\$i]['auth_type'] = 'cookie';
+\$cfg['Servers'][\$i]['host'] = 'localhost';
+\$cfg['Servers'][\$i]['compress'] = false;
+\$cfg['Servers'][\$i]['AllowNoPassword'] = false;
+EOF
 
 # [pimp-my-log/phpmyadmin] Link
 ln -fns ${DIR_PIMPMYLOG} ${DOCPATH_TOOLS}/${PATH_TOOLS_PIMPMYLOG}

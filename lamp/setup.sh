@@ -835,14 +835,12 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
             "notify"    : false,
             "multiline" : "",
             "format"    : {
-                "regex"        : "|^\\\\[([^\\\\]]*)\\\\] \\\\[([^\\\\]]*)\\\\] (\\\\[pid ([^\\\\]]*)\\\\] )*(\\\\[client ([^\\\\]]*)\\\\] )*(\\\\[referer ([^\\\\]]*)\\\\] )*(.*)$|U",
+                "regex"        : "|^(.+) \\\\[([^\\\\]]*)\\\\] (.*): (.*)$|U",
                 "export_title" : "Log",
                 "match"        : {
                     "Date"     : 1,
-                    "IP"       : 6,
-                    "Log"      : 9,
-                    "Severity" : 2,
-                    "Referer"  : 8
+                    "Log"      : 4,
+                    "Severity" : 2
                 },
                 "types": {
                     "Date"     : "date:H:i:s",
@@ -1087,9 +1085,9 @@ AccessFileName .htaccess
 </FilesMatch>
 
 LogLevel warn
-LogFormat "%v:%p %h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
-LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
-LogFormat "%h %l %u %{%Y/%m/%d %T %Z}t \"%r\" %>s %O" common
+LogFormat "%v:%p %h %l %u [%{%Y/%m/%d %T %Z}t] \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" vhost_combined
+LogFormat "%h %l %u [%{%Y/%m/%d %T %Z}t] \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+LogFormat "%h %l %u [%{%Y/%m/%d %T %Z}t] \"%r\" %>s %O" common
 LogFormat "%{Referer}i -> %U" referer
 LogFormat "%{User-agent}i" agent
 

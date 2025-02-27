@@ -305,9 +305,15 @@ OAUTH2_CLIENT: ${OAUTH2_CLIENT}
 OAUTH2_SECRET: ${OAUTH2_SECRET}
 
 [Public Certs]
+$(cat ${SSH_AUTHKEYS_TMP})
+
+[Setup Behavior]
+Upgrade: ${RUN_UPGRADE}
+Restart: ${RUN_RESTART}
+Backup: ${RUN_BACKUP}
+
 EOF
-cat ${SSH_AUTHKEYS_TMP}
-read -p "Hit enter to setup ([apt:${RUN_UPGRADE}],[restart:${RUN_RESTART}],[backup:${RUN_BACKUP}]): "
+read -p "Hit enter to continue: "
 
 #endregion
 

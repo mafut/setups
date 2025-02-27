@@ -9,55 +9,73 @@ if [ -z "${USERNAME}" ]; then
     exit 1
 fi
 
+# Script folder and file name
+DIR_SELF=$(
+    cd $(dirname $0)
+    pwd
+)
+FILE_SELF=$(basename $0)
+
 # getopts support short options
-# -c [conf path]    default is setup.sh.conf
-# -r                enable service restart
-# -u                enable apt update/upgrade
-RESTART=false
-UPGRADE=false
-while getopts "ruc:" optKey; do
+# -c  [all conf path]   
+# -cu [user conf path]  default is ./setup.sh.conf
+# -ch [host conf path]  default is /etc/setup.sh.conf
+# -b                    run logrotate before
+# -r                    restart service restart
+# -u                    run apt update/upgrade
+CONF_USER=${DIR_SELF}/${FILE_SELF}.conf
+CONF_HOST=/etc/${FILE_SELF}.conf
+RUN_BACKUP=false
+RUN_RESTART=false
+RUN_UPGRADE=false
+while getopts "rubc:" optKey; do
     # echo key:$optKey
     # echo value:${OPTARG}
     case "$optKey" in
+    b)
+        echo "-${optKey}:${OPTARG}"
+        RUN_BACKUP=true
+        ;;
     c)
         echo "-${optKey}:${OPTARG}"
-        CONF=${OPTARG}
+        CONF_USER=${OPTARG}
+        CONF_HOST=${OPTARG}
+        ;;
+    cu)
+        echo "-${optKey}:${OPTARG}"
+        CONF_USER=${OPTARG}
+        ;;
+    ch)
+        echo "-${optKey}:${OPTARG}"
+        CONF_HOST=${OPTARG}
         ;;
     r)
         echo "-${optKey}:${OPTARG}"
-        RESTART=true
+        RUN_RESTART=true
         ;;
     u)
         echo "-${optKey}:${OPTARG}"
-        UPGRADE=true
+        RUN_UPGRADE=true
+        RUN_BACKUP=true
         ;;
     esac
 done
 shift $((OPTIND - 1))
 
-#endregion
-
-#region Constants / Pre-defined variables
-
-DIR_SELF=$(
-    cd $(dirname $0)
-    pwd
-)
-
 # Load setting
-if [ -z "${CONF}" ]; then
-    # Load from default if no input
-    CONF=$0.conf
-fi
-
-if [ ! -e ${CONF} ]; then
-    echo "Usage: sudo ./setup.sh [conf=setup.sh.conf]"
+if [ ! -e ${CONF_USER} ] || [ ! -e ${CONF_HOST} ]; then
+    echo "Usage: sudo ./setup.sh [c=s./etup.sh.conf]"
+    echo "Usage: sudo ./setup.sh [cu=./setup.sh.conf] [ch=/etc/setup.sh.conf]"
     echo "Run \"touch ./setup.sh.conf\" for first run. This is needed action to avoid accidental run."
     exit 1
 fi
+source ${CONF_USER}
+source ${CONF_HOST}
+source ${DIR_SELF}/${FILE_SELF}.default.conf
 
-source ${CONF}
-source $0.default.conf
+#endregion
+
+#region Constants / Pre-defined variables
 
 # Trim a trailing slash from path
 DOCPATH_HTTP=${DOCPATH_HTTP%/}
@@ -92,11 +110,20 @@ if [ -z "${NGINX_CERTPATH}" ]; then
 fi
 NGINX_CERTPATH=${NGINX_CERTPATH%/}
 
-# FQDNS
-NGINX_FQDNS=$(printf " %s" "${NGINX_FQDN[@]}")
-CERTBOT_FQDNS=$(printf " -d %s" "${NGINX_FQDN[@]}")
-OAUTH2PROXY_FQDNS=$(printf "\"%s\"," "${NGINX_FQDN[@]}")
+# FQDN to other variables for each setting
+NGINX_FQDNS=$(printf " %s" "${FQDN[@]}")
+CERTBOT_FQDNS=$(printf " -d %s" "${FQDN[@]}")
+OAUTH2PROXY_FQDNS=$(printf "\"%s\"," "${FQDN[@]}")
+
+# ENABLE_OAUTH2 = false if related config is not ready
 OAUTH2PROXY_MAILDOMAINS=$(printf "\"%s\"," "${OAUTH2_MAILDOMAINS[@]}")
+if [ -z "${OAUTH2_CLIENT}" ] || [ -z "${OAUTH2_SECRET}" ]; then
+    domains=$(printf "%s" "${OAUTH2_MAILDOMAINS[@]}")
+    mails=$(printf "%s" "${OAUTH2_MAILUSERS[@]}")
+    if [ -z "${domains}" ] || [ -z "${mails}" ]; then
+        ENABLE_OAUTH2=false
+    fi
+fi
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -177,7 +204,6 @@ fi
 
 #region Config confirmation
 list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
-list_exts=$(printf "%s\n" "${CODESERVER_EXTS[@]}")
 list_jobs=$(printf "%s\n" "${CRON_JOBS[@]}")
 
 cat <<EOF
@@ -189,7 +215,7 @@ cat <<EOF
 |   +-- /:80 (Fixed)
 |   |   +-- Doc Path: ${DOCPATH_HTTP}
 |   |   +-- htaccess: ${CONFIG_APACHE_HTACCESS}
-|   |   +-- Redirect : ${NGINX_FQDN[0]}
+|   |   +-- Redirect : ${FQDN_DEFAULT}
 |   |
 |   +-- /:8888 (Fixed)
 |   |   +-- Visible: ${ENABLE_TOOLS}
@@ -203,8 +229,7 @@ cat <<EOF
 |
 +-- Nginx by Default
 |   +-- Config: ${CONFIG_NGINX_DEFAULT}
-|   +-- Domain: *
-|   +-- SSL: ${NGINX_DEFAULT_CERTPATH}
+|   +-- SSL: ${NGINX_CERTPATH_DEFAULT}
 |   |
 |   +-- /:443 (Fixed)
 |   |   +-- Doc Path: ${DOCPATH_HTTP}
@@ -272,24 +297,24 @@ SMTP User: ${SSMTP_AUTHUSER}
 SMTP Pass: ${SSMTP_AUTHPASS}
 Root Orverride: ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 
-[VS Code Extensions]
-${list_exts}
-
 [Cron Jobs]
 ${list_jobs}
 
-[Certbot Command]
-certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}
+[SSL]
+CertBot: certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}
 
 [API]
 MACKEREL_APIKEY: ${MACKEREL_APIKEY}
+
+[OAuth2]
+OAUTH2PROXY_FQDNS: ${OAUTH2PROXY_FQDNS}
 OAUTH2_CLIENT: ${OAUTH2_CLIENT}
 OAUTH2_SECRET: ${OAUTH2_SECRET}
 
 [Public Certs]
 EOF
 cat ${SSH_AUTHKEYS_TMP}
-read -p "Hit enter to setup ([apt:${UPGRADE}],[restart:${RESTART}]): "
+read -p "Hit enter to setup ([apt:${RUN_UPGRADE}],[restart:${RUN_RESTART}],[backup:${RUN_BACKUP}]): "
 
 #endregion
 
@@ -349,7 +374,7 @@ find ${DOCPATH_TOOLS}/ -type f -not -name "*.sh" -exec chmod 644 {} \;
 find ${DOCPATH_TOOLS}/ -name "*.sh" -exec chmod 755 {} \;
 
 # [Base Setup] Trigger backup before installing package
-if [ -e ${CONFIG_OS_LOGROTATION} ] && "${RESTART}"; then
+if [ -e ${CONFIG_OS_LOGROTATION} ] && "${RUN_BACKUP}"; then
     logrotate -f ${CONFIG_OS_LOGROTATION}
 fi
 
@@ -357,7 +382,7 @@ fi
 add-apt-repository ppa:ondrej/php -y
 add-apt-repository ppa:longsleep/golang-backports -y
 
-if "${UPGRADE}"; then
+if "${RUN_UPGRADE}"; then
     apt-get -y update
     apt-get -y upgrade
 fi
@@ -606,7 +631,6 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     # [OAuth2-Proxy] User Config
     # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg
     cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
-    list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
     cat <<EOF >${CONFIG_OAUTH2PROXY}
 http_address="0.0.0.0:${PORT_OAUTH2PROXY}"
 cookie_secret="${cookie_secret}"
@@ -871,7 +895,7 @@ cookie_secret=$(openssl rand -base64 32 | tr -- '+/' '-_')
 cat <<EOF >${DIR_PHPMYADMIN4}/config.inc.php
 <?php
 \$cfg['blowfish_secret'] = '${cookie_secret}';
-\$cfg['PmaAbsoluteUri'] = 'https://${NGINX_FQDN[0]}${PATH_TOOLS}${PATH_TOOLS_PHPMYADMIN}';
+\$cfg['PmaAbsoluteUri'] = 'https://${FQDN_DEFAULT}${PATH_TOOLS}${PATH_TOOLS_PHPMYADMIN}';
 \$cfg['SendErrorReports'] = 'never';
 \$cfg['UploadDir'] = '';
 \$cfg['SaveDir'] = '';
@@ -1054,7 +1078,7 @@ RewriteCond %{REQUEST_URI} !(^${MACKEREL_PATH_APACHE}(.*)$)
 RewriteCond %{REQUEST_URI} !(^/\.well-known(.*)$)
 RewriteCond %{REQUEST_URI} !(^/(.*)\.html$)
 RewriteCond %{HTTPS} off
-RewriteRule ^(.*) https://${NGINX_FQDN[0]}/\$1 [R=301,L]
+RewriteRule ^(.*) https://${FQDN_DEFAULT}/\$1 [R=301,L]
 EOF
 
 # [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
@@ -1261,8 +1285,8 @@ server {
     listen 443 default_server;
     server_name _;
 
-    ssl_certificate ${NGINX_DEFAULT_CERTPATH}/fullchain.pem;
-    ssl_certificate_key ${NGINX_DEFAULT_CERTPATH}/privkey.pem;
+    ssl_certificate ${NGINX_CERTPATH_DEFAULT}/fullchain.pem;
+    ssl_certificate_key ${NGINX_CERTPATH_DEFAULT}/privkey.pem;
 
     root ${DOCPATH_HTTP};
     index index.html;
@@ -1377,6 +1401,7 @@ server {
     }
 
     location / {
+        ${nginx_oauth2proxy}
         proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$remote_addr;
@@ -1557,12 +1582,6 @@ command = "mackerel-plugin-accesslog ${DIR_NGINX_LOG}/access.log"
 command = "mackerel-plugin-squid -port=8080"
 EOF
 
-    if "${RESTART}"; then
-        systemctl disable --now mackerel-agent
-        systemctl enable --now mackerel-agent
-    else
-        systemctl restart --now mackerel-agent
-    fi
 fi
 
 #endregion
@@ -1620,12 +1639,13 @@ loginctl enable-linger ${USERNAME}
 systemctl disable --now code-server
 systemctl disable --now oauth2-proxy
 
-if "${RESTART}"; then
+if "${RUN_RESTART}"; then
     systemctl disable --now code-server@${USERNAME}
     systemctl disable --now oauth2-proxy@${USERNAME}
     systemctl disable --now mysql
     systemctl disable --now apache2
     systemctl disable --now nginx
+    systemctl disable --now mackerel-agent
 fi
 
 systemctl enable --now code-server@${USERNAME}
@@ -1633,7 +1653,7 @@ systemctl enable --now oauth2-proxy@${USERNAME}
 systemctl enable --now mysql
 systemctl enable --now apache2
 systemctl enable --now nginx
-systemctl enable --now php7.4-fpm
+systemctl enable --now mackerel-agent
 
 # [Cron] Schedule to pull
 printf "%s\n" "${CRON_JOBS[@]}" >$0.crontab.conf

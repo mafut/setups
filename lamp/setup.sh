@@ -158,12 +158,11 @@ CONFIG_APACHE_DEFAULT=/etc/apache2/sites-available/000-default.conf
 CONFIG_APACHE_USER=/etc/apache2/sites-available/${USERNAME}.conf
 CONFIG_APACHE_HTACCESS=${DOCPATH_HTTP}/.htaccess
 CONFIG_OAUTH2PROXY=/etc/oauth2-proxy.${USERNAME}.conf
-CONFIG_OAUTH2PROXY_EMAILS=/etc/oauth2-proxy-emails.${USERNAME}.conf
 
 SYSTEMD_CODESERVER=/etc/systemd/system/code-server@${USERNAME}.service
 SYSTEMD_OAUTH2PROXY=/etc/systemd/system/oauth2-proxy@${USERNAME}.service
 
-# ssh
+# ssh pub keys
 DIR_PUB=$(
     cd $(dirname $0)
     cd ../ssh-pubkey/
@@ -193,12 +192,21 @@ if [ ! -s ${SSH_AUTHKEYS_TMP} ]; then
     echo "Can't get public certs"
     exit 1
 fi
+
+# oauth2 mail address
+CONFIG_OAUTH2PROXY_EMAILS=/etc/oauth2-proxy-emails.${USERNAME}.conf
+CONFIG_OAUTH2PROXY_EMAILS_TMP=/etc/oauth2-proxy-emails.${USERNAME}.conf.tmp
+
+sudo -u ${USERNAME} echo -n >${CONFIG_OAUTH2PROXY_EMAILS_TMP}
+if [ -n "${OAUTH2_MAILUSERS}" ]; then
+    for email in "${OAUTH2_MAILUSERS[@]}"; do
+        echo $email >>${CONFIG_OAUTH2PROXY_EMAILS_TMP}
+    done
+fi
+
 #endregion
 
 #region Config confirmation
-list_ports=$(printf "%s " "${ALLOWED_PORTS[@]}")
-list_jobs=$(printf "%s\n" "${CRON_JOBS[@]}")
-
 cat <<EOF
 [Service]
 +-- Apache by Default
@@ -248,7 +256,7 @@ cat <<EOF
 |   +-- ${PATH_TOOLS}:443 -> Apache:8888
 |
 +-- Others
-    +-- Allowed Ports: ${list_ports}
+    +-- Allowed Ports: $(printf "%s " "${ALLOWED_PORTS[@]}")
 
 [User]
 Unix: ${USERNAME}
@@ -291,7 +299,7 @@ SMTP Pass: ${SSMTP_AUTHPASS}
 Root Orverride: ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 
 [Cron Jobs]
-${list_jobs}
+$(printf "%s\n" "${CRON_JOBS[@]}")
 
 [SSL]
 CertBot: certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQDNS}
@@ -300,11 +308,14 @@ CertBot: certbot certonly --agree-tos --webroot -w ${DOCPATH_HTTP} ${CERTBOT_FQD
 MACKEREL_APIKEY: ${MACKEREL_APIKEY}
 
 [OAuth2]
-OAUTH2PROXY_FQDNS: ${OAUTH2PROXY_FQDNS}
-OAUTH2_CLIENT: ${OAUTH2_CLIENT}
-OAUTH2_SECRET: ${OAUTH2_SECRET}
+Client: ${OAUTH2_CLIENT}
+Secret: ${OAUTH2_SECRET}
+Cookie Domain: ${OAUTH2PROXY_FQDNS}
+Allowed email:
+$(cat ${CONFIG_OAUTH2PROXY_EMAILS_TMP})
 
-[Public Certs]
+[SSH]
+Allowed cert:
 $(cat ${SSH_AUTHKEYS_TMP})
 
 [Setup Behavior]
@@ -620,12 +631,7 @@ if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
     go install github.com/oauth2-proxy/oauth2-proxy/v7@latest
 
     # [OAuth2-Proxy] Allowed email
-    sudo -u ${USERNAME} echo -n >${CONFIG_OAUTH2PROXY_EMAILS}
-    if [ -n "${OAUTH2_MAILUSERS}" ]; then
-        for email in "${OAUTH2_MAILUSERS[@]}"; do
-            echo $email >>${CONFIG_OAUTH2PROXY_EMAILS}
-        done
-    fi
+    mv -f ${CONFIG_OAUTH2PROXY_EMAILS_TMP} ${CONFIG_OAUTH2PROXY_EMAILS}
 
     # [OAuth2-Proxy] User Config
     # https://github.com/oauth2-proxy/oauth2-proxy/blob/master/contrib/local-environment/oauth2-proxy-nginx.cfg

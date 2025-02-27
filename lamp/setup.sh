@@ -115,15 +115,8 @@ NGINX_FQDNS=$(printf " %s" "${FQDN[@]}")
 CERTBOT_FQDNS=$(printf " -d %s" "${FQDN[@]}")
 OAUTH2PROXY_FQDNS=$(printf "\"%s\"," "${FQDN[@]}")
 
-# ENABLE_OAUTH2 = false if related config is not ready
+# OAUTH2_MAILDOMAINS to OAUTH2PROXY_MAILDOMAINS
 OAUTH2PROXY_MAILDOMAINS=$(printf "\"%s\"," "${OAUTH2_MAILDOMAINS[@]}")
-if [ -z "${OAUTH2_CLIENT}" ] || [ -z "${OAUTH2_SECRET}" ]; then
-    domains=$(printf "%s" "${OAUTH2_MAILDOMAINS[@]}")
-    mails=$(printf "%s" "${OAUTH2_MAILUSERS[@]}")
-    if [ -z "${domains}" ] || [ -z "${mails}" ]; then
-        ENABLE_OAUTH2=false
-    fi
-fi
 
 # LOGWATCH_FROM
 LOGWATCH_FROM=${SSMTP_AUTHUSER}
@@ -1311,21 +1304,16 @@ ln -s ${CONFIG_NGINX_DEFAULT} /etc/nginx/sites-enabled/default
 
 # [Nginx] Configure https 443
 # Note: [] is not needed in if. Format is 'if "${boolean}"''
-nginx_oauth2proxy=
-nginx_vscode=
-nginx_tools=
-
-if [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
-    nginx_oauth2proxy=$(
+nginx_oauth2proxy=$(
         cat <<EOF
         auth_request /oauth2/auth;
         error_page 401 =403 /oauth2/sign_in;
         auth_request_set \$auth_cookie \$upstream_http_set_cookie;
         add_header Set-Cookie \$auth_cookie;
 EOF
-    )
-fi
+)
 
+nginx_vscode=
 if "${ENABLE_VSCODE}"; then
     nginx_vscode=$(
         cat <<EOF
@@ -1345,8 +1333,8 @@ EOF
     )
 fi
 
-# Enable if oauth is enabled
-if "${ENABLE_TOOLS}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
+nginx_tools=
+if "${ENABLE_TOOLS}"; then
     nginx_tools=$(
         cat <<EOF
     location = ${PATH_TOOLS}${PATH_TOOLS_PHPMYADMIN} {
@@ -1372,6 +1360,32 @@ EOF
     )
 fi
 
+nginx_root=
+if "${ENABLE_OAUTH2}" && [ -n "${OAUTH2_CLIENT}" ] && [ -n "${OAUTH2_SECRET}" ]; then
+    nginx_root=$(
+        cat <<EOF
+    location / {
+        ${nginx_oauth2proxy}
+        proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_set_header Cookie \$http_cookie;
+    }
+EOF
+    )
+else
+    nginx_root=$(
+        cat <<EOF
+    location / {
+        proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-For \$remote_addr;
+        proxy_set_header Cookie \$http_cookie;
+    }
+EOF
+    )
+fi
+
 cat <<EOF >${CONFIG_NGINX_USER}
 server {
     listen 443 ssl;
@@ -1379,10 +1393,6 @@ server {
 
     ssl_certificate ${NGINX_CERTPATH}/fullchain.pem;
     ssl_certificate_key ${NGINX_CERTPATH}/privkey.pem;
-
-    ${nginx_vscode}
-
-    ${nginx_tools}
 
     location = /oauth2/auth {
         proxy_pass http://127.0.0.1:${PORT_OAUTH2PROXY};
@@ -1400,13 +1410,11 @@ server {
         proxy_set_header X-Auth-Request-Redirect \$scheme://\$host\$request_uri;
     }
 
-    location / {
-        ${nginx_oauth2proxy}
-        proxy_pass http://127.0.0.1:${PORT_HTTPS}/;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Forwarded-For \$remote_addr;
-        proxy_set_header Cookie \$http_cookie;
-    }
+    ${nginx_vscode}
+
+    ${nginx_tools}
+
+    ${nginx_root}
 }
 EOF
 rm -f /etc/nginx/sites-enabled/${USERNAME}

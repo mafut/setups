@@ -788,7 +788,8 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                 },
                 "exclude": {
                     "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_APACHE//\//\\/}\/"],
-                    "CMD": ["\/OPTIONS\/"]
+                    "CMD": ["\/OPTIONS\/"],
+                    "Code": ["\/301\/"]
                 }
             }
         },
@@ -823,7 +824,8 @@ cat <<EOF >${DIR_PIMPMYLOG}/config.user.php
                 },
                 "exclude": {
                     "URL": ["\/favicon.ico\/", "\/\\\\.pml\\\\.php.*$\/", "${MACKEREL_PATH_NGINX//\//\\/}\/"],
-                    "CMD": ["\/OPTIONS\/"]
+                    "CMD": ["\/OPTIONS\/"],
+                    "Code": ["\/301\/"]
                 }
             }
         },

@@ -1566,7 +1566,7 @@ prevent_alert_auto_close = true
 
 
 [plugin.checks.login_oauth2]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET /oauth2/callback?state=.+\" 302"]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET /oauth2/callback\?state=.+\" 302"]
 
 [plugin.checks.login_vscode]
 command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST ${PATH_VSCODE}/login.+\" 302"]

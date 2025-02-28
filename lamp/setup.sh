@@ -1565,11 +1565,11 @@ command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "password ch
 prevent_alert_auto_close = true
 
 
-[plugin.checks.login_vscode]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST ${PATH_VSCODE}/login HTTP/1\\\\..\" 302"]
+[plugin.checks.login_oauth2]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "/oauth2/callback?state=.+\" 200"]
 
-[plugin.checks.login_tools]
-command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "GET ${PATH_TOOLS}/ HTTP/1\\\\..\" 200"]
+[plugin.checks.login_vscode]
+command = ["check-log", "--file", "${DIR_NGINX_LOG}/access.log", "--pattern", "POST ${PATH_VSCODE}/login.+\" 302"]
 
 
 # Plugin for Linux

@@ -1006,10 +1006,10 @@ chown ${MYSQL_USER}:${MYSQL_USER} /var/lib/mysql-files
 chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQL_LOG}
 chown -R ${MYSQL_USER}:${LOG_GROUP} ${DIR_MYSQLDUMP_LOG}
 
-chmod 750 /var/lib/mysql
-chmod 750 /var/lib/mysql-files
-chmod 750 ${DIR_MYSQL_LOG}
-chmod 750 ${DIR_MYSQLDUMP_LOG}
+chmod 751 /var/lib/mysql
+chmod 751 /var/lib/mysql-files
+chmod 751 ${DIR_MYSQL_LOG}
+chmod 751 ${DIR_MYSQLDUMP_LOG}
 
 usermod -d /var/lib/mysql/ ${MYSQL_USER}
 mysqld --initialize-insecure --user=${MYSQL_USER}

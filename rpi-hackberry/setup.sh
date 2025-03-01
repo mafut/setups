@@ -58,7 +58,7 @@ fi
 apt-get -y update
 apt-get -y upgrade
 apt-get -y purge bluez avahi-daemon triggerhappy modemmanager
-apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11 vivid
+apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
 apt-get -y autoremove 
 
 # set time zone
@@ -166,7 +166,6 @@ fi
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
-export LS_COLORS="\$(vivid generate dracula)"
 setterm --foreground white --store
 test -r ~/.bashrc && . ~/.bashrc
 EOF
@@ -188,7 +187,11 @@ alias clock='tty-clock -scbrBS'
 alias wifi='nmcli device wifi connect'
 
 alias up='cd ..'
-alias ls='ls --color=auto -al'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+alias ll='ls -alF'
+alias ls='ls --color=auto'
 alias ps='ps -ax'
 
 alias off='sudo shutdown now'

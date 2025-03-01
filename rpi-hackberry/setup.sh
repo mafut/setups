@@ -187,6 +187,8 @@ alias clock='tty-clock -scbrBS'
 alias wifi='nmcli device wifi connect'
 
 alias up='cd ..'
+alias l='ls -CF'
+alias la='ls -A'
 alias ll='ls -alF'
 alias ls='ls --color=auto'
 alias ps='ps -ax'

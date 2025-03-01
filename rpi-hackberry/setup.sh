@@ -165,7 +165,7 @@ fi
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
-export LS_COLORS="$(vivid generate molokai)"
+export LS_COLORS="\$(vivid generate molokai)"
 
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'

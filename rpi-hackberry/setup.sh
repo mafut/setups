@@ -176,10 +176,10 @@ cat <<EOF >${FILE_BASHALIASES}
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'
 
-alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
+alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && cd ~/'
 alias setup='sudo ./setup.sh'
 
-alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
+alias home='source ${FILE_BASHPROFILE} && cd ~/ && clear'
 alias cls='clear'
 alias up='cd ..'
 

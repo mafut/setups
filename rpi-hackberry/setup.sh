@@ -167,7 +167,7 @@ fi
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 export LS_COLORS="\$(vivid generate molokai)"
-setterm --clear all --foreground white --store 
+setterm --foreground white --store
 test -r ~/.bashrc && . ~/.bashrc
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
@@ -177,17 +177,19 @@ cat <<EOF >${FILE_BASHALIASES}
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'
 
+alias cls='setterm --clear all --foreground white --store'
+alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && setterm --clear all --foreground white --store'
 alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
 alias setup='sudo ./setup.sh'
-
-alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
-alias cls='clear'
-alias up='cd ..'
 
 alias font='sudo dpkg-reconfigure console-setup'
 alias config='sudo raspi-config'
 alias clock='tty-clock -scbrBS'
 alias wifi='nmcli device wifi connect'
+
+alias up='cd ..'
+alias ls='ls -al'
+alias ps='ps -ax'
 
 alias off='sudo shutdown now'
 EOF

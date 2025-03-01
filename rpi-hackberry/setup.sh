@@ -20,6 +20,7 @@ FILE_SSHD=/etc/ssh/sshd_config
 FILE_SSHKEY=/home/${USERNAME}/.ssh/authorized_keys
 FILE_SSHCONF=/home/${USERNAME}/.ssh/config
 FILE_BASHPROFILE=/home/${USERNAME}/.bash_profile
+FILE_BASHALIASES=/home/${USERNAME}/.bash_aliases
 FILE_LIBYKCS11=/usr/lib/arm-linux-gnueabihf/libykcs11.so
 
 # SSH_AUTHKEYS_TMP
@@ -166,7 +167,12 @@ fi
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 export LS_COLORS="\$(vivid generate molokai)"
+test -r ~/.bashrc && . ~/.bashrc
+EOF
+chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
 
+# .bash_aliases
+cat <<EOF >${FILE_BASHALIASES}
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'
 
@@ -183,10 +189,8 @@ alias clock='tty-clock -scbrBS'
 alias wifi='nmcli device wifi connect'
 
 alias off='sudo shutdown now'
-
-test -r ~/.bashrc && . ~/.bashrc
 EOF
-chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
+chown ${USERNAME}:${USERNAME} ${FILE_BASHALIASES}
 
 # Restart
 systemctl disable polkit
@@ -194,3 +198,5 @@ systemctl disable keyboard-setup
 systemctl daemon-reload
 systemctl restart rsyslog
 systemctl restart sshd
+
+sudo -u ${USERNAME} source ${FILE_BASHPROFILE}

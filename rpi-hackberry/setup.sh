@@ -167,6 +167,7 @@ fi
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 export LS_COLORS="\$(vivid generate molokai)"
+setterm --clear all --foreground white --store 
 test -r ~/.bashrc && . ~/.bashrc
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
@@ -176,7 +177,7 @@ cat <<EOF >${FILE_BASHALIASES}
 alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'
 
-alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && cd /home/${USERNAME}/'
+alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
 alias setup='sudo ./setup.sh'
 
 alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
@@ -198,5 +199,3 @@ systemctl disable keyboard-setup
 systemctl daemon-reload
 systemctl restart rsyslog
 systemctl restart sshd
-
-sudo -u ${USERNAME} source ${FILE_BASHPROFILE}

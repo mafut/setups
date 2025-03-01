@@ -166,8 +166,7 @@ fi
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
-setterm --foreground white --store
-export LS_COLORS="\$(vivid generate molokai)"
+export LS_COLORS="\$(vivid generate dracula)"
 test -r ~/.bashrc && . ~/.bashrc
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
@@ -178,7 +177,7 @@ alias sshyk='ssh -I ${FILE_LIBYKCS11}'
 alias scpyk='scp -F ${FILE_SSHCONF}'
 
 alias cls='setterm --clear all --foreground white --store'
-alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && clear'
+alias home='source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/ && setterm --clear all --foreground white --store'
 alias latest='cd ${DIR_SELF} && git pull && sudo ${DIR_SELF}/setup.sh && source ${FILE_BASHPROFILE} && cd /home/${USERNAME}/'
 alias setup='sudo ./setup.sh'
 
@@ -188,7 +187,7 @@ alias clock='tty-clock -scbrBS'
 alias wifi='nmcli device wifi connect'
 
 alias up='cd ..'
-alias ls='ls -al'
+alias ls='ls --color=auto -al'
 alias ps='ps -ax'
 
 alias off='sudo shutdown now'

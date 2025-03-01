@@ -167,6 +167,7 @@ fi
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 export LS_COLORS="\$(vivid generate dracula)"
+setterm --foreground white --store
 test -r ~/.bashrc && . ~/.bashrc
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}

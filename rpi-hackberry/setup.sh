@@ -171,6 +171,14 @@ fi
 
 # .tmux.conf
 cat <<EOF >${FILE_TMUXCONFIG}
+set-window-option -g mode-keys vi
+set-option -g base-index 1
+set-option -g mouse on
+set-option -g default-terminal "screen-256color"
+set-option -g status-bg "colour235"
+set-option -g status-fg "colour255"
+set -g mouse on
+set -g terminal-overrides 'xterm*:smcup@:rmcup@'
 set -g status-position top
 set -g status-left ""
 set -g status-right "#{wifi_ssid}|#{primary_ip}|%H:%M"

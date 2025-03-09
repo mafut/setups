@@ -164,6 +164,26 @@ PKCS11Provider ${FILE_LIBYKCS11}
 EOF
 fi
 
+# tmux
+if [ ! -e "/home/${USERNAME}/.tmux/plugins/tpm" ]; then
+    git clone https://github.com/tmux-plugins/tpm /home/${USERNAME}/.tmux/plugins/tpm
+fi
+
+# .tmux.conf
+cat <<EOF >${FILE_TMUXCONFIG}
+set -g status-position top
+set -g status-left ""
+set -g status-right "#{wifi_ssid}|#{primary_ip}|%H:%M"
+set -g status-interval 10
+set -g window-status-separator ' | '
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'gmoe/tmux-wifi'
+set -g @plugin 'dreknix/tmux-primary-ip'
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}
+
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
@@ -206,21 +226,6 @@ alias ps='ps -ax'
 alias off='sudo shutdown now'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHALIASES}
-
-# .tmux.conf
-cat <<EOF >${FILE_TMUXCONFIG}
-set -g status-position top
-set -g status-left ""
-set -g status-right "#{wifi_ssid}|#{primary_ip}|%H:%M"
-set -g status-interval 10
-set -g window-status-separator ' | '
-set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'tmux-plugins/tmux-sensible'
-set -g @plugin 'gmoe/tmux-wifi'
-set -g @plugin 'dreknix/tmux-primary-ip'
-run '~/.tmux/plugins/tpm/tpm'
-EOF
-chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}
 
 # Restart
 systemctl disable polkit

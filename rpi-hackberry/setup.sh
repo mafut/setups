@@ -22,6 +22,7 @@ FILE_SSHCONF=/home/${USERNAME}/.ssh/config
 FILE_BASHPROFILE=/home/${USERNAME}/.bash_profile
 FILE_BASHALIASES=/home/${USERNAME}/.bash_aliases
 FILE_LIBYKCS11=/usr/lib/arm-linux-gnueabihf/libykcs11.so
+FILE_TMUXCONFIG=/home/${USERNAME}/.tmux.conf
 
 # SSH_AUTHKEYS_TMP
 DIR_PUB=$(
@@ -58,7 +59,7 @@ fi
 apt-get -y update
 apt-get -y upgrade
 apt-get -y purge bluez avahi-daemon triggerhappy modemmanager
-apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11
+apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11 tmux
 apt-get -y autoremove 
 
 # set time zone
@@ -166,7 +167,13 @@ fi
 # .bash_profile
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
-setterm --foreground white --bold on --store
+setterm --foreground white --bold on
+tmux_count=$(ps -ax | grep '[t]mux' | wc -l)
+if [[ $SHLVL = 1 && $tmux_count = 0 ]]; then
+	tmux -u new-session
+elif [[ $SHLVL = 1 && $tmux_count = 1 ]]; then
+	tmux -u attach
+fi
 test -r ~/.bashrc && . ~/.bashrc
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHPROFILE}
@@ -196,6 +203,21 @@ alias ps='ps -ax'
 alias off='sudo shutdown now'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_BASHALIASES}
+
+# .tmux.conf
+cat <<EOF >${FILE_TMUXCONFIG}
+set -g status-position top
+set -g status-left ""
+set -g status-right "#{wifi_ssid}|#{primary_ip}|%H:%M"
+set -g status-interval 10
+set -g window-status-separator ' | '
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'gmoe/tmux-wifi'
+set -g @plugin 'dreknix/tmux-primary-ip'
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}
 
 # Restart
 systemctl disable polkit

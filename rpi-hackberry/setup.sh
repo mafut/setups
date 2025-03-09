@@ -76,7 +76,7 @@ free -h
 if ! grep -q tmpfs ${FILE_FSTAB}; then
     cat <<EOF >>${FILE_FSTAB}
 tmpfs   /tmp        tmpfs   defaults,size=16m,noatime,mode=1777     0   0
-tmpfs   /var/tmp    tmpfs   defaults,size=32m,noatime,mode=1777     0   0
+tmpfs   /var/tmp    tmpfs   defaults,size=128m,noatime,mode=1777     0   0
 tmpfs   /var/log    tmpfs   defaults,size=16m,noatime,mode=0750     0   0
 EOF
 fi

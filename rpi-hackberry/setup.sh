@@ -168,10 +168,10 @@ fi
 cat <<EOF >${FILE_BASHPROFILE}
 export PATH=”\$PATH:/home/${USERNAME}/.local/bin”
 setterm --foreground white --bold on
-tmux_count=$(ps -ax | grep '[t]mux' | wc -l)
-if [[ $SHLVL = 1 && $tmux_count = 0 ]]; then
+tmux_count=\$(ps -ax | grep '[t]mux' | wc -l)
+if [[ \$SHLVL = 1 && \$tmux_count = 0 ]]; then
 	tmux -u new-session
-elif [[ $SHLVL = 1 && $tmux_count = 1 ]]; then
+elif [[ \$SHLVL = 1 && \$tmux_count = 1 ]]; then
 	tmux -u attach
 fi
 test -r ~/.bashrc && . ~/.bashrc

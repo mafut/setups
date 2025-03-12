@@ -1100,7 +1100,7 @@ for writable in "${APACHE_WRITABLE[@]}"; do
     if [ -e ${writable} ]; then
         chown -R ${APACHE_USER}:${USERNAME} ${writable}
         find ${writable} -type d -exec chmod 775 {} \;
-        find ${writable} -type f -exec chmod 664 {} \;
+        find ${writable} -type f -not -name ".*" -not -name "*.sh" -exec chmod 664 {} \;
     fi
 done
 

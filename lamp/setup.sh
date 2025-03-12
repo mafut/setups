@@ -298,6 +298,9 @@ SMTP User: ${SSMTP_AUTHUSER}
 SMTP Pass: ${SSMTP_AUTHPASS}
 Root Orverride: ${SSMTP_ROOTUSER}@${SSMTP_ROOTDOMAIN}
 
+[Apache writable]
+$(printf "%s\n" "${APACHE_WRITABLE[@]}")
+
 [Cron Jobs]
 $(printf "%s\n" "${CRON_JOBS[@]}")
 
@@ -351,16 +354,17 @@ rm -rf ${DIR_LOGWATCH_DATA}/*
 
 # [Base Setup] Reset user primary/secondary group
 usermod -g ${USERNAME} ${USERNAME}
+
+# Add user to apache and logrotate group
 usermod -a -G ${APACHE_USER} ${USERNAME}
 usermod -a -G ${LOG_GROUP} ${USERNAME}
 
 # [Base Setup] Reset permission
-
 # Ubuntu 22.04 the user dir has 750 permissions by default
 chmod 755 /home/${USERNAME}/
 
 # Unix User as Owner: Read/Write 6xx
-# Apache User as Group member: Read x4x
+# Group member: Read x4x
 # Other User: Read xx4
 chown -R ${USERNAME}:${USERNAME} ${DOCPATH_HTTP}/
 find ${DOCPATH_HTTP}/ -type d -exec chmod 755 {} \;
@@ -1088,7 +1092,19 @@ RewriteCond %{HTTPS} off
 RewriteRule ^(.*) https://${FQDN_DEFAULT}/\$1 [R=301,L]
 EOF
 
-# [Apache] Reset Permission: User(6)/UserGroup(6)/Other(4)
+# [Apache] Reset Permission for apache writable files: User(6)/UserGroup(6)/Other(4)
+# Apache User as Owner: Read/Write 6xx
+# Unix User as Group member: Read x6x
+# Other User: Read xx4
+for writable in "${APACHE_WRITABLE[@]}"; do
+    if [ -e ${writable} ]; then
+        chown -R ${APACHE_USER}:${USERNAME} ${writable}
+        find ${writable} -type d -exec chmod 775 {} \;
+        find ${writable} -type f -exec chmod 664 {} \;
+    fi
+done
+
+# [Apache] Reset Permission for logs: User(6)/UserGroup(6)/Other(4)
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_APACHE_LOG}
 find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;

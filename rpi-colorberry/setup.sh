@@ -1,2 +1,7 @@
 #!/bin/bash
-source ../rpi-common/setup.sh
+DIR_COMMON=$(
+    cd $(dirname $0)
+    cd ../rpi-common/
+    pwd
+)
+source ${DIR_COMMON}/setup32.sh

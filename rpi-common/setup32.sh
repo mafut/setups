@@ -62,6 +62,11 @@ apt-get -y purge bluez avahi-daemon triggerhappy modemmanager
 apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11 tmux
 apt-get -y autoremove 
 
+# apt update/upgrade
+apt -y update
+apt -y upgrade
+apt -y autoremove
+
 # set time zone
 timedatectl set-timezone America/Los_Angeles
 

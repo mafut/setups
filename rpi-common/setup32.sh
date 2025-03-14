@@ -193,7 +193,7 @@ set -g mouse on
 set -g terminal-overrides 'xterm*:smcup@:rmcup@'
 set -g status-position top
 set -g status-left ""
-set -g status-right "#H|#{wifi_ssid}|#{primary_ip}|%H:%M"
+set -g status-right "#H|#{primary_ip}|%H:%M"
 set -g status-interval 10
 set -g window-status-separator ' | '
 set -g @plugin 'tmux-plugins/tpm'

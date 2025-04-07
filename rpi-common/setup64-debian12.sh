@@ -72,8 +72,6 @@ timedatectl set-timezone America/Los_Angeles
 
 # Remove Swap
 swapoff -a
-#chkconfig dphys-swapfile --list
-#chkconfig dphys-swapfile off
 systemctl disable dphys-swapfile
 free -h
 

@@ -4,4 +4,4 @@ DIR_COMMON=$(
     cd ../rpi-common/
     pwd
 )
-source ${DIR_COMMON}/setup32.sh
+source ${DIR_COMMON}/setup32-debian12.sh

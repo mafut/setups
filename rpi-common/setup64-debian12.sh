@@ -59,7 +59,7 @@ fi
 apt-get -y update
 apt-get -y upgrade
 apt-get -y purge bluez avahi-daemon triggerhappy modemmanager
-apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock chkconfig gpm ykcs11 tmux
+apt-get -y install rsyslog moreutils vim ufw raspi-config tty-clock gpm ykcs11 tmux
 apt-get -y autoremove 
 
 # apt update/upgrade

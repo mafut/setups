@@ -158,8 +158,8 @@ sed "s|#AuthorizedKeysFile|AuthorizedKeysFile|g" ${FILE_SSHD} | sponge ${FILE_SS
 sed "s|#PasswordAuthentication yes|PasswordAuthentication no|g" ${FILE_SSHD} | sponge ${FILE_SSHD}
 
 # ssh_host_key / ssh_host_dsa_key
-if [ ! -e /etc/ssh/ssh_host_key ] && [ ! -e /etc/ssh/ssh_host_dsa_key ]; then
-    echo Add /etc/ssh/ssh_host_key and /etc/ssh/ssh_host_dsa_key
+if [ ! -e /etc/ssh/ssh_host_rsa_key ] && [ ! -e /etc/ssh/ssh_host_ed25519_key ]; then
+    echo Add /etc/ssh/ssh_host_rsa_key and /etc/ssh/ssh_host_ed25519_key
     ssh-keygen -A
 fi
 

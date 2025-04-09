@@ -1,7 +1,7 @@
 # Uncomment some or all of these to enable the optional hardware interfaces
 dtparam=i2c_arm=off
-#dtparam=i2s=on
-#dtparam=spi=on
+dtparam=i2s=on
+dtparam=spi=on
 
 # Enable audio (loads snd_bcm2835)
 dtparam=audio=off
@@ -30,7 +30,9 @@ disable_overscan=1
 arm_boost=1
 
 [all]
-dtoverlay=vc4-kms-dpi-hyperpixel4sq
 dtoverlay=disable-bt
 dtparam=act_led_trigger=actpwr
 hdmi_blanking=2
+dtoverlay=sharp-drm
+framebuffer_width=400
+framebuffer_height=240

@@ -7,10 +7,6 @@ DIR_COMMON=$(
 source ${DIR_COMMON}/setup64-debian12.sh
 apt-get -y install raspberrypi-kernel raspberrypi-kernel-headers
 
-DIR_SELF=$(
-    cd $(dirname $0)
-    pwd
-)
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi
 # https://github.com/hyphenlee/jdi-drm-rpi/blob/main/jdi-drm-rpi-debian11-32.zip

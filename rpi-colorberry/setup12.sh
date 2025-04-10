@@ -4,7 +4,9 @@ DIR_COMMON=$(
     cd ../rpi-common/
     pwd
 )
+
 apt-get -y install raspberrypi-kernel raspberrypi-kernel-headers
+
 source ${DIR_COMMON}/setup-debian12.sh
 
 # Display

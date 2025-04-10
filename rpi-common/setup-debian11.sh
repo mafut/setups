@@ -67,6 +67,11 @@ apt -y update
 apt -y upgrade
 apt -y autoremove
 
+# raspi-config
+raspi-config nonint do_i2c 0
+raspi-config nonint do_spi 0
+raspi-config nonint do_boot_behaviour B2
+
 # set time zone
 timedatectl set-timezone America/Los_Angeles
 

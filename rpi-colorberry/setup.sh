@@ -16,12 +16,17 @@ cd /var/tmp/jdi-drm-rpi
 make install
 
 # Backlight
+cp -f ${DIR_SELF}/backlit.py /usr/local/sbin/backlit.py
+chmod +x /usr/local/sbin/backlit.py
+
 cat <<EOF >>${FILE_BASHALIASES}
 alias d0="echo 0 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d1="echo 1 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d2="echo 2 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d3="echo 3 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d4="echo 4 | sudo tee /sys/module/sharp_drm/parameters/dither"
+alias by="echo 1 | sudo tee /sys/module/sharp_drm/parameters/backlit"
+alias bn="echo 0 | sudo tee /sys/module/sharp_drm/parameters/backlit"
 EOF
 
 # Keyboard

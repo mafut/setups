@@ -11,7 +11,7 @@ source ${DIR_COMMON}/setup.sh
 
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi
-unzip ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/
+unzip ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/ -o
 cd /var/tmp/jdi-drm-rpi
 make install
 
@@ -27,4 +27,4 @@ EOF
 # Keyboard
 # https://github.com/ardangelo/beepberry-keyboard-driver -> didn't work
 # https://github.com/sqfmi/bbqX0kbd_driver -> worked
-unzip ${DIR_SELF}/beepy-kbd.zip -d /var/tmp/
+unzip ${DIR_SELF}/beepy-kbd.zip -d /var/tmp/ -o

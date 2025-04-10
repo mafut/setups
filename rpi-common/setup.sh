@@ -155,7 +155,7 @@ sed "s|^user\.*|#user.*|g" ${FILE_RSYSLOG} | sponge ${FILE_RSYSLOG}
 # ufw
 ufw disable
 ufw --force reset
-ufw default deny
+ufw --force default deny
 ufw allow 22
 ufw limit 22
 ufw enable

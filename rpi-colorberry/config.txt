@@ -31,6 +31,7 @@ disable_overscan=1
 
 # Run as fast as firmware / board allows
 arm_boost=1
+#arm_freq=800
 
 [all]
 hdmi_blanking=2

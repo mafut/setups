@@ -29,7 +29,7 @@ fi
 # Backlight
 cp -f ${DIR_SELF}/backlit.py /usr/local/sbin/backlit.py
 chmod +x /usr/local/sbin/backlit.py
-echo "@reboot   sleep 5;/path/to/back.py" >/var/tmp/crontab.txt
+echo "@reboot   sleep 5;/usr/local/sbin/backlit.py" >/var/tmp/crontab.txt
 crontab /var/tmp/crontab.txt
 
 cat <<EOF >>${FILE_BASHALIASES}

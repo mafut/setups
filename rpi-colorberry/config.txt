@@ -1,5 +1,5 @@
 # Uncomment some or all of these to enable the optional hardware interfaces
-dtparam=i2c_arm=off
+dtparam=i2c_arm=on
 dtparam=i2s=on
 dtparam=spi=on
 
@@ -23,13 +23,11 @@ max_framebuffers=2
 # Use the kernel's default instead.
 disable_fw_kms_setup=1
 
-# Run in 64-bit mode
-arm_64bit=1
-
 # Disable compensation for displays with overscan
 disable_overscan=1
 
-# Run as fast as firmware / board allows
+# Arm
+arm_64bit=1
 arm_boost=1
 #arm_freq=800
 

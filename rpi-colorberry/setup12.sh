@@ -1,0 +1,17 @@
+#!/bin/bash
+DIR_COMMON=$(
+    cd $(dirname $0)
+    cd ../rpi-common/
+    pwd
+)
+source ${DIR_COMMON}/setup-debian12.sh
+apt-get -y install raspberrypi-kernel raspberrypi-kernel-headers
+
+# Display
+# https://github.com/hyphenlee/jdi-drm-rpi
+unzip ${DIR_SELF}/jdi-drm-rpi-debian12-64.zip -d /var/tmp/
+cd /var/tmp/jdi-drm-rpi
+make install
+
+# Keyboard
+# https://github.com/ardangelo/beepberry-keyboard-driver

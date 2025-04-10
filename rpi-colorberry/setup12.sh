@@ -7,7 +7,7 @@ DIR_COMMON=$(
 
 apt-get -y install raspberrypi-kernel raspberrypi-kernel-headers
 
-source ${DIR_COMMON}/setup-debian12.sh
+source ${DIR_COMMON}/setup.sh
 
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi

@@ -4,7 +4,7 @@ DIR_COMMON=$(
     cd ../rpi-common/
     pwd
 )
-source ${DIR_COMMON}/setup-debian11.sh
+source ${DIR_COMMON}/setup.sh
 
 # https://www.waveshare.com/wiki/CM4-NAS-Double-Deck
 # [USB] Add "dtoverlay=dwc2,dr_mode=host" to config.txt

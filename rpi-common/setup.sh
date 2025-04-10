@@ -21,8 +21,11 @@ FILE_SSHKEY=/home/${USERNAME}/.ssh/authorized_keys
 FILE_SSHCONF=/home/${USERNAME}/.ssh/config
 FILE_BASHPROFILE=/home/${USERNAME}/.bash_profile
 FILE_BASHALIASES=/home/${USERNAME}/.bash_aliases
-FILE_LIBYKCS11=/usr/lib/aarch64-linux-gnu/libykcs11.so
 FILE_TMUXCONFIG=/home/${USERNAME}/.tmux.conf
+FILE_LIBYKCS11=/usr/lib/aarch64-linux-gnu/libykcs11.so
+if [ ! -e ${FILE_LIBYKCS11} ]; then
+    FILE_LIBYKCS11=/usr/lib/arm-linux-gnueabihf/libykcs11.so
+fi
 
 # SSH_AUTHKEYS_TMP
 DIR_PUB=$(

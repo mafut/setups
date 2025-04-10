@@ -27,9 +27,9 @@ if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
 fi
 
 # Backlight
-cp -f ${DIR_SELF}/backlit.py /usr/local/sbin/backlit.py
-chmod +x /usr/local/sbin/backlit.py
-echo "@reboot   sleep 5;/usr/local/sbin/backlit.py" >/var/tmp/crontab.txt
+cp -f ${DIR_SELF}/side-button.py /usr/local/sbin/side-button.py
+chmod +x /usr/local/sbin/side-button.py
+echo "@reboot   sleep 5;/usr/local/sbin/side-button.py" >/var/tmp/crontab.txt
 crontab /var/tmp/crontab.txt
 
 cat <<EOF >>${FILE_BASHALIASES}

@@ -7,7 +7,7 @@ import os
 from time import sleep, time
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(17, GPIO.IN,pull_up_down=GPIO.PUD_UP)
-backlit_on=False
+backlit_on=True
 init_label=False
 last_time=time()
 def signal_handler(sig, frame):

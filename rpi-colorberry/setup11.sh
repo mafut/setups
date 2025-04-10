@@ -4,8 +4,8 @@ DIR_COMMON=$(
     cd ../rpi-common/
     pwd
 )
-source ${DIR_COMMON}/setup-debian11.sh
 apt-get -y install raspberrypi-kernel raspberrypi-kernel-headers
+source ${DIR_COMMON}/setup-debian11.sh
 
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi

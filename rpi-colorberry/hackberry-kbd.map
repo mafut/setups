@@ -11,13 +11,13 @@ control keycode 174 = e # Short hold BlackBerry key
 
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic
-keycode 135 = F135
-string F135 = "\033[1;5D" # Ctrl + left
+#keycode 135 = Control_q
 keycode 136 = F136
-string F135 = "\033[A" # up
+string F136 = "\033[1;5D" # Ctrl + left
 keycode 137 = F137
-string F137 = "\033[1;5C" # Ctrl + right
-#keycode 138 = Control_r
+string F137 = "\033[A" # up
+keycode 138 = F138
+string F138 = "\033[1;5C" # Ctrl + right
 keycode 139 = bracketleft # Alt + t
 keycode 140 = bracketright # Alt + y
 keycode 141 = less # Alt + u
@@ -25,13 +25,13 @@ keycode 142 = greater # Alt + i
 keycode 143 = asciitilde # Alt + o
 keycode 144 = equal # Alt + p
 
-keycode 149 = F149
-string F149 = "\033[D" # left
+#keycode 149 = Control_a
 keycode 150 = F150
-string F150 = "\033[B" # down
+string F150 = "\033[D" # left
 keycode 151 = F151
-string F151 = "\033[C" # right
-#keycode 152 = Control_f
+string F151 = "\033[B" # down
+keycode 152 = F152
+string F152 = "\033[C" # right
 keycode 153 = backslash # Alt + g
 keycode 154 = ampersand # Alt + h
 keycode 155 = braceleft # Alt + j

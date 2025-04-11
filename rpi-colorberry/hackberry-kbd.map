@@ -1,22 +1,17 @@
 # Symbols: https://github.com/SFML/SFML/blob/master/src/SFML/Window/Unix/KeySymToUnicodeMapping.cpp
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
+clear Shift
+add Shift = Shift_L
+
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic
 keycode 113 = dollar
 
 # Nav Bar
-control keycode 170 = a
-control keycode 171 = j #Control_b # BlackBerry key sends Tmux prefix
-control keycode 172 = b
-control keycode 173 = c
-control keycode 174 = d
-control keycode 175 = e
-control keycode 176 = f
-control keycode 177 = g
-control keycode 178 = h
-control keycode 179 = i
-
+# 
+control keycode 171 = Control_b # BlackBerry key sends Tmux prefix
+keycode 27 = Escape
 
 # With Alt(Ctrl) key
 keycode 130 = bar # Alt + 0

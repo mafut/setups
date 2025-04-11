@@ -52,4 +52,5 @@ alias d4="echo 4 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias by="echo 1 | sudo tee /sys/module/sharp_drm/parameters/backlit"
 alias bn="echo 0 | sudo tee /sys/module/sharp_drm/parameters/backlit"
 alias km="sudo cp -f ${DIR_SELF}/hackberry-kbd.map /usr/share/kbd/keymaps/beepy-kbd.map && sudo loadkeys /usr/share/kbd/keymaps/beepy-kbd.map"
+alias bp="cat /sys/firmware/beepy/battery_percent"
 EOF

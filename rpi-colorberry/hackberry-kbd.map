@@ -22,7 +22,7 @@ keycode 139 = bracketleft # Alt + t
 keycode 140 = bracketright # Alt + y
 keycode 141 = less # Alt + u
 keycode 142 = greater # Alt + i
-keycode 143 = asciitilde # Alt + o
+keycode 143 = percent # Alt + o
 keycode 144 = equal # Alt + p
 
 #keycode 149 = Control_a

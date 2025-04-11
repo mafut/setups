@@ -6,8 +6,8 @@ keycode 11 = asciitilde # Mic
 keycode 113 = dollar # dollar
 
 # Nav Bar
-control keycode 171 = Control_b # Press BlackBerry key
-control keycode 174 = e # Short hold BlackBerry key
+control keycode 171 = Control_b # Press BlackBerry key, tmux prefix
+control keycode 174 = e # Short hold End Call key, resume
 
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic

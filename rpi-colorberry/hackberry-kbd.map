@@ -6,7 +6,7 @@ keycode 11 = asciitilde
 keycode 113 = dollar
 
 # Nav Bar
-keycode 170 = Clear
+keycode 170 = Escape
 keycode 171 = Control_b # BlackBerry key sends  Tmux prefix
 keycode 172 = Escape
 keycode 173 = Tab

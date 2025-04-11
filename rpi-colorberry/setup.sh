@@ -18,11 +18,16 @@ if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
 fi
 
 # Keyboard
-# https://github.com/sqfmi/bbqX0kbd_driver -> before firmware update
-# https://github.com/ardangelo/beepberry-keyboard-driver -> require https://github.com/ardangelo/beepberry-rp2040/releases/latest/download/i2c_puppet.uf2
+# https://github.com/sqfmi/bbqX0kbd_driver
+# https://github.com/ardangelo/beepberry-keyboard-driver
 if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
     unzip ${DIR_SELF}/beepy-kbd-ardangelo.zip -d /var/tmp/ -o
     cd /var/tmp/beepberry-keyboard-driver-main
+    make install
+fi
+if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
+    unzip ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/ -o
+    cd /var/tmp/bbqX0kbd-driver-main
     make install
 fi
 rm -f /etc/console-setup/cached_setup_keyboard.sh

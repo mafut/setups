@@ -41,7 +41,7 @@ cat <<EOF >/var/tmp/crontab.txt
 EOF
 crontab /var/tmp/crontab.txt
 
-# bash_aliases
+# bash_aliases (append)
 cat <<EOF >>${FILE_BASHALIASES}
 alias d0="echo 0 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d1="echo 1 | sudo tee /sys/module/sharp_drm/parameters/dither"
@@ -54,14 +54,14 @@ alias km="sudo cp -f ${DIR_SELF}/hackberry-kbd.map /usr/share/kbd/keymaps/beepy-
 alias bp="cat /sys/firmware/beepy/battery_percent"
 EOF
 
-# .tmux.conf
+# .tmux.conf (override)
 cat <<EOF >${FILE_TMUXCONFIG}
 set-window-option -g mode-keys vi
 set-option -g base-index 1
 set-option -g mouse on
 set-option -g default-terminal "screen"
-#set-option -g status-bg "colour235"
-#set-option -g status-fg "colour255"
+set-option -g status-bg "black"
+set-option -g status-fg "white"
 set -g mouse on
 set -g terminal-overrides 'xterm*:smcup@:rmcup@'
 set -g status-position top

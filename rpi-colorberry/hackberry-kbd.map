@@ -22,7 +22,7 @@ control keycode 174 = e # Short hold BlackBerry key
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic
 keycode 135 = MOVETOP
-keycode 136 = MOVEUP
+keycode 136 = uparrow
 keycode 137 = MOVEEND
 #keycode 138 = Control_r
 keycode 139 = bracketleft # Alt + t
@@ -32,9 +32,9 @@ keycode 142 = greater # Alt + i
 keycode 143 = asciitilde # Alt + o
 keycode 144 = equal # Alt + p
 
-keycode 149 = MOVELEFT
-keycode 150 = MOVEDOWN
-keycode 151 = MOVERIGHT
+keycode 149 = leftarrow
+keycode 150 = downarrow
+keycode 151 = rightarrow
 #keycode 152 = Control_f
 keycode 153 = backslash # Alt + g
 keycode 154 = ampersand # Alt + h

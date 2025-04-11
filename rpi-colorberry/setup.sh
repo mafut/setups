@@ -43,6 +43,7 @@ cat <<EOF >/var/tmp/crontab.txt
 EOF
 crontab /var/tmp/crontab.txt
 
+# bash_aliases
 cat <<EOF >>${FILE_BASHALIASES}
 alias d0="echo 0 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d1="echo 1 | sudo tee /sys/module/sharp_drm/parameters/dither"
@@ -54,3 +55,26 @@ alias bn="echo 0 | sudo tee /sys/module/sharp_drm/parameters/backlit"
 alias km="sudo cp -f ${DIR_SELF}/hackberry-kbd.map /usr/share/kbd/keymaps/beepy-kbd.map && sudo loadkeys /usr/share/kbd/keymaps/beepy-kbd.map"
 alias bp="cat /sys/firmware/beepy/battery_percent"
 EOF
+
+# .tmux.conf
+cat <<EOF >${FILE_TMUXCONFIG}
+set-window-option -g mode-keys vi
+set-option -g base-index 1
+set-option -g mouse on
+set-option -g default-terminal "screen-256color"
+set-option -g status-bg "colour235"
+set-option -g status-fg "colour255"
+set -g mouse on
+set -g terminal-overrides 'xterm*:smcup@:rmcup@'
+set -g status-position top
+set -g status-left ""
+set -g status-right "#(cat /sys/firmware/beepy/battery_percent)%|#{primary_ip}|%H:%M"
+set -g status-interval 10
+set -g window-status-separator ' | '
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'gmoe/tmux-wifi'
+set -g @plugin 'dreknix/tmux-primary-ip'
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}

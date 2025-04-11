@@ -4,8 +4,12 @@
 #clear Shift
 #add Shift = Shift_L
 
-string F172 = "\033[1;5D"
-string F173 = "\033[1;5C"
+string MOVEUP = "\033[A"
+string MOVEDOWN = "\033[B"
+string MOVELEFT = "\033[D"
+string MOVERIGHT = "\033[C"
+string MOVETOP = "\033[1;5D"
+string MOVEEND = "\033[1;5C"
 
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic
@@ -17,10 +21,10 @@ control keycode 174 = e # Short hold BlackBerry key
 
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic
-keycode 135 = Control_q
-keycode 136 = Control_w # up
-keycode 137 = Control_e
-keycode 138 = Control_r
+keycode 135 = MOVETOP
+keycode 136 = MOVEUP
+keycode 137 = MOVEEND
+#keycode 138 = Control_r
 keycode 139 = bracketleft # Alt + t
 keycode 140 = bracketright # Alt + y
 keycode 141 = less # Alt + u
@@ -28,10 +32,10 @@ keycode 142 = greater # Alt + i
 keycode 143 = asciitilde # Alt + o
 keycode 144 = equal # Alt + p
 
-keycode 149 = F172 # left
-keycode 150 = Control_s # down
-keycode 151 = F173 # right
-keycode 152 = Control_f
+keycode 149 = MOVELEFT
+keycode 150 = MOVEDOWN
+keycode 151 = MOVERIGHT
+#keycode 152 = Control_f
 keycode 153 = backslash # Alt + g
 keycode 154 = ampersand # Alt + h
 keycode 155 = braceleft # Alt + j
@@ -43,8 +47,8 @@ keycode 164 = Control_x
 keycode 165 = Control_c
 keycode 166 = Control_v
 keycode 167 = Control_b
-keycode 168 = Control_n
-keycode 169 = Control_m
+#keycode 168 = Control_n
+#keycode 169 = Control_m
 keycode 232 = bar # Alt + dollar
 
 keycode 147 = Tab # Alt + enter

@@ -27,7 +27,7 @@ if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
 fi
 if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
     unzip ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/ -o
-    cd /var/tmp/bbqX0kbd-driver-main
+    cd /var/tmp/bbqX0kbd_driver-main
     make install
 fi
 rm -f /etc/console-setup/cached_setup_keyboard.sh

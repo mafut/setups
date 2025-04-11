@@ -2,15 +2,16 @@
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
 # Without Alt,Sym,Left/Right Shift
+keycode 11 = asciitilde
 keycode 113 = dollar
 
 # Nav Bar
-keycode 170 = Control_b
+keycode 170 = Clear
 keycode 171 = Control_b # BlackBerry key sends  Tmux prefix
 keycode 172 = Escape
 keycode 173 = Tab
 
-# With Alt key
+# With Alt(Ctrl) key
 keycode 130 = bar
 keycode 135 = Control_q
 keycode 136 = Control_w
@@ -47,31 +48,34 @@ keycode 232 = asciitilde # Alt + dollar key
 
 
 # With Sym key
-altgr keycode 16 = a
-altgr keycode 17 = b
-altgr keycode 18 = c
-altgr keycode 19 = d
-altgr keycode 20 = e
-altgr keycode 21 = f
-altgr keycode 22 = g
-altgr keycode 23 = h
-altgr keycode 24 = i
-altgr keycode 25 = j
+altgr keycode 11 = zero
+altgr keycode 16 = numbersign
+altgr keycode 17 = one
+altgr keycode 18 = two
+altgr keycode 19 = three
+altgr keycode 20 = parenleft
+altgr keycode 21 = parenright
+altgr keycode 22 = underscore
+altgr keycode 23 = minus
+altgr keycode 24 = plus
+altgr keycode 25 = at
 
-altgr keycode 30 = k
-altgr keycode 31 = l
-altgr keycode 32 = m
-altgr keycode 33 = n
-altgr keycode 34 = o
-altgr keycode 35 = p
-altgr keycode 36 = q
-altgr keycode 37 = r
-altgr keycode 38 = s
+altgr keycode 30 = asterisk
+altgr keycode 31 = four
+altgr keycode 32 = five
+altgr keycode 33 = six
+altgr keycode 34 = slash
+altgr keycode 35 = colon
+altgr keycode 36 = semicolon
+altgr keycode 37 = apostrophe
+altgr keycode 38 = quotedbl
 
-altgr keycode 44 = t
-altgr keycode 45 = u
-altgr keycode 46 = v
-altgr keycode 47 = w
-altgr keycode 48 = x
-altgr keycode 49 = y
-altgr keycode 50 = z
+altgr keycode 44 = seven
+altgr keycode 45 = eight
+altgr keycode 46 = nine
+altgr keycode 47 = question
+altgr keycode 48 = exclam
+altgr keycode 49 = comma
+altgr keycode 50 = period
+
+# With Right Shift

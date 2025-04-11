@@ -185,7 +185,7 @@ fi
 if [ ! -e "/home/${USERNAME}/.tmux/plugins/tpm" ]; then
     git clone https://github.com/tmux-plugins/tpm /home/${USERNAME}/.tmux/plugins/tpm
 fi
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.tmux/plugins/tpm
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.tmux/
 
 # .tmux.conf
 cat <<EOF >${FILE_TMUXCONFIG}

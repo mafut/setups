@@ -4,37 +4,39 @@
 #clear Shift
 #add Shift = Shift_L
 
+string F172 = "\033[1;5D"
+string F173 = "\033[1;5C"
+
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic
-keycode 113 = dollar
+keycode 113 = dollar # dollar
 
 # Nav Bar
-# 
-control keycode 171 = Control_b # BlackBerry key sends Tmux prefix
-keycode 27 = Escape
+control keycode 171 = Control_b # Press BlackBerry key
+control keycode 174 = e # Short hold BlackBerry key
 
 # With Alt(Ctrl) key
-keycode 130 = bar # Alt + 0
+keycode 130 = asciitilde # Alt + Mic
 keycode 135 = Control_q
-keycode 136 = Control_w
+keycode 136 = Control_w # up
 keycode 137 = Control_e
 keycode 138 = Control_r
-keycode 139 = Control_t
-keycode 140 = Control_y
-keycode 141 = Control_u
-keycode 142 = Control_i
-keycode 143 = Control_o
-keycode 144 = Control_p
+keycode 139 = bracketleft # Alt + t
+keycode 140 = bracketright # Alt + y
+keycode 141 = less # Alt + u
+keycode 142 = greater # Alt + i
+keycode 143 = asciitilde # Alt + o
+keycode 144 = equal # Alt + p
 
-keycode 149 = Control_a
-keycode 150 = Control_s
-keycode 151 = Control_d
+keycode 149 = F172 # left
+keycode 150 = Control_s # down
+keycode 151 = F173 # right
 keycode 152 = Control_f
-keycode 153 = Control_g
-keycode 154 = Control_h
-keycode 155 = Control_j
-keycode 156 = Control_k
-keycode 157 = Control_l
+keycode 153 = backslash # Alt + g
+keycode 154 = ampersand # Alt + h
+keycode 155 = braceleft # Alt + j
+keycode 156 = braceright # Alt + k
+keycode 157 = asciicircum # Alt + l
 
 keycode 163 = Control_z
 keycode 164 = Control_x
@@ -43,10 +45,10 @@ keycode 166 = Control_v
 keycode 167 = Control_b
 keycode 168 = Control_n
 keycode 169 = Control_m
+keycode 232 = bar # Alt + dollar
 
 keycode 147 = Tab # Alt + enter
 keycode 133 = Delete # Alt + backspace
-keycode 232 = bar # Alt + dollar key
 
 
 # With Sym key

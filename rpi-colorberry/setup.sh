@@ -36,7 +36,11 @@ dpkg-reconfigure keyboard-configuration
 # Backlight
 cp -f ${DIR_SELF}/side-button.py /usr/local/sbin/side-button.py
 chmod +x /usr/local/sbin/side-button.py
-echo "@reboot   sleep 5;/usr/local/sbin/side-button.py" >/var/tmp/crontab.txt
+
+cat <<EOF >/var/tmp/crontab.txt
+@reboot   sleep 5;/usr/local/sbin/side-button.py
+@reboot   loadkeys '/usr/share/kbd/keymaps/beepy-kbd.map'
+EOF
 crontab /var/tmp/crontab.txt
 
 cat <<EOF >>${FILE_BASHALIASES}
@@ -47,5 +51,5 @@ alias d3="echo 3 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias d4="echo 4 | sudo tee /sys/module/sharp_drm/parameters/dither"
 alias by="echo 1 | sudo tee /sys/module/sharp_drm/parameters/backlit"
 alias bn="echo 0 | sudo tee /sys/module/sharp_drm/parameters/backlit"
-alias km="sudo cp -f ${DIR_SELF}/hackberry-kbd.map /usr/share/kbd/keymaps/beepy-kbd.map && sudo loadkeys /usr/share/kbd/keymaps/beepy-kbd.map"
+alias km="sudo cp -f ${DIR_SELF}/hackberry-kbd.map /usr/share/kbd/keymaps/beepy-kbd.map && loadkeys /usr/share/kbd/keymaps/beepy-kbd.map"
 EOF

@@ -30,8 +30,6 @@ if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
     cd /var/tmp/bbqX0kbd_driver-main
     make install
 fi
-rm -f /etc/console-setup/cached_setup_keyboard.sh
-dpkg-reconfigure keyboard-configuration
 
 # Backlight
 cp -f ${DIR_SELF}/side-button.py /usr/local/sbin/side-button.py

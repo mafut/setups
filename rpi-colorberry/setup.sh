@@ -12,7 +12,7 @@ source ${DIR_COMMON}/setup.sh
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi
 if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
-    unzip ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/ -o
+    unzip -o ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/
     cd /var/tmp/jdi-drm-rpi
     make install
 fi
@@ -21,7 +21,7 @@ fi
 # https://github.com/sqfmi/bbqX0kbd_driver
 # https://github.com/ardangelo/beepberry-keyboard-driver
 if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
-    unzip ${DIR_SELF}/beepy-kbd-ardangelo.zip -d /var/tmp/ -o
+    unzip -o ${DIR_SELF}/beepy-kbd-ardangelo.zip -d /var/tmp/
     cd /var/tmp/beepberry-keyboard-driver-main
     make install
 fi

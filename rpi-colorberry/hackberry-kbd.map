@@ -4,12 +4,8 @@
 #clear Shift
 #add Shift = Shift_L
 
-string MOVEUP = "\033[A"
-string MOVEDOWN = "\033[B"
-string MOVELEFT = "\033[D"
-string MOVERIGHT = "\033[C"
-string MOVETOP = "\033[1;5D"
-string MOVEEND = "\033[1;5C"
+string CTRLLEFT = "\033[1;5D"
+string CTRLRIGHT = "\033[1;5C"
 
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic
@@ -21,9 +17,9 @@ control keycode 174 = e # Short hold BlackBerry key
 
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic
-keycode 135 = MOVETOP
+keycode 135 = CTRLLEFT
 keycode 136 = uparrow
-keycode 137 = MOVEEND
+keycode 137 = CTRLRIGHT
 #keycode 138 = Control_r
 keycode 139 = bracketleft # Alt + t
 keycode 140 = bracketright # Alt + y

@@ -44,7 +44,7 @@ keycode 169 = Control_m
 
 keycode 147 = Tab # Alt + enter
 keycode 133 = Delete # Alt + backspace
-keycode 232 = asciitilde # Alt + dollar key
+keycode 232 = bar # Alt + dollar key
 
 
 # With Sym key

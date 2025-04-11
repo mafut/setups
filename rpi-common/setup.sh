@@ -155,10 +155,10 @@ sed "s|^user\.*|#user.*|g" ${FILE_RSYSLOG} | sponge ${FILE_RSYSLOG}
 # ufw
 ufw disable
 ufw --force reset
-ufw --force default deny
+ufw default deny
 ufw allow 22
 ufw limit 22
-ufw enable
+ufw --force enable
 
 # sshd
 sed "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|g" ${FILE_SSHD} | sponge ${FILE_SSHD}

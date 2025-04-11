@@ -1,8 +1,8 @@
 # Symbols: https://github.com/SFML/SFML/blob/master/src/SFML/Window/Unix/KeySymToUnicodeMapping.cpp
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
-clear Shift
-add Shift = Shift_L
+#clear Shift
+#add Shift = Shift_L
 
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic

@@ -2,12 +2,12 @@
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
 # Without Alt,Sym,Left/Right Shift
-keycode 11 = asciitilde
+keycode 11 = asciitilde # Mic
 keycode 113 = dollar
 
 # Nav Bar
 keycode 170 = a
-keycode 171 = Control_b # BlackBerry key sends Tmux prefix
+keycode 171 = j #Control_b # BlackBerry key sends Tmux prefix
 keycode 172 = b
 keycode 173 = c
 keycode 174 = d
@@ -17,8 +17,9 @@ keycode 177 = g
 keycode 178 = h
 keycode 179 = i
 
+
 # With Alt(Ctrl) key
-keycode 130 = bar
+keycode 130 = bar # Alt + 0
 keycode 135 = Control_q
 keycode 136 = Control_w
 keycode 137 = Control_e
@@ -83,5 +84,6 @@ altgr keycode 47 = question
 altgr keycode 48 = exclam
 altgr keycode 49 = comma
 altgr keycode 50 = period
+
 
 # With Right Shift

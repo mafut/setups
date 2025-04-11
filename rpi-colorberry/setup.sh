@@ -5,9 +5,9 @@ DIR_COMMON=$(
     pwd
 )
 
-apt-get -y install raspberrypi-kernel-headers i2c-tools
-
 source ${DIR_COMMON}/setup.sh
+
+apt-get -y install raspberrypi-kernel-headers i2c-tools unzip
 
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi
@@ -78,3 +78,5 @@ set -g @plugin 'dreknix/tmux-primary-ip'
 run '~/.tmux/plugins/tpm/tpm'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}
+
+systemctl enable keyboard-setup

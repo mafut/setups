@@ -43,8 +43,8 @@ keycode 164 = Control_x
 keycode 165 = Control_c
 keycode 166 = Control_v
 keycode 167 = Control_b
-#keycode 168 = Control_n
-#keycode 169 = Control_m
+keycode 168 = comma # Alt + n
+keycode 169 = period # Alt + m
 keycode 232 = bar # Alt + dollar
 
 keycode 147 = Tab # Alt + enter

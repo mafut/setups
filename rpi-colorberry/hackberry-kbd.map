@@ -1,12 +1,6 @@
 # Symbols: https://github.com/SFML/SFML/blob/master/src/SFML/Window/Unix/KeySymToUnicodeMapping.cpp
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
-#clear Shift
-#add Shift = Shift_L
-
-string CTRLLEFT = "\033[1;5D"
-string CTRLRIGHT = "\033[1;5C"
-
 # Without Alt,Sym,Left/Right Shift
 keycode 11 = asciitilde # Mic
 keycode 113 = dollar # dollar
@@ -17,9 +11,11 @@ control keycode 174 = e # Short hold BlackBerry key
 
 # With Alt(Ctrl) key
 keycode 130 = asciitilde # Alt + Mic
-keycode 135 = CTRLLEFT
+keycode 135 = F135
+string F135 = "\033[1;5D"
 keycode 136 = uparrow
-keycode 137 = CTRLRIGHT
+keycode 137 = F137
+string F137 = "\033[1;5C"
 #keycode 138 = Control_r
 keycode 139 = bracketleft # Alt + t
 keycode 140 = bracketright # Alt + y

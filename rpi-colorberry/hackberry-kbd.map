@@ -14,7 +14,6 @@ keycode 130 = asciitilde # Alt + Mic
 #keycode 135 = Control_q
 keycode 136 = F136
 string F136 = "\033[1;5D" # Ctrl + left
-control keycode 18 = F137
 keycode 137 = F137
 string F137 = "\033[A" # up
 keycode 138 = F138

@@ -17,7 +17,7 @@ DIR_SELF=$(
 FILE_SELF=$(basename $0)
 
 # getopts support short options
-# -c  [all conf path]   
+# -c  [merged conf path]
 # -cu [user conf path]  default is ./setup.sh.conf
 # -ch [host conf path]  default is /etc/setup.sh.conf
 # -b                    run logrotate before

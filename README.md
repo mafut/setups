@@ -18,6 +18,17 @@ This script set up Linux-Apache-MySQL-PHP (LAMP) site with Code-Server on Ubuntu
 Request host doesn't match with configured server_name of /etc/nginx/sites-enabled/, first configuration will be used.
 If you'd like to use specific config, add "default_server" in listen directive like "listen 443 ssl default_server".
 
+### Options
+
+| Option                 | Behavior                      |
+| ---------------------- | ----------------------------- |
+| -c  [merged conf path] |
+| -cu [user conf path]   | default is ./setup.sh.conf    |
+| -ch [host conf path]   | default is /etc/setup.sh.conf |
+| -b                     | run logrotate before          |
+| -r                     | restart service restart       |
+| -u                     | run apt update/upgrade        |
+
 ### Quick Steps
 1. Create new user and login
     ```

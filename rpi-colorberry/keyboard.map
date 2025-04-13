@@ -1,57 +1,16 @@
 # Symbols: https://github.com/SFML/SFML/blob/master/src/SFML/Window/Unix/KeySymToUnicodeMapping.cpp
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
-# Without Alt,Sym,Left/Right Shift
-keycode 11 = asciitilde # Mic
-keycode 113 = dollar # dollar
-
 # Nav Bar
 control keycode 171 = Control_b # Press BlackBerry key, tmux prefix
 control keycode 174 = e # Short hold End Call key, resume
+keycode 128 = Tab # Press hold End Call key
 
-# With Alt(Ctrl) key
-keycode 130 = asciitilde # Alt + Mic
-#keycode 135 = Control_q
-keycode 136 = F136
-string F136 = "\033[1;5D" # Ctrl + left
-keycode 137 = F137
-string F137 = "\033[A" # up
-keycode 138 = F138
-string F138 = "\033[1;5C" # Ctrl + right
-keycode 139 = bracketleft # Alt + t
-keycode 140 = bracketright # Alt + y
-keycode 141 = less # Alt + u
-keycode 142 = greater # Alt + i
-keycode 143 = equal # Alt + p
-keycode 144 = percent # Alt + o
+# Standard
+keycode 11 = asciitilde # Mic
+keycode 113 = dollar # dollar
 
-#keycode 149 = Control_a
-keycode 150 = F150
-string F150 = "\033[D" # left
-keycode 151 = F151
-string F151 = "\033[B" # down
-keycode 152 = F152
-string F152 = "\033[C" # right
-keycode 153 = backslash # Alt + g
-keycode 154 = ampersand # Alt + h
-keycode 155 = braceleft # Alt + j
-keycode 156 = braceright # Alt + k
-keycode 157 = asciicircum # Alt + l
-
-keycode 163 = Control_z
-keycode 164 = Control_x
-keycode 165 = Control_c
-keycode 166 = Control_v
-keycode 167 = Control_b
-keycode 168 = comma # Alt + n
-keycode 169 = period # Alt + m
-keycode 232 = bar # Alt + dollar
-
-keycode 147 = Tab # Alt + enter
-keycode 133 = Delete # Alt + backspace
-
-
-# With Sym key
+# Layer 1 (Sym key)
 altgr keycode 11 = zero
 altgr keycode 16 = numbersign
 altgr keycode 17 = one
@@ -82,5 +41,45 @@ altgr keycode 48 = exclam
 altgr keycode 49 = comma
 altgr keycode 50 = period
 
+altgr keycode 14 = Insert # Sym + backspace
+altgr keycode 28 = Tab # Sym + enter
 
-# With Right Shift
+# Layer 2 (Alt key)
+keycode 130 = asciitilde # Alt + Mic
+keycode 136 = F136
+string F136 = "\033[1;5D" # Ctrl + left
+keycode 137 = F137
+string F137 = "\033[A" # up
+keycode 138 = F138
+string F138 = "\033[1;5C" # Ctrl + right
+keycode 139 = bracketleft # Alt + t
+keycode 140 = bracketright # Alt + y
+keycode 141 = less # Alt + u
+keycode 142 = greater # Alt + i
+keycode 143 = braceleft # Alt + p
+keycode 144 = braceright # Alt + o
+
+#keycode 149 = Control_a
+keycode 150 = F150
+string F150 = "\033[D" # left
+keycode 151 = F151
+string F151 = "\033[B" # down
+keycode 152 = F152
+string F152 = "\033[C" # right
+keycode 153 = backslash # Alt + g
+keycode 154 = ampersand # Alt + h
+keycode 155 = percent # Alt + j
+keycode 156 = equal # Alt + k
+keycode 157 = asciicircum # Alt + l
+
+keycode 163 = Control_z
+keycode 164 = Control_x
+keycode 165 = Control_c
+keycode 166 = Control_v
+keycode 167 = Control_b
+keycode 168 = comma # Alt + n
+keycode 169 = period # Alt + m
+keycode 232 = bar # Alt + dollar
+
+keycode 133 = Delete # Alt + backspace
+keycode 147 = Tab # Alt + enter

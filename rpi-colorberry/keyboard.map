@@ -41,7 +41,7 @@ altgr keycode 48 = exclam
 altgr keycode 49 = comma
 altgr keycode 50 = period
 
-altgr keycode 14 = Insert # Sym + backspace
+altgr keycode 14 = Delete # Sym + backspace
 altgr keycode 28 = Tab # Sym + enter
 
 # Layer 2 (Alt key)

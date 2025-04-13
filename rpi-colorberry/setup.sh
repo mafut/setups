@@ -7,7 +7,7 @@ DIR_COMMON=$(
 
 source ${DIR_COMMON}/setup.sh
 
-apt-get -y install raspberrypi-kernel-headers i2c-tools unzip
+apt-get -y install raspberrypi-kernel-headers i2c-tools unzip keyboard-setup
 
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi

@@ -255,7 +255,6 @@ chown ${USERNAME}:${USERNAME} ${FILE_BASHALIASES}
 
 # Restart
 systemctl disable polkit
-systemctl disable keyboard-setup
 systemctl daemon-reload
 systemctl restart rsyslog
 systemctl restart sshd

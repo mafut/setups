@@ -193,7 +193,7 @@ set-window-option -g mode-keys vi
 set-option -g base-index 1
 set-option -g mouse on
 set-option -g default-terminal "screen-256color"
-set-option -g status-bg "Black"
+set-option -g status-bg "Blue"
 set-option -g status-fg "White"
 set -g mouse on
 set -g terminal-overrides 'xterm*:smcup@:rmcup@'

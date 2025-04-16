@@ -75,12 +75,12 @@ set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'gmoe/tmux-wifi'
 set -g @plugin 'dreknix/tmux-primary-ip'
-set -g @tmux_wifi_icon_5 "▁▂▄▆█"
-set -g @tmux_wifi_icon_4 "▁▂▄▆ "
-set -g @tmux_wifi_icon_3 "▁▂▄  "
-set -g @tmux_wifi_icon_2 "▁▂   "
-set -g @tmux_wifi_icon_1 "▁    "
-set -g @tmux_wifi_icon_off "  -  "
+set -g @tmux_wifi_icon_5 "█████"
+set -g @tmux_wifi_icon_4 "████ "
+set -g @tmux_wifi_icon_3 "███  "
+set -g @tmux_wifi_icon_2 "██   "
+set -g @tmux_wifi_icon_1 "█    "
+set -g @tmux_wifi_icon_off "-----"
 run '~/.tmux/plugins/tpm/tpm'
 EOF
 chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}

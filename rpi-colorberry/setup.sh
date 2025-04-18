@@ -80,3 +80,4 @@ EOF
 chown ${USERNAME}:${USERNAME} ${FILE_TMUXCONFIG}
 
 systemctl enable keyboard-setup
+systemctl enable bluetooth

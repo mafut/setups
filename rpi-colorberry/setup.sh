@@ -26,7 +26,7 @@ if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
     make install
 fi
 if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
-    unzip ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/ -o
+    unzip -o ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/
     cd /var/tmp/bbqX0kbd_driver-main
     make install
 fi

@@ -9,6 +9,9 @@ source ${DIR_COMMON}/setup.sh
 
 apt-get -y install raspberrypi-kernel-headers i2c-tools unzip keyboard-setup
 
+# Firmware
+# https://github.com/ardangelo/beepberry-rp2040/releases/latest/download/i2c_puppet.uf2
+
 # Display
 # https://github.com/hyphenlee/jdi-drm-rpi
 if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then

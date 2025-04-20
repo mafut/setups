@@ -7,7 +7,7 @@ DIR_COMMON=$(
 
 source ${DIR_COMMON}/setup.sh
 
-apt-get -y install raspberrypi-kernel-headers i2c-tools unzip keyboard-setup
+apt-get -y install raspberrypi-kernel-headers i2c-tools unzip
 
 # Firmware
 # https://github.com/ardangelo/beepberry-rp2040/releases/latest/download/i2c_puppet.uf2

@@ -17,28 +17,30 @@ apt-get -y install raspberrypi-kernel-headers i2c-tools unzip
 if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
     unzip -o ${DIR_SELF}/sharp-drm-driver-arkie.zip -d /var/tmp/
     cd /var/tmp/sharp-drm-driver-master
+    make
     make install
 fi
 # https://github.com/hyphenlee/jdi-drm-rpi
-if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
-    unzip -o ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/
-    cd /var/tmp/jdi-drm-rpi
-    make install
-fi
+# if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
+#     unzip -o ${DIR_SELF}/jdi-drm-rpi-debian11-32.zip -d /var/tmp/
+#     cd /var/tmp/jdi-drm-rpi
+#     make install
+# fi
 
 # Keyboard
 # https://github.com/ardangelo/beepberry-keyboard-driver
 if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
     unzip -o ${DIR_SELF}/beepy-kbd-ardangelo.zip -d /var/tmp/
     cd /var/tmp/beepberry-keyboard-driver-main
+    make
     make install
 fi
 # https://github.com/sqfmi/bbqX0kbd_driver
-if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
-    unzip -o ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/
-    cd /var/tmp/bbqX0kbd_driver-main
-    make install
-fi
+# if [ ! -e /boot/overlays/beepy-kbd.dtbo ]; then
+#     unzip -o ${DIR_SELF}/beepy-kbd-sqfmi.zip -d /var/tmp/
+#     cd /var/tmp/bbqX0kbd_driver-main
+#     make install
+# fi
 
 # Backlight
 cp -f ${DIR_SELF}/side-button.py /usr/local/sbin/side-button.py

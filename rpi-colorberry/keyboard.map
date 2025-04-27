@@ -2,9 +2,9 @@
 # HackBerry: https://github.com/ZitaoTech/Hackberry-Pi_Zero/tree/main/Keyboard
 
 # Nav Bar
-control keycode 171 = Control_b # Press BlackBerry key, tmux prefix
+control keycode 171 = Control_b # Press End Call key, tmux prefix
 control keycode 174 = e # Short hold End Call key, resume
-keycode 128 = Tab # Press hold End Call key
+#keycode 128 = Tab # Press hold End Call key
 
 # Standard
 keycode 11 = asciitilde # Mic

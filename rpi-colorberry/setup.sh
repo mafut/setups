@@ -13,7 +13,7 @@ apt-get -y install raspberrypi-kernel-headers i2c-tools unzip python3-dbus
 # https://github.com/ardangelo/beepberry-rp2040/releases/latest/download/i2c_puppet.uf2
 
 # Display
-# https://github.com/arkie/sharp-drm-driver
+# https://github.com/arkie/sharp-drm-driver (Mod https://github.com/ardangelo/sharp-drm-driver)
 if [ ! -e /boot/overlays/sharp-drm.dtbo ]; then
     unzip -o ${DIR_SELF}/sharp-drm-driver-arkie.zip -d /var/tmp/
     cd /var/tmp/sharp-drm-driver-master

@@ -65,6 +65,7 @@ alias km="sudo cp -f ${DIR_SELF}/keyboard.map /usr/share/kbd/keymaps/beepy-kbd.m
 alias bp="cat /sys/firmware/beepy/battery_percent"
 alias bton="dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_14_35_B7_BC_94_11 org.bluez.Network1.Connect string:\"nap\""
 alias btoff="dbus-send --system --print-reply --type=method_call --dest=org.bluez /org/bluez/hci0/dev_14_35_B7_BC_94_11 org.bluez.Network1.Disconnect"
+alias btget="wget https://gist.githubusercontent.com/hishizuka/d66189ec81316945c33531f7d4ddc68d/raw/319621b045254002beb774c701eafe0fc21c0f02/bt-pan"
 
 unalias ls
 EOF

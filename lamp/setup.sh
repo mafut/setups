@@ -1572,15 +1572,15 @@ command = ["check-procs", "--pattern", "mysqld"]
 
 [plugin.checks.user_ssh]
 command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "session opened", "--exclude", "(cron|sudo|runuser|systemd-user):session", "--return"]
-prevent_alert_auto_close = true
+# prevent_alert_auto_close = true
 
 [plugin.checks.user_add]
 command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "new user", "--return"]
-prevent_alert_auto_close = true
+# prevent_alert_auto_close = true
 
 [plugin.checks.user_password]
 command = ["check-log", "--file", "/var/log/auth.log", "--pattern", "password changed", "--return"]
-prevent_alert_auto_close = true
+# prevent_alert_auto_close = true
 
 
 [plugin.checks.login_oauth2]

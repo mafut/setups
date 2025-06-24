@@ -601,7 +601,7 @@ jq '.["security.workspace.trust.untrustedFiles"]|="open"' "${CONFIG_VSCODE}" | s
 
 jq '.["vsicons.dontShowNewVersionMessage"]|=true' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 
-if [ -d -e "/home/${USERNAME}/OneDrive/Notes" ]; then
+if [ -e "/home/${USERNAME}/OneDrive/Notes" ]; then
     jq '.["vsnotes.defaultNotePath"]|="/home/'${USERNAME}'/OneDrive/Notes"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
 fi
 jq '.["vsnotes.defaultNoteTitle"]|="{title}.{ext}"' "${CONFIG_VSCODE}" | sponge "${CONFIG_VSCODE}"
@@ -928,7 +928,7 @@ ln -fns ${DIR_PHPMYADMIN4} ${DOCPATH_TOOLS}/${PATH_TOOLS_PHPMYADMIN}
 #region MySQL
 
 # [MySQL] Config
-if [ -f -e ${CONFIG_OS_MYSQL} ] && [ ! -e ${CONFIG_OS_MYSQL}.bak ]; then
+if [ -e ${CONFIG_OS_MYSQL} ] && [ ! -e ${CONFIG_OS_MYSQL}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_MYSQL} ${CONFIG_OS_MYSQL}.bak
 fi
@@ -1042,7 +1042,7 @@ done
 for phpver in "${PHP_VERS[@]}"; do
     phpini=/etc/php/${phpver}/apache2/php.ini
 
-    if [ -f -e ${phpini} ] && [ ! -e ${phpini}.bak ]; then
+    if [ -e ${phpini} ] && [ ! -e ${phpini}.bak ]; then
         # Backup original
         cp -f ${phpini} ${phpini}.bak
     fi
@@ -1110,7 +1110,7 @@ find ${DIR_APACHE_LOG} -type d -exec chmod 775 {} \;
 find ${DIR_APACHE_LOG} -type f -exec chmod 664 {} \;
 
 # [Apache] Configure core config
-if [ -f -e ${CONFIG_OS_APACHE} ] && [ ! -e ${CONFIG_OS_APACHE}.bak ]; then
+if [ -e ${CONFIG_OS_APACHE} ] && [ ! -e ${CONFIG_OS_APACHE}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_APACHE} ${CONFIG_OS_APACHE}.bak
 fi
@@ -1258,7 +1258,7 @@ a2ensite ${USERNAME}
 chown -R ${APACHE_USER}:${LOG_GROUP} ${DIR_NGINX_LOG}
 
 # [Nginx] Configure core config
-if [ -f -e ${CONFIG_OS_NGINX} ] && [ ! -e ${CONFIG_OS_NGINX}.bak ]; then
+if [ -e ${CONFIG_OS_NGINX} ] && [ ! -e ${CONFIG_OS_NGINX}.bak ]; then
     # Backup original
     cp -f ${CONFIG_OS_NGINX} ${CONFIG_OS_NGINX}.bak
 fi

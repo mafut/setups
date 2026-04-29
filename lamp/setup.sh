@@ -401,17 +401,19 @@ if "${RUN_UPGRADE}"; then
     apt-get -y upgrade
 fi
 
-apt-get -y install ufw wget zip unzip jq moreutils ssmtp
+apt-get -y install ufw wget zip unzip jq moreutils ssmtp git vim
 apt-get -y install certbot python3 python3-pip python-is-python3
 apt-get -y install ca-certificates apt-transport-https software-properties-common lsb-release
 apt-get -y install nginx apache2
 apt-get -y install composer phpmyadmin
 apt-get -y install logrotate logwatch
-apt-get -y install mackerel-agent-plugins mackerel-check-plugins
+apt-get -y install mackerel-agent mackerel-agent-plugins mackerel-check-plugins
 apt-get -y install golang-go
+apt-get -y install ffmpeg imagemagick
+# apt-get -y install mecab-utils mecab-ipadic mecab-ipadic-utf8 mailutils swatch
 
 for phpver in "${PHP_VERS[@]}"; do
-    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,soap,xml,zip}
+    apt-get -y install php${phpver} libapache2-mod-php${phpver} php${phpver}-{apcu,cli,common,curl,fpm,gd,intl,mbstring,mysql,mysqli,opcache,readline,soap,xdebug,xml,zip}
 done
 
 apt-get -y autoremove
